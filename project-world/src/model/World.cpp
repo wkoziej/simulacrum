@@ -5,6 +5,7 @@
  *      Author: wojtas
  */
 
+#include <numeric>
 #include <stdlib.h>
 
 #include <ga/GASimpleGA.h>
@@ -18,6 +19,8 @@ LoggerPtr World::logger(Logger::getLogger("world"));
 class CreaturesVisitor: public PopulationOnFieldVisitor {
 private:
 	CreaturesOnFieldVisitor *visitor;
+	// Logowanie
+	static LoggerPtr logger;
 public:
 	CreaturesVisitor(CreaturesOnFieldVisitor *v) :
 		visitor(v) {
@@ -25,13 +28,17 @@ public:
 
 	virtual void visit(GAPopulation *population, Field *field, unsigned x,
 			unsigned y) {
-		CreaturesList creaturesOnField = getCreaturesList(population);
-		CreaturesList::iterator c = creaturesOnField.begin();
-		for (; c != creaturesOnField.end(); c++) {
-			visitor->visit(*c, field, population, x, y);
+		LOG4CXX_DEBUG(logger, "population:" << population << ", Population size: " << population->size());
+		int popSize = population->size();
+		for (int i = 0; i < popSize; i++) {
+			Creature * c = (Creature *) &(population->individual(i,
+					GAPopulation::RAW));
+			visitor->visit(c, field, population, x, y);
 		}
 	}
 };
+
+LoggerPtr CreaturesVisitor::logger(Logger::getLogger("CreaturesVisitor"));
 
 class ReproductionVisitor: public PopulationOnFieldVisitor {
 private:
@@ -43,20 +50,25 @@ public:
 		LOG4CXX_DEBUG(logger, "Population size: " << population->size());
 		int c;
 		for (c = 0; c < population->size(); c++) {
-			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).userData());
+			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
 		}
 		if (population->size()) {
 			GASimpleGA simpleGA(*population);
+			//simpleGA.objectiveFunction();
 			simpleGA.pMutation(MUTATION);
 			simpleGA.pCrossover(CROSSOVER);
 			simpleGA.step();
 			GAPopulation p = simpleGA.population();
 			for (c = 0; c < p.size(); c++) {
-				// Brak danych o dodatkowych wskaźnikach przystosowania
-				p.individual(c).userData(NULL);
-				LOG4CXX_DEBUG(logger, " J [" << c << "]: " << p.individual(c) << " UD: " << p.individual(c).userData());
+				LOG4CXX_DEBUG(logger, " J [" << c << "]: " << p.individual(c) << " UD: " << p.individual(c).evalData());
 				population->add(p.individual(c));
 			}
+
+			for (c = 0; c < p.size(); c++) {
+				LOG4CXX_DEBUG(logger, " FITNESS [" << c << "]: " << p.individual(c).fitness());
+				population->add(p.individual(c));
+			}
+
 		}
 	}
 };
@@ -70,9 +82,19 @@ private:
 	static LoggerPtr logger;
 public:
 	void visit(GAPopulation *population, Field *field, unsigned x, unsigned y) {
-		//pop
 		int psize = population->size();
-		population->remove(0, GAPopulation::RAW);
+		for (int c = 0; c < population->size();) {
+			//Creaturepopulation->individual(c, GAPopulation::RAW);
+			CreatureFenotype *f =
+					(CreatureFenotype *) population->individual(c).evalData();
+			float sum = std::accumulate(f->missedProductQuants.begin(),
+					f->missedProductQuants.end(), 0.0);
+			if (sum > 0 && population->size() > 20) {
+				population->remove(&(population->individual(c)));
+			} else {
+				c++;
+			}
+		}
 		LOG4CXX_DEBUG(logger, "population size get smaller from " << psize << " to " << population->size ());
 	}
 };
@@ -96,8 +118,8 @@ public:
 
 class SuplyVisitor: public CreaturesOnFieldVisitor {
 public:
-	void visit(Creature *creature, Field *field, GAPopulation *population, unsigned x,
-			unsigned y) {
+	void visit(Creature *creature, Field *field, GAPopulation *population,
+			unsigned x, unsigned y) {
 		for (unsigned productIndex = 0; productIndex < NO_OF_RESOURCES; productIndex++) {
 			float productAmount = field->getProductQuantity(productIndex);
 			float productEaten;
@@ -255,7 +277,11 @@ void World::createCreatures() {
 		Creature * creature = new Creature();
 		population->add(creature);
 	};
-	LOG4CXX_DEBUG(logger, "creaturesCreated: " << population->size());
+	LOG4CXX_DEBUG(logger, "population: " << population << ", creaturesCreated: " << population->size());
+
+	for (int c = 0; c < population->size(); c++) {
+		LOG4CXX_DEBUG(logger, " creature [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
+	}
 }
 
 void World::creaturesWorking() {
@@ -280,11 +306,9 @@ void World::creaturesDying() {
 
 void World::creaturesReproducting() {
 	LOG4CXX_TRACE(logger, "creaturesReproducting");
-	LOG4CXX_TRACE(logger, "iterateCreaturesOnFields");
 	PopulationOnFieldVisitor *visitor = new ReproductionVisitor();
 	iteratePopulationOnFields(visitor);
 	delete visitor;
-
 }
 
 void World::creaturesMoving() {
@@ -334,7 +358,7 @@ void World::iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor) {
 }
 
 void World::iteratePopulationOnFields(PopulationOnFieldVisitor *visitor) {
-	LOG4CXX_TRACE(logger, "iterateCreaturesOnFields");
+	LOG4CXX_TRACE(logger, "iteratePopulationOnFields");
 	FieldsMatrix::iterator i = fields.begin();
 	for (; i != fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();

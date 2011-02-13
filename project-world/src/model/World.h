@@ -48,14 +48,15 @@ public:
 	}
 	;
 protected:
-	CreaturesList getCreaturesList(const GAPopulation *population) {
+/*	CreaturesList getCreaturesList(const GAPopulation *population) {
 		CreaturesList list;
 		for (int i = 0; i < population->size(); i++) {
-			GAGenome genome = population->individual(i, GAPopulation::RAW);
-			list.push_back((Creature *) genome.userData());
+			GAGenome genome = population->individual(i, GAPopulation::RAW).;
+			population->individual()
+			list.push_back( (Creature *)&genome);
 		}
 		return list;
-	}
+	}*/
 };
 
 class World {
@@ -72,15 +73,17 @@ public:
 	void resourcesRenovation();
 	bool creaturesExists();
 	void step();
-private:
 	FieldsMatrix fields;
+	void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);
+private:
+
 	//CreaturesList creatures;
 	PopulationsMatrix populations;
 	// Logowanie
 	static LoggerPtr logger;
 
 	void iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor);
-	void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);
+
 };
 
 #endif /* WORLD_H_ */

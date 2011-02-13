@@ -11,17 +11,25 @@
 #include <OGRE/Ogre.h>
 #include <OGRE/ExampleFrameListener.h>
 #include <log4cxx/logger.h>
-#include "model/World.h"
+
+
+class Viewer;
 
 using namespace Ogre;
+using namespace log4cxx;
 
 class WorldFrameListener: public ExampleFrameListener {
 public:
-	WorldFrameListener (World *world, RenderWindow* win, Camera* cam);
+	WorldFrameListener (Viewer *v, RenderWindow* win, Camera* cam);
 	bool frameStarted(const FrameEvent& evt);
+	bool processUnbufferedKeyInput(const FrameEvent& evt);
+
 private:
-	World *world;
 	static LoggerPtr logger;
+	Viewer *viewer;
+	int stepNo;
+	bool autoStep;
+    void stepAndVisualize();
 };
 
 #endif /* WorldFrameListener_H */

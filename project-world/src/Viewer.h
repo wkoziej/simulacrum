@@ -19,16 +19,34 @@
 
 using namespace Ogre;
 using namespace CEGUI;
+
+class SceneCreatorVisitor;
+
+struct FieldVisualData {
+	Field *field;
+	SceneNode * fieldNode;
+	std::vector<SceneNode *> resourceNodes;
+	std::vector<SceneNode *> productNodes;
+	SceneNode * populationNode;
+};
+
 class Viewer : public ExampleApplication  {
+	friend class SceneCreatorVisitor;
 public:
 	Viewer(World *world);
 	virtual bool configure(void);
 	virtual void createScene(void);
 	virtual void createFrameListener(void);
 	virtual ~Viewer();
+	void updateVisualization ();
+	World *world;
 private:
 	static LoggerPtr logger;
-	World *world;
+
+	std::vector<FieldVisualData> fVisualData;
+    void updateResourceVisualization(std::vector<FieldVisualData>::iterator &i);
+    void updateProductVisualization(std::vector<FieldVisualData>::iterator &i);
+    void updatePopulationVisualization(std::vector<FieldVisualData>::iterator i);
 };
 
 #endif /* VIEWER_H_ */
