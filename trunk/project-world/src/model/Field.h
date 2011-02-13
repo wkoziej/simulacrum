@@ -30,6 +30,8 @@ public:
 	void decreaseProductQuantity(float productEaten, unsigned productIndex);
 	bool getOut (float &velocity);
 	virtual ~Field();
+	const FloatVector &resourceQuantitiesVector () const {return resourceQuantities; }
+	const FloatVector &productsQuantitiesVector () const { return productsQuantities; }
 private:
 	float moveLag; // Opóźnienie ruchu
 	FloatVector resourceQuantities;

@@ -27,16 +27,15 @@ int main(int argc, char **argv) {
 	}
 
 	srand(time(0));
+	World world(5, 5);
+	 Viewer viewer(&world);
 
-	World world(1, 1);
 	world.initializeRandomly();
 	world.createCreatures();
 
-	Viewer viewer(&world);
 	viewer.go();
 
-//	while (world.creaturesExists()) {
-//	}
+
 
 	return 0;
 }

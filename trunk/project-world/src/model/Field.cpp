@@ -26,7 +26,7 @@ void Field::initializeRandomly() {
 	FloatVector::iterator f;
 	for (f = resourceRenewal.begin(); f != resourceRenewal.end(); f++) {
 		*f = (random() / (float) RAND_MAX) * MAX_RENEWAL;
-		LOG4CXX_TRACE(logger, "resourceRenewal [" << f - resourceRenewal.begin( ) << "]: " << *f);
+		LOG4CXX_DEBUG(logger, "resourceRenewal [" << f - resourceRenewal.begin( ) << "]: " << *f);
 	}
 	productsQuantities.assign(NO_OF_RESOURCES, 0);
 }

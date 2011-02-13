@@ -7,6 +7,7 @@
 
 #include "Creature.h"
 #include "Config.h"
+#include <numeric>
 
 LoggerPtr Creature::logger(Logger::getLogger("creature"));
 
@@ -20,11 +21,30 @@ float VELOCITY_BOUNDS[3] = { 0.0, 10.0, 0.1 };
 
 float DIRECTION_BOUNDS[3] = { 0.0, 3.0, 1.0 };
 
+float Objective(GAGenome&g) {
+	Creature *c = (Creature *) &g;
+	CreatureFenotype * f = (CreatureFenotype *) c->evalData();
+	float sum = std::accumulate(f->missedProductQuants.begin(), f->missedProductQuants.end(), 0.0);
+	LOG4CXX_DEBUG(Creature::getLogger(), "Objective -> sum : " << sum);
+	return sum > 0.0 ? 0.0 : 0.5;
+}
+
+GAEvalData* CreatureFenotype::clone() const {
+	CreatureFenotype *cf = new CreatureFenotype();
+	cf->copy(*this);
+	return cf;
+}
+
+void CreatureFenotype::copy(const GAEvalData&src) {
+	missedProductQuants = (((CreatureFenotype &) src).missedProductQuants);
+}
+
 Creature::Creature() :
-	GARealGenome(Creature::allelesDefinition(), NULL) {
+	GARealGenome(Creature::allelesDefinition(), Objective) {
 	LOG4CXX_TRACE(logger, "Creature::Creature");
 	initializer(RandomInitializer);
 	initialize();
+	this->evd = new CreatureFenotype();
 	LOG4CXX_DEBUG(logger, "genome : " << *this);
 }
 
@@ -60,7 +80,6 @@ void Creature::RandomInitializer(GAGenome &g) {
 		h->gene(j++, randBetweenAndStepped(DIRECTION_BOUNDS[0],
 				DIRECTION_BOUNDS[1], DIRECTION_BOUNDS[2]));
 	}
-	evalData( ...)
 }
 
 GARealAlleleSetArray Creature::alleles;
@@ -96,7 +115,9 @@ float Creature::produce(float resourceQuantity, float &resourceUsed,
 		unsigned index) {
 	LOG4CXX_TRACE(logger, "produce");
 	float processingRate = getProcessingRate(index);
+	LOG4CXX_DEBUG(logger, "processingRate " << this << processingRate);
 	float processingVelocity = getProcessingVelocity(index);
+	LOG4CXX_DEBUG(logger, "processingVelocity " << this << processingVelocity);
 	resourceUsed = resourceQuantity >= processingVelocity ? processingVelocity
 			: resourceQuantity;
 	float productQuant = resourceUsed * processingRate;
@@ -111,26 +132,18 @@ void Creature::feed(float productAmount, float &productEaten,
 	float needs = getNeedAmount(productIndex);
 	if ((amountSuffice = (productAmount >= needs))) {
 		productEaten = needs;
+		productMissed(0, productIndex);
 	} else { // productAmount < needs
-		productMissed (needs - productAmount);
-		this->evalData()
+		productMissed(needs - productAmount, productIndex);
 		productEaten = productAmount;
 	}
 	LOG4CXX_DEBUG(logger, "productIndex:" << productIndex << ", productAmount: " <<productAmount<< " needs: " << needs);
 }
 
-void Creature::productMissed (float quant) {
-	this->evd
+void Creature::productMissed(float quant, unsigned productIndex) {
+	CreatureFenotype * evalData = (CreatureFenotype *) this->evd;
+	evalData->missedProductQuants.at(productIndex) = quant;
 }
-
-/*
- GAGenome *Creature::getGenome() {
- return genome;
- }*/
-
-/*bool Creature::dying() {
-	return missedProductsFactor > 0.0;
-}*/
 
 float Creature::getVelocity() {
 	//GARealGenome *g = (GARealGenome *) genome;
@@ -157,7 +170,8 @@ Creature::Directions Creature::nextDirection(unsigned step) {
 }
 
 float Creature::getNeedAmount(unsigned productIndex) {
-	LOG4CXX_TRACE(logger, "Creature::Creature");
+	LOG4CXX_TRACE(logger, "getNeedAmount [" << productIndex << "]");
+	LOG4CXX_DEBUG(logger, "this " << this);
 	return this->gene(productIndex * 3);
 }
 
@@ -166,8 +180,11 @@ float Creature::getProcessingVelocity(unsigned index) {
 }
 
 float Creature::getProcessingRate(unsigned index) {
+	LOG4CXX_DEBUG(logger, "getProcessingRate [" << index << "]");
+	LOG4CXX_DEBUG(logger, "this " << this);
 	return this->gene(index * 3 + 2);
 }
 
 Creature::~Creature() {
+	delete this->evd;
 }
