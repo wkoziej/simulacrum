@@ -1,0 +1,15 @@
+
+material product
+{
+    technique
+	{
+		pass
+		{
+			lighting on
+			ambient 0.7 0.3 0.1
+			diffuse 0.2 0.8 0.8 1.0
+			
+			
+		}
+	}
+}
