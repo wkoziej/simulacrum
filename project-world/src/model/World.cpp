@@ -6,8 +6,8 @@
  */
 
 #include <numeric>
+#include <utility>
 #include <stdlib.h>
-
 #include <ga/GASimpleGA.h>
 
 #include "World.h"
@@ -47,7 +47,7 @@ private:
 public:
 	virtual void visit(GAPopulation *population, Field *field, unsigned x,
 			unsigned y) {
-		LOG4CXX_DEBUG(logger, "Population size: " << population->size());
+		LOG4CXX_DEBUG(logger, "Population size before reproduction: " << population->size());
 		int c;
 		for (c = 0; c < population->size(); c++) {
 			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
@@ -59,17 +59,15 @@ public:
 			simpleGA.pCrossover(CROSSOVER);
 			simpleGA.step();
 			GAPopulation p = simpleGA.population();
-			for (c = 0; c < p.size(); c++) {
+
+			int maxInd = p.size() > 2 ? 2 : p.size();
+			for (c = 0; c < maxInd; c++) {
 				LOG4CXX_DEBUG(logger, " J [" << c << "]: " << p.individual(c) << " UD: " << p.individual(c).evalData());
 				population->add(p.individual(c));
 			}
-
-			for (c = 0; c < p.size(); c++) {
-				LOG4CXX_DEBUG(logger, " FITNESS [" << c << "]: " << p.individual(c).fitness());
-				population->add(p.individual(c));
-			}
-
 		}
+		LOG4CXX_DEBUG(logger, "Population size after reproduction: " << population->size());
+
 	}
 };
 
@@ -89,7 +87,7 @@ public:
 					(CreatureFenotype *) population->individual(c).evalData();
 			float sum = std::accumulate(f->missedProductQuants.begin(),
 					f->missedProductQuants.end(), 0.0);
-			if (sum > 0 && population->size() > 20) {
+			if (sum > 0) {
 				population->remove(&(population->individual(c)));
 			} else {
 				c++;
@@ -136,6 +134,7 @@ class MovingVisitor: public CreaturesOnFieldVisitor {
 private:
 	// Logowanie
 	static LoggerPtr logger;
+	list <int> moves;
 public:
 	MovingVisitor(FieldsMatrix *fields, PopulationsMatrix *populations) {
 		this->fields = fields;
@@ -147,32 +146,41 @@ public:
 		unsigned sX = x, sY = y;
 		float velocity = creature->getVelocity();
 		Field *destField = field;
-		LOG4CXX_DEBUG(logger, "start coord  (" << x << "," << y <<") of field " << field);
 		GAPopulation *destPopulation = population;
 		int step = 0;
 		Creature::Directions nextDirection = Creature::NoDirection;
-		bool getOut, hasNextDirection;
-		do {
-			getOut = destField->getOut(velocity);
-			if (getOut) {
-				nextDirection = creature->nextDirection(step);
-				hasNextDirection = nextDirection != Creature::NoDirection;
-				if (hasNextDirection) {
-					calculateNextCoordinates(x, y, nextDirection);
-					destField = fields->at(x).at(y);
-					LOG4CXX_DEBUG(logger, "next coord  (" << x << "," << y <<") and field = " << destField);
-
+		CreatureFenotype *f = (CreatureFenotype *) creature->evalData();
+		LOG4CXX_DEBUG(logger, " start coord  (" << x << "," << y <<") of field " << field << " - YEARS :" << f->yearsOnField);
+		if (f->yearsOnField > 0) {
+			bool getOut, hasNextDirection;
+			do {
+				getOut = destField->getOut(velocity);
+				if (getOut) {
+					nextDirection = creature->nextDirection(step);
+					hasNextDirection = nextDirection != Creature::NoDirection;
+					if (hasNextDirection) {
+						calculateNextCoordinates(x, y, nextDirection);
+						destField = fields->at(x).at(y);
+						LOG4CXX_DEBUG(logger, "next coord  (" << x << "," << y <<") and field = " << destField);
+					}
 				}
-			}
-		} while (getOut && hasNextDirection);
+			} while (getOut && hasNextDirection);
 
-		if (destField != field) {
-			// Ruszyliśmy się
-			destPopulation = populations->at(x).at(y);
-			population->remove(creature);
-			destPopulation->add(creature);
-			LOG4CXX_DEBUG(logger, "move from (" << sX << "," << sY << ") to (" << x << "," << y <<")");
-			LOG4CXX_DEBUG(logger, "destPopulation->size " << destPopulation->size() << " population->size " << population->size());
+			if (destField != field) {
+				// Ruszyliśmy się
+				destPopulation = populations->at(x).at(y);
+				population->remove(creature);
+				destPopulation->add(creature);
+				f->yearsOnField = 0;
+				f->previousFieldIdexes = pair <unsigned, unsigned> (sX, sY);
+				LOG4CXX_DEBUG(logger, "move from (" << sX << "," << sY << ") to (" << x << "," << y <<")");
+
+				LOG4CXX_DEBUG(logger, "destPopulation->size " << destPopulation->size() << " population->size " << population->size());
+			} else {
+				f->yearsOnField++;
+			}
+		} else {
+			f->yearsOnField++;
 		}
 	}
 private:
@@ -269,18 +277,20 @@ void World::initializeRandomly() {
 void World::createCreatures() {
 	LOG4CXX_TRACE(logger, "createCreatures");
 	// Wybierz losowe pole
-	unsigned x = (random() / (float) RAND_MAX) * fields.size();
-	unsigned y = (random() / (float) RAND_MAX) * fields.begin()->size();
-	LOG4CXX_DEBUG(logger, "Initial Field: x  " << x << ", y " << y);
-	GAPopulation *population = populations.at(x).at(y);
-	for (int i = 0; i < INITIAL_NO_OF_CREATURES_IN_FIELD; i++) {
-		Creature * creature = new Creature();
-		population->add(creature);
-	};
-	LOG4CXX_DEBUG(logger, "population: " << population << ", creaturesCreated: " << population->size());
+	for (int z = 0; z < NO_OF_POPULATIONS; z++) {
+		unsigned x = (random() / (float) RAND_MAX) * fields.size();
+		unsigned y = (random() / (float) RAND_MAX) * fields.begin()->size();
+		LOG4CXX_DEBUG(logger, "Initial Field: x  " << x << ", y " << y);
+		GAPopulation *population = populations.at(x).at(y);
+		for (int i = 0; i < INITIAL_NO_OF_CREATURES_IN_FIELD; i++) {
+			Creature * creature = new Creature();
+			population->add(creature);
+		};
+		LOG4CXX_DEBUG(logger, "population: " << population << ", creaturesCreated: " << population->size());
 
-	for (int c = 0; c < population->size(); c++) {
-		LOG4CXX_DEBUG(logger, " creature [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
+		for (int c = 0; c < population->size(); c++) {
+			LOG4CXX_DEBUG(logger, " creature [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
+		}
 	}
 }
 
@@ -315,7 +325,9 @@ void World::creaturesMoving() {
 	LOG4CXX_TRACE(logger, "creaturesMoving");
 	CreaturesOnFieldVisitor * visitor =
 			new MovingVisitor(&fields, &populations);
+
 	iterateCreaturesOnFields(visitor);
+
 	delete visitor;
 }
 

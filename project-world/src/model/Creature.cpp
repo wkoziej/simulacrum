@@ -11,7 +11,7 @@
 
 LoggerPtr Creature::logger(Logger::getLogger("creature"));
 
-float NEEDS_BOUNDS[3] = { 0.1, 5.0, 0.1 };
+float NEEDS_BOUNDS[3] = { 0.1, 7.0, 0.1 };
 
 float TALENTS_V_BOUNDS[3] = { 0.1, 10.0, 0.1 };
 
@@ -24,10 +24,18 @@ float DIRECTION_BOUNDS[3] = { 0.0, 3.0, 1.0 };
 float Objective(GAGenome&g) {
 	Creature *c = (Creature *) &g;
 	CreatureFenotype * f = (CreatureFenotype *) c->evalData();
-	float sum = std::accumulate(f->missedProductQuants.begin(), f->missedProductQuants.end(), 0.0);
+	float sum = std::accumulate(f->missedProductQuants.begin(),
+			f->missedProductQuants.end(), 0.0);
 	LOG4CXX_DEBUG(Creature::getLogger(), "Objective -> sum : " << sum);
 	return sum > 0.0 ? 0.0 : 0.5;
 }
+
+CreatureFenotype::CreatureFenotype() {
+	missedProductQuants.assign(NO_OF_RESOURCES, 0);
+	yearsOnField = 0;
+	previousFieldIdexes = std::pair<unsigned, unsigned> (0,0);
+}
+;
 
 GAEvalData* CreatureFenotype::clone() const {
 	CreatureFenotype *cf = new CreatureFenotype();
@@ -37,6 +45,7 @@ GAEvalData* CreatureFenotype::clone() const {
 
 void CreatureFenotype::copy(const GAEvalData&src) {
 	missedProductQuants = (((CreatureFenotype &) src).missedProductQuants);
+	yearsOnField = (((CreatureFenotype &) src).yearsOnField);
 }
 
 Creature::Creature() :

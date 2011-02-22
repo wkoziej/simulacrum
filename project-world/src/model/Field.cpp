@@ -15,7 +15,8 @@ Field::Field() {
 	resourceQuantities.assign(NO_OF_RESOURCES, 0);
 	resourceRenewal.assign(NO_OF_RESOURCES, 0);
 	productsQuantities.assign(NO_OF_RESOURCES, 0);
-
+	maxResourcesQuantities.assign(NO_OF_RESOURCES, 0);
+	maxProductsQuantities.assign(NO_OF_RESOURCES, 0);
 }
 
 void Field::initializeRandomly() {
@@ -24,9 +25,15 @@ void Field::initializeRandomly() {
 	LOG4CXX_TRACE(logger, "moveLag: " << moveLag);
 	resourceQuantities.assign(NO_OF_RESOURCES, 0);
 	FloatVector::iterator f;
-	for (f = resourceRenewal.begin(); f != resourceRenewal.end(); f++) {
+	FloatVector::iterator mP = maxProductsQuantities.begin();
+	FloatVector::iterator mR = maxResourcesQuantities.begin();
+
+	for (f = resourceRenewal.begin(); f != resourceRenewal.end(); f++, mP++, mR++) {
 		*f = (random() / (float) RAND_MAX) * MAX_RENEWAL;
+		*mP = (random() / (float) RAND_MAX) * MAX_PRODUCT_QUANT;
+		*mR = (random() / (float) RAND_MAX) * MAX_RESOURCE_QUANT;
 		LOG4CXX_DEBUG(logger, "resourceRenewal [" << f - resourceRenewal.begin( ) << "]: " << *f);
+
 	}
 	productsQuantities.assign(NO_OF_RESOURCES, 0);
 }
@@ -35,10 +42,15 @@ void Field::renovateResources() {
 	LOG4CXX_TRACE(logger, "renovateResources");
 	FloatVector::iterator r = resourceRenewal.begin();
 	FloatVector::iterator q = resourceQuantities.begin();
-	for (; r != resourceRenewal.end(); r++, q++) {
+	FloatVector::iterator mR = maxResourcesQuantities.begin();
+	for (; r != resourceRenewal.end(); r++, q++, mR++) {
 		*q += *r;
-		LOG4CXX_DEBUG(logger, "resourceQuantity [" << r - resourceRenewal.begin() << "]: " << *q);
+		if (*q > *mR) {
+			*q = *mR;
+		}
+		LOG4CXX_DEBUG(logger, "resourceQuantity [" << r - resourceRenewal.begin() << "]: " << *q << ", ren:" << *r << ", maxRen : " << *mR);
 	}
+
 }
 
 float Field::getResourceQuantity(unsigned index) {
@@ -49,10 +61,13 @@ void Field::increaseProductQuantity(unsigned productIndex,
 		float productQuantity) {
 	LOG4CXX_DEBUG(logger, "productQuantity [" << productIndex << "] incresed from " << productsQuantities.at(productIndex) << " to " << productsQuantities.at(productIndex) + productQuantity);
 	productsQuantities.at(productIndex) += productQuantity;
+	if ( productsQuantities.at(productIndex) > maxProductsQuantities.at(productIndex) ) {
+		productsQuantities.at(productIndex) = maxProductsQuantities.at(productIndex);
+	}
 }
 
 void Field::decreaseResourceQuantity(unsigned resourceIndex, float resourceUsed) {
-	LOG4CXX_DEBUG(logger, "resourceQuantities [" << resourceIndex << "] decreased from " <<resourceQuantities.at(resourceIndex) << " to " << 	resourceQuantities.at(resourceIndex) - resourceUsed);
+	LOG4CXX_DEBUG(logger, "resourceQuantities [" << resourceIndex << "] decreased from " <<resourceQuantities.at(resourceIndex) << " to " << resourceQuantities.at(resourceIndex) - resourceUsed);
 	resourceQuantities.at(resourceIndex) -= resourceUsed;
 }
 
@@ -64,9 +79,9 @@ void Field::decreaseProductQuantity(float productEaten, unsigned productIndex) {
 	productsQuantities.at(productIndex) -= productEaten;
 }
 
-bool Field::getOut (float &velocity) {
+bool Field::getOut(float &velocity) {
 	bool isOut = false;
-	LOG4CXX_DEBUG(logger, "velocity " <<velocity  << ", moveLag: " << moveLag);
+	LOG4CXX_DEBUG(logger, "velocity " <<velocity << ", moveLag: " << moveLag);
 	if (moveLag > velocity) {
 		velocity = 0;
 	} else {
