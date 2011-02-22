@@ -37,6 +37,8 @@ private:
 	FloatVector resourceQuantities;
 	FloatVector resourceRenewal;
 	FloatVector productsQuantities;
+	FloatVector maxResourcesQuantities;
+	FloatVector maxProductsQuantities;
 	// Logowanie
 	static LoggerPtr logger;
 };

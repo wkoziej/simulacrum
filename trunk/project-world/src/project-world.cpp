@@ -26,9 +26,10 @@ int main(int argc, char **argv) {
 		BasicConfigurator::configure();
 	}
 
-	srand(time(0));
-	World world(5, 5);
-	 Viewer viewer(&world);
+	int i = 1298309352;//time(0); //time(0);
+	srand(i); //1298309352
+	World world(10, 10);
+	Viewer viewer(&world);
 
 	world.initializeRandomly();
 	world.createCreatures();
@@ -36,6 +37,8 @@ int main(int argc, char **argv) {
 	viewer.go();
 
 
+
+	cerr << i << endl;
 
 	return 0;
 }

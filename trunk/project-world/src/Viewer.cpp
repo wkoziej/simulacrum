@@ -178,6 +178,9 @@ void Viewer::updateResourceVisualization(
 		s = (*r)->getScale();
 		(*r)->setScale(Ogre::Vector3::UNIT_SCALE);
 		(*r)->setScale(s.x, s.y, *rV / 10.0);
+		if (*rV == 0) {
+			//(*r)->setScale(0.001, 0.001, 0.001);
+		}
 		LOG4CXX_INFO(logger, "\t resource [" << r - i->resourceNodes.begin() << "]: " << *rV);
 	}
 }
@@ -194,6 +197,9 @@ void Viewer::updateProductVisualization(
 		s = (*r)->getScale();
 		(*r)->setScale(Ogre::Vector3::UNIT_SCALE);
 		(*r)->setScale(s.x, s.y, *rV / 10.0);
+		if (*rV == 0) {
+			//(*r)->setScale(0.001, 0.001, 0.001);
+		}
 		LOG4CXX_INFO(logger, "\t product [" << r - i->productNodes.begin() << "]: " << *rV);
 	}
 }
@@ -209,9 +215,14 @@ void Viewer::updatePopulationVisualization(
 	int popSize = p->size();
 	if (popSize) {
 		s.z = popSize / 10.0;
+	} else {
+		s.z = 0;
 	}
 	i->populationNode->setScale(Ogre::Vector3::UNIT_SCALE);
-	i->populationNode->setScale(s.x, s.y, s.z );
+	i->populationNode->setScale(s.x, s.y, s.z);
+	if (popSize == 0) {
+		//i->populationNode->setScale(0.001, 0.001, 0.001);
+	}
 	LOG4CXX_INFO(logger, "\t population: " << popSize);
 }
 

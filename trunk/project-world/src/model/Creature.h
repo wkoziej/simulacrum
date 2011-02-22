@@ -21,7 +21,9 @@ class CreatureFenotype: public GAEvalData {
 
 public:
 	std::vector<float> missedProductQuants;
-	CreatureFenotype () { missedProductQuants.assign(NO_OF_RESOURCES, 0); };
+	std::pair <unsigned, unsigned> previousFieldIdexes;
+	unsigned yearsOnField;
+	CreatureFenotype ();
 	virtual GAEvalData* clone() const;
 	virtual void copy(const GAEvalData &src);
 };
