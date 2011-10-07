@@ -7,33 +7,60 @@
 
 #include "Creature.h"
 #include "Config.h"
+#include "World.h"
 #include <numeric>
 
 LoggerPtr Creature::logger(Logger::getLogger("creature"));
 
-float NEEDS_BOUNDS[3] = { 0.1, 7.0, 0.1 };
-
-float TALENTS_V_BOUNDS[3] = { 0.1, 10.0, 0.1 };
-
-float TALENTS_F_BOUNDS[3] = { 0.1, 5.0, 0.1 };
-
-float VELOCITY_BOUNDS[3] = { 0.0, 10.0, 0.1 };
-
+float NEEDS_BOUNDS[3] = { 0.05, 1.0, 0.05 };
+float TALENTS_F_BOUNDS[3] = { 0.05, 1.0, 0.05 };
 float DIRECTION_BOUNDS[3] = { 0.0, 3.0, 1.0 };
 
-float Objective(GAGenome&g) {
+float Objective(GAGenome &g) {
 	Creature *c = (Creature *) &g;
-	CreatureFenotype * f = (CreatureFenotype *) c->evalData();
-	float sum = std::accumulate(f->missedProductQuants.begin(),
-			f->missedProductQuants.end(), 0.0);
-	LOG4CXX_DEBUG(Creature::getLogger(), "Objective -> sum : " << sum);
-	return sum > 0.0 ? 0.0 : 0.5;
+	CreatureFenotype * fenotype = c->getFenotype();
+	World *world = World::getWorld();
+	Field *field = world->fields.at(fenotype->fieldCoordX).at(
+			fenotype->fieldCoordY);
+	Population *population = world->populations.at(fenotype->fieldCoordX).at(
+			fenotype->fieldCoordY);
+	// Możliwe funkcje celu
+	// 1. Stosunek wartości wytworzonych produktów do wartości zużytych surowców jest największy
+	// 2. Wartość wytworzonych produktów jest największa
+
+
+	// wersja 1
+	// Wartość wytworzonych produktów
+	float productsValueSum = 0.0;
+	for (int i = 0; i < NO_OF_PRODUCTS; i++) {
+		productsValueSum += population->productPrice(i)
+				* fenotype->createdProductQuants.at(i);
+	}
+	// Wartość zużytych surowców
+	float resourcesValueSum = 0.0;
+	for (int i = 0; i < NO_OF_PRODUCTS; i++) {
+		resourcesValueSum += population->resourcePrice(i)
+				* fenotype->usedResourcesQuants.at(i);
+	}
+	// Stosunek wartości produktu do wartości zużycia
+	float value = POSITIVE_INFINITY;
+	if (resourcesValueSum > 0)
+		value = productsValueSum / resourcesValueSum;
+
+	fenotype->objectiveValue = value;
+	LOG4CXX_DEBUG(Creature::getLogger(), "Objective  : " << value);
+	return value;
 }
 
 CreatureFenotype::CreatureFenotype() {
-	missedProductQuants.assign(NO_OF_RESOURCES, 0);
-	yearsOnField = 0;
-	previousFieldIdexes = std::pair<unsigned, unsigned> (0,0);
+	createdProductQuants.assign(NO_OF_PRODUCTS, 0);
+	usedResourcesQuants.assign(NO_OF_RESOURCES, 0);
+	notSatisfiedNeedsQuants.assign(NO_OF_PRODUCTS, 0);
+	yearsOld = 0;
+	previousFieldIdexes = std::pair<unsigned, unsigned>(0, 0);
+	fieldCoordX = -1;
+	fieldCoordY = -1;
+	objectiveValue = 0;
 }
 ;
 
@@ -44,8 +71,85 @@ GAEvalData* CreatureFenotype::clone() const {
 }
 
 void CreatureFenotype::copy(const GAEvalData&src) {
-	missedProductQuants = (((CreatureFenotype &) src).missedProductQuants);
-	yearsOnField = (((CreatureFenotype &) src).yearsOnField);
+	createdProductQuants = (((CreatureFenotype &) src).createdProductQuants);
+	usedResourcesQuants = (((CreatureFenotype &) src).usedResourcesQuants);
+	notSatisfiedNeedsQuants
+			= (((CreatureFenotype &) src).notSatisfiedNeedsQuants);
+	objectiveValue = (((CreatureFenotype &) src).objectiveValue);
+	yearsOld = (((CreatureFenotype &) src).yearsOld);
+	fieldCoordX = (((CreatureFenotype &) src).fieldCoordX);
+	fieldCoordY = (((CreatureFenotype &) src).fieldCoordY);
+}
+
+GARealAlleleSetArray Creature::alleles;
+
+int Creature::noOfTalents() {
+	return 2;
+}
+
+int Creature::noOfNeeds() {
+	return 3;
+}
+
+GARealAlleleSetArray Creature::allelesDefinition() {
+	if (alleles.size() == 0) {
+
+		int i = 0;
+		for (; i < Creature::noOfTalents(); i++) {
+			// Indeks zasobu
+			alleles.add(0, NO_OF_RESOURCES - 1, 1);
+			// Indeks produktu
+			alleles.add(0, NO_OF_PRODUCTS - 1, 1);
+			// Talenty (współczynnik przetwarzania) Rate
+			alleles.add(TALENTS_F_BOUNDS[0], TALENTS_F_BOUNDS[1],
+					TALENTS_F_BOUNDS[2]);
+		}
+
+		for (i = 0; i < Creature::noOfNeeds(); i++) {
+			// Indeks produktu
+			alleles.add(0, NO_OF_PRODUCTS - 1, 1);
+			// Potrzeba
+			alleles.add(NEEDS_BOUNDS[0], NEEDS_BOUNDS[1], NEEDS_BOUNDS[2]);
+		}
+		// Droga do przebycia
+		i = 0;
+		for (; i < MAX_POINT_ON_ROAD; i++) {
+			// 4 kierunki
+			alleles.add(DIRECTION_BOUNDS[0], DIRECTION_BOUNDS[1],
+					DIRECTION_BOUNDS[2]);
+		}
+	}
+	return alleles;
+}
+
+void Creature::RandomInitializer(GAGenome &g) {
+	GARealGenome *h = (GARealGenome *) &g;
+	int i = 0;
+	unsigned j = 0;
+	for (; i < Creature::noOfTalents(); i++) {
+		// Indeks zasobu
+		h->gene(j++, randBetweenAndStepped(0, NO_OF_RESOURCES - 1, 1));
+		// Indeks produktu
+		h->gene(j++, randBetweenAndStepped(0, NO_OF_PRODUCTS - 1, 1));
+		// Wspolczynnik przetwarzania
+		h->gene(j++, randBetweenAndStepped(TALENTS_F_BOUNDS[0],
+				TALENTS_F_BOUNDS[1], TALENTS_F_BOUNDS[2]));
+	}
+	// Potrzeby
+	for (i = 0; i < Creature::noOfNeeds(); i++) {
+		// Indeks produktu
+		h->gene(j++, randBetweenAndStepped(0, NO_OF_PRODUCTS - 1, 1));
+		// Wspolczynnik przetwarzania
+		h->gene(j++, randBetweenAndStepped(NEEDS_BOUNDS[0], NEEDS_BOUNDS[1],
+				NEEDS_BOUNDS[2]));
+	}
+	// Droga do przebycia
+	i = 0;
+	for (; i < MAX_POINT_ON_ROAD; i++) {
+		// 4 kierunki
+		h->gene(j++, randBetweenAndStepped(DIRECTION_BOUNDS[0],
+				DIRECTION_BOUNDS[1], DIRECTION_BOUNDS[2]));
+	}
 }
 
 Creature::Creature() :
@@ -64,111 +168,44 @@ float Creature::randBetweenAndStepped(float min, float max, float step) {
 	return intVal * step;
 }
 
-void Creature::RandomInitializer(GAGenome &g) {
-	GARealGenome *h = (GARealGenome *) &g;
-	int i = 0;
-	unsigned j = 0;
-	for (; i < NO_OF_RESOURCES; i++) {
-		// Potrzeby
-		h->gene(j++, randBetweenAndStepped(NEEDS_BOUNDS[0], NEEDS_BOUNDS[1],
-				NEEDS_BOUNDS[2]));
-		// Talenty (prędkość przetwarzania) Velocity
-		h->gene(j++, randBetweenAndStepped(TALENTS_V_BOUNDS[0],
-				TALENTS_V_BOUNDS[1], TALENTS_V_BOUNDS[2]));
-		// Talenty (współczynnik przetwarzania) Rate
-		h->gene(j++, randBetweenAndStepped(TALENTS_F_BOUNDS[0],
-				TALENTS_F_BOUNDS[1], TALENTS_F_BOUNDS[2]));
-	}
-	// Prędkość poruszania się
-	h->gene(j++, randBetweenAndStepped(VELOCITY_BOUNDS[0], VELOCITY_BOUNDS[1],
-			VELOCITY_BOUNDS[2]));
-	// Droga do przebycia
-	i = 0;
-	for (; i < MAX_POINT_ON_ROAD; i++) {
-		// 4 kierunki
-		h->gene(j++, randBetweenAndStepped(DIRECTION_BOUNDS[0],
-				DIRECTION_BOUNDS[1], DIRECTION_BOUNDS[2]));
-	}
-}
-
-GARealAlleleSetArray Creature::alleles;
-
-GARealAlleleSetArray Creature::allelesDefinition() {
-	if (alleles.size() == 0) {
-
-		int i = 0;
-		for (; i < NO_OF_RESOURCES; i++) {
-			// Potrzeby
-			alleles.add(NEEDS_BOUNDS[0], NEEDS_BOUNDS[1], NEEDS_BOUNDS[2]);
-			// Talenty (prędkość przetwarzania) Velocity
-			alleles.add(TALENTS_V_BOUNDS[0], TALENTS_V_BOUNDS[1],
-					TALENTS_V_BOUNDS[2]);
-			// Talenty (współczynnik przetwarzania) Rate
-			alleles.add(TALENTS_F_BOUNDS[0], TALENTS_F_BOUNDS[1],
-					TALENTS_F_BOUNDS[2]);
-		}
-		// Prędkość poruszania się
-		alleles.add(VELOCITY_BOUNDS[0], VELOCITY_BOUNDS[1], VELOCITY_BOUNDS[2]);
-		// Droga do przebycia
-		i = 0;
-		for (; i < MAX_POINT_ON_ROAD; i++) {
-			// 4 kierunki
-			alleles.add(DIRECTION_BOUNDS[0], DIRECTION_BOUNDS[1],
-					DIRECTION_BOUNDS[2]);
-		}
-	}
-	return alleles;
-}
-
-float Creature::produce(float resourceQuantity, float &resourceUsed,
-		unsigned index) {
+float Creature::produce(float resourceQuantity, unsigned index) {
 	LOG4CXX_TRACE(logger, "produce");
-	float processingRate = getProcessingRate(index);
-	LOG4CXX_DEBUG(logger, "processingRate " << this << processingRate);
-	float processingVelocity = getProcessingVelocity(index);
-	LOG4CXX_DEBUG(logger, "processingVelocity " << this << processingVelocity);
-	resourceUsed = resourceQuantity >= processingVelocity ? processingVelocity
-			: resourceQuantity;
-	float productQuant = resourceUsed * processingRate;
-	LOG4CXX_DEBUG(logger, "resourceQuantity: " << resourceQuantity << ", processingRate: " << processingRate << ", processingVelocity: " << processingVelocity << ", resourceUsed: " << resourceUsed);
-	LOG4CXX_DEBUG(logger, "creature " << this << " produced " << productQuant);
+	float productQuant = 0.0;
+	if (resourceQuantity > 0.0) {
+		int productIndex = -1;
+		float processingRate = getProcessingRateAndProductIndex(index,
+				productIndex);
+		if (processingRate > 0.0) {
+			LOG4CXX_DEBUG(logger, "processingRate " << this << processingRate);
+			productQuant = resourceQuantity * processingRate;
+			LOG4CXX_DEBUG(logger, "resourceQuantity: " << resourceQuantity << ", processingRate: " << processingRate );
+			LOG4CXX_DEBUG(logger, "creature " << this << " produced " << productQuant);
+			getFenotype()->createdProductQuants.at(productIndex) = productQuant;
+		}
+	}
 	return productQuant;
 }
 
-void Creature::feed(float productAmount, float &productEaten,
-		bool &amountSuffice, unsigned productIndex) {
+void Creature::feed(float productAmount, unsigned productIndex) {
 	LOG4CXX_TRACE(logger, "feed");
-	float needs = getNeedAmount(productIndex);
-	if ((amountSuffice = (productAmount >= needs))) {
-		productEaten = needs;
-		productMissed(0, productIndex);
-	} else { // productAmount < needs
-		productMissed(needs - productAmount, productIndex);
-		productEaten = productAmount;
-	}
-	LOG4CXX_DEBUG(logger, "productIndex:" << productIndex << ", productAmount: " <<productAmount<< " needs: " << needs);
-}
-
-void Creature::productMissed(float quant, unsigned productIndex) {
-	CreatureFenotype * evalData = (CreatureFenotype *) this->evd;
-	evalData->missedProductQuants.at(productIndex) = quant;
-}
-
-float Creature::getVelocity() {
-	//GARealGenome *g = (GARealGenome *) genome;
-	return this->gene(3 * NO_OF_RESOURCES);
+	float need = getNeedOfProduct(productIndex);
+	float notSatisfiedNeed = need - productAmount;
+	getFenotype()->notSatisfiedNeedsQuants.at(productIndex) = notSatisfiedNeed
+			<= 0 ? 0 : notSatisfiedNeed;
+	LOG4CXX_DEBUG(logger, "productIndex:" << productIndex << ", productAmount: " <<productAmount<< " needs: " << need);
 }
 
 Creature::Directions Creature::nextDirection(unsigned step) {
 	Creature::Directions direction = Creature::NoDirection;
 	if (step < MAX_POINT_ON_ROAD) {
-		float d = this->gene(3 * NO_OF_RESOURCES + 1);
-		LOG4CXX_DEBUG(logger, " nextDirection (" << step << ") = " << d);
-		if (d == 0.0) {
+		float direction =
+				this->gene(3 * noOfTalents() + 2 * noOfNeeds() + step);
+		LOG4CXX_DEBUG(logger, " nextDirection (" << step << ") = " << direction);
+		if (direction == 0.0) {
 			direction = Creature::DirLeft;
-		} else if (d == 1.0) {
+		} else if (direction == 1.0) {
 			direction = Creature::DirRight;
-		} else if (d == 2.0) {
+		} else if (direction == 2.0) {
 			direction = Creature::DirUp;
 		} else {
 			direction = Creature::DirDown;
@@ -178,20 +215,49 @@ Creature::Directions Creature::nextDirection(unsigned step) {
 	return direction;
 }
 
-float Creature::getNeedAmount(unsigned productIndex) {
+float Creature::getNeedOfProduct(unsigned productIndex) {
 	LOG4CXX_TRACE(logger, "getNeedAmount [" << productIndex << "]");
 	LOG4CXX_DEBUG(logger, "this " << this);
-	return this->gene(productIndex * 3);
+	float needAmount = 0.0;
+	// Znajdź gen odpowiadający za potrzebę danego produktu
+	int genIndex = -1;
+	for (int i = 0; i < noOfNeeds(); i++) {
+		int index = noOfTalents() * 3 + 2 * i;
+		if (gene(index) == productIndex) {
+			genIndex = index;
+			break;
+		}
+	}
+	if (genIndex != -1) {
+		needAmount = gene(genIndex + 1);
+	}
+	return needAmount;
 }
 
-float Creature::getProcessingVelocity(unsigned index) {
-	return this->gene(index * 3 + 1);
+float Creature::getNeedOfResource(unsigned resourceIndex) {
+	int productIndex;
+	return getProcessingRateAndProductIndex(resourceIndex, productIndex);
 }
 
-float Creature::getProcessingRate(unsigned index) {
-	LOG4CXX_DEBUG(logger, "getProcessingRate [" << index << "]");
+float Creature::getProcessingRateAndProductIndex(unsigned resourceIndex,
+		int &productIndex) {
+	LOG4CXX_DEBUG(logger, "getProcessingRate [" << resourceIndex << "]");
 	LOG4CXX_DEBUG(logger, "this " << this);
-	return this->gene(index * 3 + 2);
+	float rate = 0.0;
+	// Znajdź gen odpowiadający za potrzebę danego produktu
+	int genIndex = -1;
+	for (int i = 0; i < noOfTalents(); i++) {
+		int index = 3 * i;
+		if (gene(index) == resourceIndex) {
+			genIndex = index;
+			break;
+		}
+	}
+	if (genIndex != -1) {
+		productIndex = gene(genIndex + 1);
+		rate = gene(genIndex + 2);
+	}
+	return rate;
 }
 
 Creature::~Creature() {

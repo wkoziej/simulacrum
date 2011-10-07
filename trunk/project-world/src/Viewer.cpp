@@ -55,8 +55,10 @@ public:
 					Ogre::Vector3::ZERO);
 			mEntity->setMaterialName("resource");
 			mNode->attachObject(mEntity);
-			mNode->setPosition(rIndex * (100
-					/ field->resourceQuantitiesVector().size()), 50, 15);
+			//Real x = rIndex * (100 / field->resourceQuantitiesVector().size());
+			//Real y = 50;
+			Real z = 15;
+			mNode->setPosition(x, y, z);
 			mNode->setScale(0.3, 0.3, *r);
 			resourceNodes.push_back(mNode);
 		}
@@ -64,7 +66,7 @@ public:
 
 	void createProductVisualization(SceneNode *fieldNode, Field *field,
 			unsigned x, unsigned y, std::vector<SceneNode *> &productNodes) {
-		FloatVector::const_iterator r =
+		/*FloatVector::const_iterator r =
 				field->productsQuantitiesVector().begin();
 		unsigned rIndex = 0;
 		for (; r != field->productsQuantitiesVector().end(); r++, rIndex++) {
@@ -83,7 +85,7 @@ public:
 					/ field->productsQuantitiesVector().size()), 0, 15);
 			mNode->setScale(0.3, 0.3, *r);
 			productNodes.push_back(mNode);
-		}
+		}*/
 	}
 
 	void createPopulationVisualization(SceneNode *fieldNode,
@@ -115,11 +117,11 @@ public:
 		createResourceVisualization(fVisualData.fieldNode, field, x, y,
 				fVisualData.resourceNodes);
 		// Produkty
-		createProductVisualization(fVisualData.fieldNode, field, x, y,
-				fVisualData.productNodes);
+		//createProductVisualization(fVisualData.fieldNode, field, x, y,
+		//		fVisualData.productNodes);
 		// Populacja
-		createPopulationVisualization(fVisualData.fieldNode, population, x, y,
-				fVisualData.populationNode);
+		//createPopulationVisualization(fVisualData.fieldNode, population, x, y,
+		//		fVisualData.populationNode);
 		viewer->fVisualData.push_back(fVisualData);
 	}
 };
@@ -187,7 +189,7 @@ void Viewer::updateResourceVisualization(
 
 void Viewer::updateProductVisualization(
 		std::vector<FieldVisualData>::iterator & i) {
-	Ogre::Any any;
+	/*Ogre::Any any;
 	Ogre::Vector3 s;
 	any = i->fieldNode->getUserObjectBindings().getUserAny();
 	Field *f = any_cast<Field*> (any);
@@ -201,7 +203,7 @@ void Viewer::updateProductVisualization(
 			//(*r)->setScale(0.001, 0.001, 0.001);
 		}
 		LOG4CXX_INFO(logger, "\t product [" << r - i->productNodes.begin() << "]: " << *rV);
-	}
+	}*/
 }
 
 void Viewer::updatePopulationVisualization(

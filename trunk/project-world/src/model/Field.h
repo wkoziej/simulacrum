@@ -24,19 +24,20 @@ public:
 	void initializeRandomly();
 	void renovateResources();
 	float getResourceQuantity(unsigned index);
-	void increaseProductQuantity(unsigned productIndex, float productQuantity);
+	//void increaseProductQuantity(unsigned productIndex, float productQuantity);
 	void decreaseResourceQuantity(unsigned resourceIndex, float resourceUsed);
-	float getProductQuantity(unsigned productIndex);
+	//float getProductQuantity(unsigned productIndex);
 	void decreaseProductQuantity(float productEaten, unsigned productIndex);
 	bool getOut (float &velocity);
 	virtual ~Field();
 	const FloatVector &resourceQuantitiesVector () const {return resourceQuantities; }
-	const FloatVector &productsQuantitiesVector () const { return productsQuantities; }
+//	const FloatVector &productsQuantitiesVector () const { return productsQuantities; }
+
 private:
 	float moveLag; // Opóźnienie ruchu
 	FloatVector resourceQuantities;
 	FloatVector resourceRenewal;
-	FloatVector productsQuantities;
+	//FloatVector productsQuantities;
 	FloatVector maxResourcesQuantities;
 	FloatVector maxProductsQuantities;
 	// Logowanie

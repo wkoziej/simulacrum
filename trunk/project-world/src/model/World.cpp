@@ -15,37 +15,14 @@
 using namespace std;
 
 LoggerPtr World::logger(Logger::getLogger("world"));
-
-class CreaturesVisitor: public PopulationOnFieldVisitor {
-private:
-	CreaturesOnFieldVisitor *visitor;
-	// Logowanie
-	static LoggerPtr logger;
-public:
-	CreaturesVisitor(CreaturesOnFieldVisitor *v) :
-		visitor(v) {
-	}
-
-	virtual void visit(GAPopulation *population, Field *field, unsigned x,
-			unsigned y) {
-		LOG4CXX_DEBUG(logger, "population:" << population << ", Population size: " << population->size());
-		int popSize = population->size();
-		for (int i = 0; i < popSize; i++) {
-			Creature * c = (Creature *) &(population->individual(i,
-					GAPopulation::RAW));
-			visitor->visit(c, field, population, x, y);
-		}
-	}
-};
-
-LoggerPtr CreaturesVisitor::logger(Logger::getLogger("CreaturesVisitor"));
+World *World::singleton = NULL;
 
 class ReproductionVisitor: public PopulationOnFieldVisitor {
 private:
 	// Logowanie
 	static LoggerPtr logger;
 public:
-	virtual void visit(GAPopulation *population, Field *field, unsigned x,
+	virtual void visit(Population *population, Field *field, unsigned x,
 			unsigned y) {
 		LOG4CXX_DEBUG(logger, "Population size before reproduction: " << population->size());
 		int c;
@@ -79,15 +56,16 @@ private:
 	// Logowanie
 	static LoggerPtr logger;
 public:
-	void visit(GAPopulation *population, Field *field, unsigned x, unsigned y) {
+	void visit(Population *population, Field *field, unsigned x, unsigned y) {
 		int psize = population->size();
 		for (int c = 0; c < population->size();) {
-			//Creaturepopulation->individual(c, GAPopulation::RAW);
 			CreatureFenotype *f =
 					(CreatureFenotype *) population->individual(c).evalData();
-			float sum = std::accumulate(f->missedProductQuants.begin(),
-					f->missedProductQuants.end(), 0.0);
-			if (sum > 0) {
+			// Jezeli wartosc funkcji celu jest mniejsza od sredniej populacji, to wyrzuc osobnika z populacji
+			// Pomijaj dzieci
+			float objAvg = population->objectiveAvarage();
+			float creatureObjVal = f->objectiveValue;
+			if (objAvg > creatureObjVal && f->yearsOld > 0) {
 				population->remove(&(population->individual(c)));
 			} else {
 				c++;
@@ -101,15 +79,24 @@ LoggerPtr DyingVisitor::logger(Logger::getLogger("DyingVisitor"));
 
 class WorkerVisitor: public CreaturesOnFieldVisitor {
 public:
-	void visit(Creature *creature, Field *field, GAPopulation *, unsigned x,
-			unsigned y) {
+	void visit(Creature *creature, Field *field, Population *population,
+			unsigned x, unsigned y) {
 		for (int resourceIndex = 0; resourceIndex < NO_OF_RESOURCES; resourceIndex++) {
-			float resourceQuantity = field->getResourceQuantity(resourceIndex);
-			float resourceUsed;
-			float productQuantity = creature->produce(resourceQuantity,
-					resourceUsed, resourceIndex);
-			field->increaseProductQuantity(resourceIndex, productQuantity);
-			field->decreaseResourceQuantity(resourceIndex, resourceUsed);
+			float fieldResourceQuantity = field->getResourceQuantity(
+					resourceIndex);
+			// TODO - nie wyliczać za każdym razem potrzebnych surowców ale brać je z cache, który będzie aktualizowany przy zmianach - podobnie z produktami/potrzebami?
+			float populationResourceNeeds = population->resourceNeeds(
+					resourceIndex);
+			float resourceRatio = fieldResourceQuantity
+					/ populationResourceNeeds;
+			float availableResource = resourceRatio > 1.0 ? 1 : resourceRatio;
+			float creatureResourceNeeds = creature->getNeedOfResource(
+					resourceIndex);
+			float resourceToUse = availableResource * creatureResourceNeeds;
+			//float productQuantity =
+			creature->produce(resourceToUse, resourceIndex);
+			//field->increaseProductQuantity(resourceIndex, productQuantity);
+			field->decreaseResourceQuantity(resourceIndex, resourceToUse);
 		}
 	}
 };
@@ -134,7 +121,7 @@ class MovingVisitor: public CreaturesOnFieldVisitor {
 private:
 	// Logowanie
 	static LoggerPtr logger;
-	list <int> moves;
+	list<int> moves;
 public:
 	MovingVisitor(FieldsMatrix *fields, PopulationsMatrix *populations) {
 		this->fields = fields;
@@ -150,8 +137,8 @@ public:
 		int step = 0;
 		Creature::Directions nextDirection = Creature::NoDirection;
 		CreatureFenotype *f = (CreatureFenotype *) creature->evalData();
-		LOG4CXX_DEBUG(logger, " start coord  (" << x << "," << y <<") of field " << field << " - YEARS :" << f->yearsOnField);
-		if (f->yearsOnField > 0) {
+		LOG4CXX_DEBUG(logger, " start coord  (" << x << "," << y <<") of field " << field << " - YEARS :" << f->yearsOld);
+		if (f->yearsOld > 0) {
 			bool getOut, hasNextDirection;
 			do {
 				getOut = destField->getOut(velocity);
@@ -171,16 +158,16 @@ public:
 				destPopulation = populations->at(x).at(y);
 				population->remove(creature);
 				destPopulation->add(creature);
-				f->yearsOnField = 0;
-				f->previousFieldIdexes = pair <unsigned, unsigned> (sX, sY);
+				f->yearsOld = 0;
+				f->previousFieldIdexes = pair<unsigned, unsigned> (sX, sY);
 				LOG4CXX_DEBUG(logger, "move from (" << sX << "," << sY << ") to (" << x << "," << y <<")");
 
 				LOG4CXX_DEBUG(logger, "destPopulation->size " << destPopulation->size() << " population->size " << population->size());
 			} else {
-				f->yearsOnField++;
+				f->yearsOld++;
 			}
 		} else {
-			f->yearsOnField++;
+			f->yearsOld++;
 		}
 	}
 private:
@@ -243,12 +230,12 @@ public:
 	}
 };
 
-World::World(unsigned X, unsigned Y) {
-
+World *World::createWorld(unsigned X, unsigned Y) {
 	if (X < 1 || Y < 1) {
 		LOG4CXX_FATAL(logger, "Incorrect dimensions");
 		exit(1);
 	}
+	World *w = World::singleton;
 	for (unsigned x = 0; x < X; x++) {
 		FieldsVector fVector;
 		//CreaturesListsVector cVector;
@@ -256,7 +243,7 @@ World::World(unsigned X, unsigned Y) {
 		for (unsigned y = 0; y < Y; y++) {
 			fVector.push_back(new Field());
 			//CreaturesList cList;
-			pVector.push_back(new GAPopulation());
+			pVector.push_back(new Population());
 		}
 		fields.push_back(fVector);
 		populations.push_back(pVector);
@@ -367,6 +354,7 @@ void World::iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor) {
 	LOG4CXX_TRACE(logger, "iterateCreaturesOnFields");
 	PopulationOnFieldVisitor *creaturesVisitor = new CreaturesVisitor(visitor);
 	iteratePopulationOnFields(creaturesVisitor);
+	delete creaturesVisitor;
 }
 
 void World::iteratePopulationOnFields(PopulationOnFieldVisitor *visitor) {
