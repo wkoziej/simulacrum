@@ -20,10 +20,17 @@ using namespace log4cxx;
 class CreatureFenotype: public GAEvalData {
 
 public:
-	std::vector<float> missedProductQuants;
-	std::pair <unsigned, unsigned> previousFieldIdexes;
-	unsigned yearsOnField;
-	CreatureFenotype ();
+	std::vector<float> createdProductQuants;
+	std::vector<float> usedResourcesQuants;
+	std::vector<float> notSatisfiedNeedsQuants;
+
+	std::pair<unsigned, unsigned> previousFieldIdexes;
+	int fieldCoordX;
+	int fieldCoordY;
+	unsigned yearsOld;
+	float objectiveValue;
+
+	CreatureFenotype();
 	virtual GAEvalData* clone() const;
 	virtual void copy(const GAEvalData &src);
 };
@@ -35,22 +42,29 @@ public:
 	};
 	Creature();
 	virtual ~Creature();
-	float produce(float resourceQuantity, float &resourceUsed, unsigned index);
-	void feed(float productAmount, float &productEaten, bool &amountSuffice,
-			unsigned productIndex);
-	//GAGenome *getGenome();
-	//bool dying();
-	float getVelocity();
+	float produce(float resourceQuantity, unsigned index);
+	void feed(float productAmount, unsigned productIndex);
+	float getNeedOfProduct(unsigned productIndex);
+	float getNeedOfResource(unsigned productIndex);
+	//float getNeed
 	Directions nextDirection(unsigned step);
-	static LoggerPtr getLogger () { return logger; };
+	static LoggerPtr getLogger() {
+		return logger;
+	}
+	;
+	static int noOfTalents();
+	static int noOfNeeds();
+	CreatureFenotype *getFenotype() {
+		return (CreatureFenotype *) evalData();
+	}
 private:
-	float getNeedAmount(unsigned productIndex);
-	float getProcessingVelocity(unsigned index);
-	float getProcessingRate(unsigned index);
+
+	//float getProcessingVelocity(unsigned index);
+	float getProcessingRateAndProductIndex(unsigned resourceIndex, int &productIndex);
 	static float randBetweenAndStepped(float min, float max, float step);
 	static void RandomInitializer(GAGenome &g);
 	static GARealAlleleSetArray allelesDefinition();
-	void productMissed(float quant, unsigned productIndex);
+	//void productMissed(float quant, unsigned productIndex);
 	//GAGenome *genome;
 	// float missedProductsFactor;
 	// Logowanie

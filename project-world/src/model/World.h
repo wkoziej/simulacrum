@@ -11,31 +11,19 @@
 #include <vector>
 #include <list>
 #include <log4cxx/logger.h>
-#include <ga/GASimpleGA.h>
+
 
 #include "Field.h"
 #include "Creature.h"
-
+#include "Population.h"
 using namespace std;
 using namespace log4cxx;
 
 typedef std::vector<Field *> FieldsVector;
 typedef std::vector<FieldsVector> FieldsMatrix;
 typedef std::list<Creature *> CreaturesList;
-typedef std::vector<GAPopulation *> PopulationsVector;
+typedef std::vector<Population *> PopulationsVector;
 typedef std::vector<PopulationsVector> PopulationsMatrix;
-
-class CreaturesOnFieldVisitor {
-public:
-	CreaturesOnFieldVisitor() {
-	}
-	;
-	virtual void visit(Creature *creature, Field *field, GAPopulation *,
-			unsigned x, unsigned y) = 0;
-	virtual ~CreaturesOnFieldVisitor() {
-	}
-	;
-};
 
 class PopulationOnFieldVisitor {
 public:
@@ -48,20 +36,12 @@ public:
 	}
 	;
 protected:
-/*	CreaturesList getCreaturesList(const GAPopulation *population) {
-		CreaturesList list;
-		for (int i = 0; i < population->size(); i++) {
-			GAGenome genome = population->individual(i, GAPopulation::RAW).;
-			population->individual()
-			list.push_back( (Creature *)&genome);
-		}
-		return list;
-	}*/
 };
 
 class World {
 public:
-	World(unsigned X, unsigned Y);
+	static World *createWorld(unsigned X, unsigned Y);
+	static World *getWorld() { return singleton; };
 	virtual ~World();
 	void initializeRandomly();
 	void createCreatures();
@@ -74,11 +54,16 @@ public:
 	bool creaturesExists();
 	void step();
 	FieldsMatrix fields;
+	PopulationsMatrix populations;
 	void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);
 private:
-
+	static World *singleton;
+	World() {
+		if (singleton == NULL)
+			singleton = this;
+	}
 	//CreaturesList creatures;
-	PopulationsMatrix populations;
+
 	// Logowanie
 	static LoggerPtr logger;
 

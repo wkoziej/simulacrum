@@ -28,11 +28,11 @@ int main(int argc, char **argv) {
 
 	int i = 1298309352;//time(0); //time(0);
 	srand(i); //1298309352
-	World world(10, 10);
-	Viewer viewer(&world);
+	World *world = World::createWorld(4, 4);
+	Viewer viewer(world);
 
-	world.initializeRandomly();
-	world.createCreatures();
+	world->initializeRandomly();
+	world->createCreatures();
 
 	viewer.go();
 
