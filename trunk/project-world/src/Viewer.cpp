@@ -18,7 +18,6 @@ private:
 public:
 	SceneCreatorVisitor(Viewer *v) :
 		viewer(v) {
-
 	}
 
 	void createFieldVisualization(SceneNode *&mNode, Field *field, unsigned x,
@@ -107,7 +106,7 @@ public:
 		//UserObjectBindings::
 	}
 
-	virtual void visit(GAPopulation *population, Field *field, unsigned x,
+	virtual void visit(Population *population, Field *field, unsigned x,
 			unsigned y) {
 		// Płaszczyzny pola
 		//SceneNode *fieldNode;

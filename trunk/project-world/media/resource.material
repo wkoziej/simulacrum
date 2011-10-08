@@ -1,15 +1,21 @@
 
 material resource
 {
-    technique
-	{
-		pass
-		{
-			lighting on
-			ambient 0.3 0.3 0.3
-			diffuse 0.8 0.8 0.8 1.0
-			
-			
-		}
-	}
+technique
+        {
+                pass
+                {
+                        scene_blend colour_blend
+                        depth_write off
+
+                   
+
+                        texture_unit
+                        {
+                                texture frost.png
+                                env_map spherical
+                                scroll_anim 0.01 0.01
+                        }
+                }
+        }
 }

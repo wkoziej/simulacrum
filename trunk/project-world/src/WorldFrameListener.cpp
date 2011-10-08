@@ -35,18 +35,18 @@ void WorldFrameListener::stepAndVisualize() {
 		;
 		break;
 	case 1:
-		viewer->world->creaturesWorking();
-		LOG4CXX_INFO(logger, "creaturesWorking")
-		;
-		break;
-	case 2:
 		viewer->world->creaturesSupplying();
 		LOG4CXX_INFO(logger, "creaturesSupplying")
 		;
 		break;
+	case 2:
+		viewer->world->creaturesWorking();
+		LOG4CXX_INFO(logger, "creaturesWorking")
+		;
+		break;
 	case 3:
-		viewer->world->creaturesDying();
-		LOG4CXX_INFO(logger, "creaturesDying")
+		viewer->world->creaturesMoving();
+		LOG4CXX_INFO(logger, "creaturesMoving")
 		;
 		break;
 	case 4:
@@ -55,8 +55,8 @@ void WorldFrameListener::stepAndVisualize() {
 		;
 		break;
 	case 5:
-		viewer->world->creaturesMoving();
-		LOG4CXX_INFO(logger, "creaturesMoving")
+		viewer->world->creaturesDying();
+		LOG4CXX_INFO(logger, "creaturesDying")
 		;
 		break;
 	}

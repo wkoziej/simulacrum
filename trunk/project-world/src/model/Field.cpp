@@ -8,22 +8,23 @@
 #include "stdlib.h"
 
 #include "Field.h"
+#include "World.h"
 
 LoggerPtr Field::logger(Logger::getLogger("field"));
 
 Field::Field() {
-	resourceQuantities.assign(NO_OF_RESOURCES, 0);
-	resourceRenewal.assign(NO_OF_RESOURCES, 0);
+	resourceQuantities.assign(World::NO_OF_RESOURCES, 0);
+	resourceRenewal.assign(World::NO_OF_RESOURCES, 0);
 	//productsQuantities.assign(NO_OF_RESOURCES, 0);
-	maxResourcesQuantities.assign(NO_OF_RESOURCES, 0);
-	maxProductsQuantities.assign(NO_OF_RESOURCES, 0);
+	maxResourcesQuantities.assign(World::NO_OF_RESOURCES, 0);
+	maxProductsQuantities.assign(World::NO_OF_RESOURCES, 0);
 }
 
 void Field::initializeRandomly() {
 	LOG4CXX_TRACE(logger, "initializeRandomly");
 	moveLag = (random() / (float) RAND_MAX) * MAX_MOVE_LAG;
 	LOG4CXX_TRACE(logger, "moveLag: " << moveLag);
-	resourceQuantities.assign(NO_OF_RESOURCES, 0);
+	resourceQuantities.assign(World::NO_OF_RESOURCES, 0);
 	FloatVector::iterator f;
 	FloatVector::iterator mP = maxProductsQuantities.begin();
 	FloatVector::iterator mR = maxResourcesQuantities.begin();

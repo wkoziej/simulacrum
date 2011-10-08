@@ -12,7 +12,6 @@
 #include <list>
 #include <log4cxx/logger.h>
 
-
 #include "Field.h"
 #include "Creature.h"
 #include "Population.h"
@@ -25,23 +24,17 @@ typedef std::list<Creature *> CreaturesList;
 typedef std::vector<Population *> PopulationsVector;
 typedef std::vector<PopulationsVector> PopulationsMatrix;
 
-class PopulationOnFieldVisitor {
-public:
-	PopulationOnFieldVisitor() {
-	}
-	;
-	virtual void visit(GAPopulation *population, Field *field, unsigned x,
-			unsigned y) = 0;
-	virtual ~PopulationOnFieldVisitor() {
-	}
-	;
-protected:
-};
-
 class World {
 public:
-	static World *createWorld(unsigned X, unsigned Y);
-	static World *getWorld() { return singleton; };
+	static World *createRandomWorld(unsigned X, unsigned Y);
+	static World *readWorldFromFile(const char *fileName);
+
+	static World *getWorld() {
+		if (singleton == NULL)
+			singleton = new World();
+		return singleton;
+	}
+	;
 	virtual ~World();
 	void initializeRandomly();
 	void createCreatures();
@@ -56,18 +49,19 @@ public:
 	FieldsMatrix fields;
 	PopulationsMatrix populations;
 	void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);
+	void iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor);
+	static int NO_OF_RESOURCES; //3 // Liczba surowców -> 0 - natchnienie, 1 - materia
+	static int NO_OF_PRODUCTS; //3 // Liczba surowców -> 0 - natchnienie, 1 - materia
+
 private:
 	static World *singleton;
 	World() {
 		if (singleton == NULL)
 			singleton = this;
 	}
-	//CreaturesList creatures;
-
 	// Logowanie
 	static LoggerPtr logger;
-
-	void iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor);
+	void createFieldsAndPopulations(unsigned X, unsigned Y);
 
 };
 

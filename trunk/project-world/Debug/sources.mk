@@ -26,4 +26,5 @@ SUBDIRS := \
 src \
 src/model \
 src/ga \
+src/JSON \
 

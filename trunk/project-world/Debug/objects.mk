@@ -4,5 +4,4 @@
 
 USER_OBJS :=
 
-LIBS := -llog4cxx -lSDL -lOgreMain -lOIS
-
+LIBS := -llog4cxx -lOgreMain -lOIS
