@@ -12,6 +12,7 @@ RM := rm -rf
 -include src/subdir.mk
 -include src/model/subdir.mk
 -include src/ga/subdir.mk
+-include src/JSON/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -40,19 +41,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: project-world
+all: project-world_old
 
 # Tool invocations
-project-world: $(OBJS) $(USER_OBJS)
+project-world_old: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L/home/wojtas/devel/lib -o"project-world" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L/home/wojtas/devel/lib -o"project-world_old" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) project-world
+	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) project-world_old
 	-@echo ' '
 
 .PHONY: all clean dependents

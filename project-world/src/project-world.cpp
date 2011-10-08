@@ -28,17 +28,15 @@ int main(int argc, char **argv) {
 
 	int i = 1298309352;//time(0); //time(0);
 	srand(i); //1298309352
-	World *world = World::createWorld(4, 4);
-	Viewer viewer(world);
+	World *world = World::readWorldFromFile("world.json");
+	if (world == NULL)
+		return 0;
+	else {
+		Viewer viewer(world);
+		//world->step();
+		viewer.go();
 
-	world->initializeRandomly();
-	world->createCreatures();
-
-	viewer.go();
-
-
-
-	cerr << i << endl;
-
+		cerr << i << endl;
+	}
 	return 0;
 }

@@ -22,13 +22,14 @@ class CreatureFenotype: public GAEvalData {
 public:
 	std::vector<float> createdProductQuants;
 	std::vector<float> usedResourcesQuants;
-	std::vector<float> notSatisfiedNeedsQuants;
+	//std::vector<float> notSatisfiedNeedsQuants;
 
 	std::pair<unsigned, unsigned> previousFieldIdexes;
 	int fieldCoordX;
 	int fieldCoordY;
 	unsigned yearsOld;
 	float objectiveValue;
+	float performanceRatio;
 
 	CreatureFenotype();
 	virtual GAEvalData* clone() const;
@@ -44,8 +45,10 @@ public:
 	virtual ~Creature();
 	float produce(float resourceQuantity, unsigned index);
 	void feed(float productAmount, unsigned productIndex);
-	float getNeedOfProduct(unsigned productIndex);
+	float getNeedOfProductRatio(unsigned productIndex);
 	float getNeedOfResource(unsigned productIndex);
+	void prepare4Meal () { getFenotype()->performanceRatio = 0.0; }
+	float getPerformanceRatio () { return getFenotype()->performanceRatio; };
 	//float getNeed
 	Directions nextDirection(unsigned step);
 	static LoggerPtr getLogger() {
@@ -54,6 +57,7 @@ public:
 	;
 	static int noOfTalents();
 	static int noOfNeeds();
+
 	CreatureFenotype *getFenotype() {
 		return (CreatureFenotype *) evalData();
 	}

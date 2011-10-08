@@ -32,13 +32,13 @@ float Objective(GAGenome &g) {
 	// wersja 1
 	// Wartość wytworzonych produktów
 	float productsValueSum = 0.0;
-	for (int i = 0; i < NO_OF_PRODUCTS; i++) {
+	for (int i = 0; i < World::NO_OF_PRODUCTS; i++) {
 		productsValueSum += population->productPrice(i)
 				* fenotype->createdProductQuants.at(i);
 	}
 	// Wartość zużytych surowców
 	float resourcesValueSum = 0.0;
-	for (int i = 0; i < NO_OF_PRODUCTS; i++) {
+	for (int i = 0; i < World::NO_OF_PRODUCTS; i++) {
 		resourcesValueSum += population->resourcePrice(i)
 				* fenotype->usedResourcesQuants.at(i);
 	}
@@ -53,9 +53,9 @@ float Objective(GAGenome &g) {
 }
 
 CreatureFenotype::CreatureFenotype() {
-	createdProductQuants.assign(NO_OF_PRODUCTS, 0);
-	usedResourcesQuants.assign(NO_OF_RESOURCES, 0);
-	notSatisfiedNeedsQuants.assign(NO_OF_PRODUCTS, 0);
+	createdProductQuants.assign(World::NO_OF_PRODUCTS, 0);
+	usedResourcesQuants.assign(World::NO_OF_RESOURCES, 0);
+	//notSatisfiedNeedsQuants.assign(NO_OF_PRODUCTS, 0);
 	yearsOld = 0;
 	previousFieldIdexes = std::pair<unsigned, unsigned>(0, 0);
 	fieldCoordX = -1;
@@ -73,8 +73,8 @@ GAEvalData* CreatureFenotype::clone() const {
 void CreatureFenotype::copy(const GAEvalData&src) {
 	createdProductQuants = (((CreatureFenotype &) src).createdProductQuants);
 	usedResourcesQuants = (((CreatureFenotype &) src).usedResourcesQuants);
-	notSatisfiedNeedsQuants
-			= (((CreatureFenotype &) src).notSatisfiedNeedsQuants);
+//	notSatisfiedNeedsQuants
+//			= (((CreatureFenotype &) src).notSatisfiedNeedsQuants);
 	objectiveValue = (((CreatureFenotype &) src).objectiveValue);
 	yearsOld = (((CreatureFenotype &) src).yearsOld);
 	fieldCoordX = (((CreatureFenotype &) src).fieldCoordX);
@@ -97,9 +97,9 @@ GARealAlleleSetArray Creature::allelesDefinition() {
 		int i = 0;
 		for (; i < Creature::noOfTalents(); i++) {
 			// Indeks zasobu
-			alleles.add(0, NO_OF_RESOURCES - 1, 1);
+			alleles.add(0, World::NO_OF_RESOURCES - 1, 1);
 			// Indeks produktu
-			alleles.add(0, NO_OF_PRODUCTS - 1, 1);
+			alleles.add(0, World::NO_OF_PRODUCTS - 1, 1);
 			// Talenty (współczynnik przetwarzania) Rate
 			alleles.add(TALENTS_F_BOUNDS[0], TALENTS_F_BOUNDS[1],
 					TALENTS_F_BOUNDS[2]);
@@ -107,7 +107,7 @@ GARealAlleleSetArray Creature::allelesDefinition() {
 
 		for (i = 0; i < Creature::noOfNeeds(); i++) {
 			// Indeks produktu
-			alleles.add(0, NO_OF_PRODUCTS - 1, 1);
+			alleles.add(0, World::NO_OF_PRODUCTS - 1, 1);
 			// Potrzeba
 			alleles.add(NEEDS_BOUNDS[0], NEEDS_BOUNDS[1], NEEDS_BOUNDS[2]);
 		}
@@ -128,9 +128,9 @@ void Creature::RandomInitializer(GAGenome &g) {
 	unsigned j = 0;
 	for (; i < Creature::noOfTalents(); i++) {
 		// Indeks zasobu
-		h->gene(j++, randBetweenAndStepped(0, NO_OF_RESOURCES - 1, 1));
+		h->gene(j++, randBetweenAndStepped(0, World::NO_OF_RESOURCES - 1, 1));
 		// Indeks produktu
-		h->gene(j++, randBetweenAndStepped(0, NO_OF_PRODUCTS - 1, 1));
+		h->gene(j++, randBetweenAndStepped(0, World::NO_OF_PRODUCTS - 1, 1));
 		// Wspolczynnik przetwarzania
 		h->gene(j++, randBetweenAndStepped(TALENTS_F_BOUNDS[0],
 				TALENTS_F_BOUNDS[1], TALENTS_F_BOUNDS[2]));
@@ -138,7 +138,7 @@ void Creature::RandomInitializer(GAGenome &g) {
 	// Potrzeby
 	for (i = 0; i < Creature::noOfNeeds(); i++) {
 		// Indeks produktu
-		h->gene(j++, randBetweenAndStepped(0, NO_OF_PRODUCTS - 1, 1));
+		h->gene(j++, randBetweenAndStepped(0, World::NO_OF_PRODUCTS - 1, 1));
 		// Wspolczynnik przetwarzania
 		h->gene(j++, randBetweenAndStepped(NEEDS_BOUNDS[0], NEEDS_BOUNDS[1],
 				NEEDS_BOUNDS[2]));
@@ -177,7 +177,7 @@ float Creature::produce(float resourceQuantity, unsigned index) {
 				productIndex);
 		if (processingRate > 0.0) {
 			LOG4CXX_DEBUG(logger, "processingRate " << this << processingRate);
-			productQuant = resourceQuantity * processingRate;
+			productQuant = resourceQuantity * processingRate * getFenotype()->performanceRatio;
 			LOG4CXX_DEBUG(logger, "resourceQuantity: " << resourceQuantity << ", processingRate: " << processingRate );
 			LOG4CXX_DEBUG(logger, "creature " << this << " produced " << productQuant);
 			getFenotype()->createdProductQuants.at(productIndex) = productQuant;
@@ -188,11 +188,13 @@ float Creature::produce(float resourceQuantity, unsigned index) {
 
 void Creature::feed(float productAmount, unsigned productIndex) {
 	LOG4CXX_TRACE(logger, "feed");
-	float need = getNeedOfProduct(productIndex);
-	float notSatisfiedNeed = need - productAmount;
-	getFenotype()->notSatisfiedNeedsQuants.at(productIndex) = notSatisfiedNeed
-			<= 0 ? 0 : notSatisfiedNeed;
-	LOG4CXX_DEBUG(logger, "productIndex:" << productIndex << ", productAmount: " <<productAmount<< " needs: " << need);
+	float needRatio = getNeedOfProductRatio(productIndex);
+	if (productAmount > 1.0)
+		productAmount = 1.0;
+	//float notSatisfiedNeed = needRatio - productAmount;
+	// getFenotype()->notSatisfiedNeedsQuants.at(productIndex) = notSatisfiedNeed <= 0 ? 0 : notSatisfiedNeed;
+	getFenotype()->performanceRatio += productAmount * needRatio;
+	LOG4CXX_DEBUG(logger, "productIndex:" << productIndex << ", productAmount: " << productAmount << " needs: " << needRatio);
 }
 
 Creature::Directions Creature::nextDirection(unsigned step) {
@@ -215,21 +217,22 @@ Creature::Directions Creature::nextDirection(unsigned step) {
 	return direction;
 }
 
-float Creature::getNeedOfProduct(unsigned productIndex) {
+float Creature::getNeedOfProductRatio(unsigned productIndex) {
 	LOG4CXX_TRACE(logger, "getNeedAmount [" << productIndex << "]");
 	LOG4CXX_DEBUG(logger, "this " << this);
 	float needAmount = 0.0;
+	float summary = 0.0;
 	// Znajdź gen odpowiadający za potrzebę danego produktu
 	int genIndex = -1;
 	for (int i = 0; i < noOfNeeds(); i++) {
 		int index = noOfTalents() * 3 + 2 * i;
 		if (gene(index) == productIndex) {
 			genIndex = index;
-			break;
 		}
+		summary += gene(index + 1);
 	}
 	if (genIndex != -1) {
-		needAmount = gene(genIndex + 1);
+		needAmount = gene(genIndex + 1) / summary;
 	}
 	return needAmount;
 }
@@ -241,21 +244,22 @@ float Creature::getNeedOfResource(unsigned resourceIndex) {
 
 float Creature::getProcessingRateAndProductIndex(unsigned resourceIndex,
 		int &productIndex) {
-	LOG4CXX_DEBUG(logger, "getProcessingRate [" << resourceIndex << "]");
+	LOG4CXX_DEBUG(logger, "getProcessingRateAndProductIndex [" << resourceIndex << "]");
 	LOG4CXX_DEBUG(logger, "this " << this);
 	float rate = 0.0;
+	float summary = 0.0;
 	// Znajdź gen odpowiadający za potrzebę danego produktu
 	int genIndex = -1;
 	for (int i = 0; i < noOfTalents(); i++) {
 		int index = 3 * i;
 		if (gene(index) == resourceIndex) {
 			genIndex = index;
-			break;
 		}
+		summary += gene(index + 2);
 	}
 	if (genIndex != -1) {
 		productIndex = gene(genIndex + 1);
-		rate = gene(genIndex + 2);
+		rate = gene(genIndex + 2) / summary;
 	}
 	return rate;
 }

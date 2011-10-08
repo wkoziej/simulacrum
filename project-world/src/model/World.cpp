@@ -9,6 +9,7 @@
 #include <utility>
 #include <stdlib.h>
 #include <ga/GASimpleGA.h>
+#include "JSON/JSON.h"
 
 #include "World.h"
 
@@ -16,6 +17,9 @@ using namespace std;
 
 LoggerPtr World::logger(Logger::getLogger("world"));
 World *World::singleton = NULL;
+int World::NO_OF_RESOURCES = 3; // Liczba surowców -> 0 - natchnienie, 1 - materia
+int World::NO_OF_PRODUCTS = 3; // Liczba surowców -> 0 - natchnienie, 1 - materia
+
 
 class ReproductionVisitor: public PopulationOnFieldVisitor {
 private:
@@ -81,37 +85,40 @@ class WorkerVisitor: public CreaturesOnFieldVisitor {
 public:
 	void visit(Creature *creature, Field *field, Population *population,
 			unsigned x, unsigned y) {
-		for (int resourceIndex = 0; resourceIndex < NO_OF_RESOURCES; resourceIndex++) {
+
+		for (int resourceIndex = 0; resourceIndex < World::NO_OF_RESOURCES; resourceIndex++) {
 			float fieldResourceQuantity = field->getResourceQuantity(
 					resourceIndex);
 			// TODO - nie wyliczać za każdym razem potrzebnych surowców ale brać je z cache, który będzie aktualizowany przy zmianach - podobnie z produktami/potrzebami?
 			float populationResourceNeeds = population->resourceNeeds(
 					resourceIndex);
-			float resourceRatio = fieldResourceQuantity
-					/ populationResourceNeeds;
-			float availableResource = resourceRatio > 1.0 ? 1 : resourceRatio;
-			float creatureResourceNeeds = creature->getNeedOfResource(
-					resourceIndex);
-			float resourceToUse = availableResource * creatureResourceNeeds;
-			//float productQuantity =
-			creature->produce(resourceToUse, resourceIndex);
-			//field->increaseProductQuantity(resourceIndex, productQuantity);
-			field->decreaseResourceQuantity(resourceIndex, resourceToUse);
+			if (populationResourceNeeds > 0.0) {
+				float resourceRatio = fieldResourceQuantity
+						/ populationResourceNeeds;
+				float availableResource = resourceRatio > 1.0 ? 1.0
+						: resourceRatio;
+				creature->produce(availableResource, resourceIndex);
+				field->decreaseResourceQuantity(resourceIndex,
+						availableResource);
+			}
 		}
 	}
 };
 
 class SuplyVisitor: public CreaturesOnFieldVisitor {
 public:
-	void visit(Creature *creature, Field *field, GAPopulation *population,
+	void visit(Creature *creature, Field *field, Population *population,
 			unsigned x, unsigned y) {
-		for (unsigned productIndex = 0; productIndex < NO_OF_RESOURCES; productIndex++) {
-			float productAmount = field->getProductQuantity(productIndex);
-			float productEaten;
-			bool amountSuffice;
-			creature->feed(productAmount, productEaten, amountSuffice,
-					productIndex);
-			field->decreaseProductQuantity(productEaten, productIndex);
+		creature->prepare4Meal();
+		for (unsigned productIndex = 0; productIndex < World::NO_OF_RESOURCES; productIndex++) {
+			float productAmount = population->keptProductSum(productIndex);
+			float productNeeds = population->productNeeds(productIndex);
+			if (productNeeds > 0) {
+				float productRatio = productAmount / productNeeds;
+				float productAvailable = productRatio > 1.0 ? 1.0
+						: productRatio;
+				creature->feed(productAvailable, productIndex);
+			}
 		}
 	}
 };
@@ -128,12 +135,12 @@ public:
 		this->populations = populations;
 	}
 
-	void visit(Creature *creature, Field *field, GAPopulation *population,
+	void visit(Creature *creature, Field *field, Population *population,
 			unsigned x, unsigned y) {
 		unsigned sX = x, sY = y;
-		float velocity = creature->getVelocity();
+		float velocity = creature->getPerformanceRatio();
 		Field *destField = field;
-		GAPopulation *destPopulation = population;
+		Population *destPopulation = population;
 		int step = 0;
 		Creature::Directions nextDirection = Creature::NoDirection;
 		CreatureFenotype *f = (CreatureFenotype *) creature->evalData();
@@ -224,51 +231,132 @@ public:
 		anybody = false;
 	}
 
-	void visit(Creature *creature, Field *field, GAPopulation *, unsigned x,
+	void visit(Creature *creature, Field *field, Population *, unsigned x,
 			unsigned y) {
 		anybody = true;
 	}
 };
 
-World *World::createWorld(unsigned X, unsigned Y) {
-	if (X < 1 || Y < 1) {
-		LOG4CXX_FATAL(logger, "Incorrect dimensions");
-		exit(1);
-	}
-	World *w = World::singleton;
+void World::createFieldsAndPopulations(unsigned X, unsigned Y) {
+	World *w = World::getWorld();
 	for (unsigned x = 0; x < X; x++) {
 		FieldsVector fVector;
 		//CreaturesListsVector cVector;
 		PopulationsVector pVector;
 		for (unsigned y = 0; y < Y; y++) {
-			fVector.push_back(new Field());
+			Field *field = new Field();
+			fVector.push_back(field);
 			//CreaturesList cList;
-			pVector.push_back(new Population());
+			pVector.push_back(new Population(field));
 		}
-		fields.push_back(fVector);
-		populations.push_back(pVector);
+		w->fields.push_back(fVector);
+		w->populations.push_back(pVector);
 	}
 
 }
 
+World *World::createRandomWorld(unsigned X, unsigned Y) {
+	if (X < 1 || Y < 1) {
+		LOG4CXX_FATAL(logger, "Incorrect dimensions");
+		exit(1);
+	}
+	World *world = World::getWorld();
+	world->createFieldsAndPopulations(X, Y);
+	world->initializeRandomly();
+	world->createCreatures();
+	return world;
+}
+
+World *World::readWorldFromFile(const char *fileName) {
+
+	std::string fileContent;
+	World *world = NULL;
+	ifstream file;
+	file.open(fileName);
+	char output[100];
+	LOG4CXX_DEBUG(logger, "fileName: " << fileName);
+
+	if (file.is_open()) {
+
+		while (!file.eof()) {
+			file >> output;
+			fileContent.append(output);
+		}
+
+		LOG4CXX_DEBUG(logger, "fileContent:" << fileContent);
+		JSONValue *value = JSON::Parse(fileContent.c_str());
+		if (value != NULL) {
+			JSONObject root = value->AsObject();
+			root = root[L"world"]->AsObject();
+			int X = root.at(L"sizeX")->AsNumber();
+			int Y = root.at(L"sizeY")->AsNumber();
+			LOG4CXX_DEBUG(logger, "wordlSize (" << X << "," << Y << ")");
+
+			World::NO_OF_PRODUCTS = root.at(L"productsNo")->AsNumber();
+			LOG4CXX_DEBUG(logger, "NO_OF_PRODUCTS :" << World::NO_OF_PRODUCTS);
+
+			World::NO_OF_RESOURCES = root.at(L"resourcesNo")->AsNumber();
+			LOG4CXX_DEBUG(logger, "NO_OF_RESOURCES :" << World::NO_OF_RESOURCES);
+
+			for (int i = 0; i < X; i++) {
+				for (int j = 0; j < Y; j++) {
+					std::wstringstream populationName;
+					populationName << "population" << i << "x" << j;
+					LOG4CXX_DEBUG(logger, populationName.str());
+					if (root.count(populationName.str())) {
+						JSONObject population =
+								root.at(populationName.str())->AsObject();
+						int k = 0;
+						std::wstringstream creatureName;
+						creatureName << "creature" << k;
+						LOG4CXX_DEBUG(logger, creatureName.str());
+						while (root.count(creatureName.str())) {
+							JSONObject creature =
+									root.at(creatureName.str())->AsObject();
+							creatureName << "creature" << k;
+							LOG4CXX_DEBUG(logger, creatureName.str());
+							creature = root.at(creatureName.str())->AsObject();
+
+/*
+							JSONArray talents =
+									creature.at(L"talents")->AsArray();
+
+							LOG4CXX_DEBUG(logger, "Talents size: " << talents.size());
+*/
+						}
+					}
+
+				}
+			}
+
+			//	world = World::getWorld();
+			// world->createFieldsAndPopulations(X, Y);
+		}
+
+	}
+	return world;
+}
+
 void World::initializeRandomly() {
 	LOG4CXX_TRACE(logger, "initializeRandomly");
-	FieldsMatrix::iterator i = fields.begin();
-	for (; i != fields.end(); i++) {
+	FieldsMatrix::iterator i = getWorld()->fields.begin();
+	for (; i != getWorld()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();
 		for (; j != i->end(); j++) {
 			(*j)->initializeRandomly();
 		}
 	}
 }
+
 void World::createCreatures() {
 	LOG4CXX_TRACE(logger, "createCreatures");
 	// Wybierz losowe pole
 	for (int z = 0; z < NO_OF_POPULATIONS; z++) {
-		unsigned x = (random() / (float) RAND_MAX) * fields.size();
-		unsigned y = (random() / (float) RAND_MAX) * fields.begin()->size();
+		unsigned x = (random() / (float) RAND_MAX) * getWorld()->fields.size();
+		unsigned y = (random() / (float) RAND_MAX)
+				* getWorld()->fields.begin()->size();
 		LOG4CXX_DEBUG(logger, "Initial Field: x  " << x << ", y " << y);
-		GAPopulation *population = populations.at(x).at(y);
+		Population *population = getWorld()->populations.at(x).at(y);
 		for (int i = 0; i < INITIAL_NO_OF_CREATURES_IN_FIELD; i++) {
 			Creature * creature = new Creature();
 			population->add(creature);
@@ -312,16 +400,14 @@ void World::creaturesMoving() {
 	LOG4CXX_TRACE(logger, "creaturesMoving");
 	CreaturesOnFieldVisitor * visitor =
 			new MovingVisitor(&fields, &populations);
-
 	iterateCreaturesOnFields(visitor);
-
 	delete visitor;
 }
 
 void World::resourcesRenovation() {
 	LOG4CXX_TRACE(logger, "resourcesRenovation");
-	FieldsMatrix::iterator i = fields.begin();
-	for (; i != fields.end(); i++) {
+	FieldsMatrix::iterator i = getWorld()->fields.begin();
+	for (; i != getWorld()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();
 		for (; j != i->end(); j++) {
 			(*j)->renovateResources();
@@ -339,11 +425,12 @@ bool World::creaturesExists() {
 
 void World::step() {
 	resourcesRenovation();
-	creaturesWorking();
 	creaturesSupplying();
-	creaturesDying();
-	creaturesReproducting();
+	creaturesWorking();
 	creaturesMoving();
+	creaturesReproducting();
+	creaturesDying();
+
 }
 
 World::~World() {
@@ -352,20 +439,21 @@ World::~World() {
 
 void World::iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor) {
 	LOG4CXX_TRACE(logger, "iterateCreaturesOnFields");
-	PopulationOnFieldVisitor *creaturesVisitor = new CreaturesVisitor(visitor);
+	PopulationOnFieldVisitor *creaturesVisitor =
+			new CreaturesOfPopulationOnFieldVisitor(visitor);
 	iteratePopulationOnFields(creaturesVisitor);
 	delete creaturesVisitor;
 }
 
 void World::iteratePopulationOnFields(PopulationOnFieldVisitor *visitor) {
 	LOG4CXX_TRACE(logger, "iteratePopulationOnFields");
-	FieldsMatrix::iterator i = fields.begin();
-	for (; i != fields.end(); i++) {
+	FieldsMatrix::iterator i = getWorld()->fields.begin();
+	for (; i != getWorld()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();
 		for (; j != i->end(); j++) {
-			unsigned x = i - fields.begin();
+			unsigned x = i - getWorld()->fields.begin();
 			unsigned y = j - i->begin();
-			GAPopulation *population = populations.at(x).at(y);
+			Population *population = populations.at(x).at(y);
 			visitor->visit(population, *j, x, y);
 		}
 	}
