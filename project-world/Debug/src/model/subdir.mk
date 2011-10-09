@@ -6,18 +6,21 @@
 CPP_SRCS += \
 ../src/model/Creature.cpp \
 ../src/model/Field.cpp \
+../src/model/ModelHelpers.cpp \
 ../src/model/Population.cpp \
 ../src/model/World.cpp 
 
 OBJS += \
 ./src/model/Creature.o \
 ./src/model/Field.o \
+./src/model/ModelHelpers.o \
 ./src/model/Population.o \
 ./src/model/World.o 
 
 CPP_DEPS += \
 ./src/model/Creature.d \
 ./src/model/Field.d \
+./src/model/ModelHelpers.d \
 ./src/model/Population.d \
 ./src/model/World.d 
 

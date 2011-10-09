@@ -12,7 +12,10 @@
 #include <ga/GAGenome.h>
 #include <ga/GARealGenome.h>
 #include <log4cxx/logger.h>
+#include "JSON/JSON.h"
 #include "Config.h"
+#include "Population.h"
+
 
 using namespace std;
 using namespace log4cxx;
@@ -30,18 +33,20 @@ public:
 	unsigned yearsOld;
 	float objectiveValue;
 	float performanceRatio;
-
-	CreatureFenotype();
+	Population *population;
+	CreatureFenotype(const Population *population);
 	virtual GAEvalData* clone() const;
 	virtual void copy(const GAEvalData &src);
 };
+
 
 class Creature: public GARealGenome {
 public:
 	enum Directions {
 		NoDirection, DirLeft, DirRight, DirUp, DirDown
 	};
-	Creature();
+	Creature(const Population *population);
+	Creature(const Population *population, JSONObject &creature);
 	virtual ~Creature();
 	float produce(float resourceQuantity, unsigned index);
 	void feed(float productAmount, unsigned productIndex);
@@ -67,6 +72,7 @@ private:
 	float getProcessingRateAndProductIndex(unsigned resourceIndex, int &productIndex);
 	static float randBetweenAndStepped(float min, float max, float step);
 	static void RandomInitializer(GAGenome &g);
+	static void JSONInitializer(GAGenome &g);
 	static GARealAlleleSetArray allelesDefinition();
 	//void productMissed(float quant, unsigned productIndex);
 	//GAGenome *genome;
@@ -74,6 +80,7 @@ private:
 	// Logowanie
 	static LoggerPtr logger;
 	static GARealAlleleSetArray alleles;
+
 };
 
 #endif /* CREATURE_H_ */

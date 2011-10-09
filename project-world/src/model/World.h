@@ -13,16 +13,19 @@
 #include <log4cxx/logger.h>
 
 #include "Field.h"
-#include "Creature.h"
-#include "Population.h"
+#include "ModelHelpers.h"
+//#include "Creature.h"
+//#include "Population.h"
 using namespace std;
 using namespace log4cxx;
 
 typedef std::vector<Field *> FieldsVector;
 typedef std::vector<FieldsVector> FieldsMatrix;
-typedef std::list<Creature *> CreaturesList;
-typedef std::vector<Population *> PopulationsVector;
-typedef std::vector<PopulationsVector> PopulationsMatrix;
+//typedef std::list<Creature *> CreaturesList;
+
+
+//typedef std::vector<PopulationsList> PopulationsListVector;
+//typedef std::vector<PopulationsListVector> PopulationsMatrix;
 
 class World {
 public:
@@ -37,7 +40,7 @@ public:
 	;
 	virtual ~World();
 	void initializeRandomly();
-	void createCreatures();
+	void createRandomCreatures();
 	void creaturesWorking();
 	void creaturesSupplying();
 	void creaturesDying();
@@ -46,8 +49,9 @@ public:
 	void resourcesRenovation();
 	bool creaturesExists();
 	void step();
+	Population *findPopulationOnField (std::wstring name, int x,  int y);
 	FieldsMatrix fields;
-	PopulationsMatrix populations;
+	//PopulationsMatrix populations;
 	void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);
 	void iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor);
 	static int NO_OF_RESOURCES; //3 // Liczba surowców -> 0 - natchnienie, 1 - materia
