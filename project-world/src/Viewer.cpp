@@ -106,7 +106,7 @@ public:
 		//UserObjectBindings::
 	}
 
-	virtual void visit(Population *population, Field *field, unsigned x,
+	virtual void visit(CreaturesPopulation *population, Field *field, unsigned x,
 			unsigned y) {
 		// Płaszczyzny pola
 		//SceneNode *fieldNode;

@@ -14,8 +14,7 @@
 
 #include "Field.h"
 #include "ModelHelpers.h"
-//#include "Creature.h"
-//#include "Population.h"
+
 using namespace std;
 using namespace log4cxx;
 
@@ -46,10 +45,13 @@ public:
 	void creaturesDying();
 	void creaturesReproducting();
 	void creaturesMoving();
-	void resourcesRenovation();
+	void stepWorld();
 	bool creaturesExists();
 	void step();
-	Population *findPopulationOnField (std::wstring name, int x,  int y);
+	void countResourcesPrices() ;
+	void countProductsPrices() ;
+
+	CreaturesPopulation *findPopulationOnField (std::wstring name, int x,  int y);
 	FieldsMatrix fields;
 	//PopulationsMatrix populations;
 	void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);

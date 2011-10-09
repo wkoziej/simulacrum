@@ -15,7 +15,7 @@
 #include "JSON/JSON.h"
 #include "Config.h"
 #include "Population.h"
-
+#include "Field.h"
 
 using namespace std;
 using namespace log4cxx;
@@ -25,43 +25,61 @@ class CreatureFenotype: public GAEvalData {
 public:
 	std::vector<float> createdProductQuants;
 	std::vector<float> usedResourcesQuants;
-	//std::vector<float> notSatisfiedNeedsQuants;
-
 	std::pair<unsigned, unsigned> previousFieldIdexes;
 	int fieldCoordX;
 	int fieldCoordY;
 	unsigned yearsOld;
 	float objectiveValue;
-	float performanceRatio;
-	Population *population;
-	CreatureFenotype(const Population *population);
+	const CreaturesPopulation *population;
+	const Field *field;
+	CreatureFenotype(const CreaturesPopulation *population, const Field *field);
 	virtual GAEvalData* clone() const;
 	virtual void copy(const GAEvalData &src);
+	void clearPerformanceRatio() {
+		performanceRatio = 0;
+	}
+	void increasePerformanceRatio(float amount) {
+		performanceRatio += amount;
+	}
+	float getPerformanceRatio() {
+		return performanceRatio;
+	}
+private:
+	float performanceRatio;
 };
-
 
 class Creature: public GARealGenome {
 public:
 	enum Directions {
 		NoDirection, DirLeft, DirRight, DirUp, DirDown
 	};
-	Creature(const Population *population);
-	Creature(const Population *population, JSONObject &creature);
+	Creature(const CreaturesPopulation *population, const Field * field);
+	Creature(const CreaturesPopulation *population, const Field * field,
+			JSONObject &creature);
+	void step ();
+	void changePopulation(CreaturesPopulation *from, CreaturesPopulation *to);
 	virtual ~Creature();
-	float produce(float resourceQuantity, unsigned index);
-	void feed(float productAmount, unsigned productIndex);
+	float produce(float resourceQuantity, unsigned index, float &resourceUsed,
+			int &productIndex);
+	void feed(float productAmount, unsigned productIndex, float &eaten);
 	float getNeedOfProductRatio(unsigned productIndex);
 	float getNeedOfResource(unsigned productIndex);
-	void prepare4Meal () { getFenotype()->performanceRatio = 0.0; }
-	float getPerformanceRatio () { return getFenotype()->performanceRatio; };
-	//float getNeed
+	void prepare4Meal() {
+		getFenotype()->clearPerformanceRatio();
+	}
+
+	float getPerformanceRatio() {
+		float ratio = getFenotype()->getPerformanceRatio();
+		return ratio == 0 ? 0.001 : ratio;
+	}
+
 	Directions nextDirection(unsigned step);
 	static LoggerPtr getLogger() {
 		return logger;
 	}
-	;
-	static int noOfTalents();
-	static int noOfNeeds();
+
+	int noOfTalents();
+	int noOfNeeds();
 
 	CreatureFenotype *getFenotype() {
 		return (CreatureFenotype *) evalData();
@@ -69,11 +87,13 @@ public:
 private:
 
 	//float getProcessingVelocity(unsigned index);
-	float getProcessingRateAndProductIndex(unsigned resourceIndex, int &productIndex);
+	float getProcessingRateAndProductIndex(unsigned resourceIndex,
+			int &productIndex);
 	static float randBetweenAndStepped(float min, float max, float step);
 	static void RandomInitializer(GAGenome &g);
 	static void JSONInitializer(GAGenome &g);
-	static GARealAlleleSetArray allelesDefinition();
+	static GARealAlleleSetArray allelesDefinition(
+			const CreaturesPopulation *population);
 	//void productMissed(float quant, unsigned productIndex);
 	//GAGenome *genome;
 	// float missedProductsFactor;
