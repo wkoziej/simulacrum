@@ -16,14 +16,20 @@ float NEEDS_BOUNDS[3] = { 0.05, 1.0, 0.05 };
 float TALENTS_F_BOUNDS[3] = { 0.05, 1.0, 0.05 };
 float DIRECTION_BOUNDS[3] = { 0.0, 3.0, 1.0 };
 
+#define TALENT_BITS_COUNT 3
+#define NEED_BITS_COUNT 2
+#define CREATING_PRODUCT_BIT 1
+#define PROCESSING_RATIO_BIT 2
+#define NEED_RATIO_BIT 1
+
 float Objective(GAGenome &g) {
 	Creature *c = (Creature *) &g;
 	CreatureFenotype * fenotype = c->getFenotype();
 	World *world = World::getWorld();
 	Field *field = world->fields.at(fenotype->fieldCoordX).at(
 			fenotype->fieldCoordY);
-	Population *population = world->populations.at(fenotype->fieldCoordX).at(
-			fenotype->fieldCoordY);
+	/*Population *population = world->populations.at(fenotype->fieldCoordX).at(
+	 fenotype->fieldCoordY);*/
 	// Możliwe funkcje celu
 	// 1. Stosunek wartości wytworzonych produktów do wartości zużytych surowców jest największy
 	// 2. Wartość wytworzonych produktów jest największa
@@ -33,13 +39,13 @@ float Objective(GAGenome &g) {
 	// Wartość wytworzonych produktów
 	float productsValueSum = 0.0;
 	for (int i = 0; i < World::NO_OF_PRODUCTS; i++) {
-		productsValueSum += population->productPrice(i)
+		productsValueSum += field->productPrice(i)
 				* fenotype->createdProductQuants.at(i);
 	}
 	// Wartość zużytych surowców
 	float resourcesValueSum = 0.0;
 	for (int i = 0; i < World::NO_OF_PRODUCTS; i++) {
-		resourcesValueSum += population->resourcePrice(i)
+		resourcesValueSum += field->resourcePrice(i)
 				* fenotype->usedResourcesQuants.at(i);
 	}
 	// Stosunek wartości produktu do wartości zużycia
@@ -52,7 +58,7 @@ float Objective(GAGenome &g) {
 	return value;
 }
 
-CreatureFenotype::CreatureFenotype() {
+CreatureFenotype::CreatureFenotype(const Population * population) {
 	createdProductQuants.assign(World::NO_OF_PRODUCTS, 0);
 	usedResourcesQuants.assign(World::NO_OF_RESOURCES, 0);
 	//notSatisfiedNeedsQuants.assign(NO_OF_PRODUCTS, 0);
@@ -61,6 +67,7 @@ CreatureFenotype::CreatureFenotype() {
 	fieldCoordX = -1;
 	fieldCoordY = -1;
 	objectiveValue = 0;
+	this->population = population;
 }
 ;
 
@@ -73,27 +80,27 @@ GAEvalData* CreatureFenotype::clone() const {
 void CreatureFenotype::copy(const GAEvalData&src) {
 	createdProductQuants = (((CreatureFenotype &) src).createdProductQuants);
 	usedResourcesQuants = (((CreatureFenotype &) src).usedResourcesQuants);
-//	notSatisfiedNeedsQuants
-//			= (((CreatureFenotype &) src).notSatisfiedNeedsQuants);
+	//	notSatisfiedNeedsQuants
+	//			= (((CreatureFenotype &) src).notSatisfiedNeedsQuants);
 	objectiveValue = (((CreatureFenotype &) src).objectiveValue);
 	yearsOld = (((CreatureFenotype &) src).yearsOld);
 	fieldCoordX = (((CreatureFenotype &) src).fieldCoordX);
 	fieldCoordY = (((CreatureFenotype &) src).fieldCoordY);
+	population = (((CreatureFenotype &) src).population);
 }
 
 GARealAlleleSetArray Creature::alleles;
 
 int Creature::noOfTalents() {
-	return 2;
+	return getFenotype()->population->getCreaturesTalentsCount();
 }
 
 int Creature::noOfNeeds() {
-	return 3;
+	return getFenotype()->population->getCreaturesNeedsCount();
 }
 
 GARealAlleleSetArray Creature::allelesDefinition() {
 	if (alleles.size() == 0) {
-
 		int i = 0;
 		for (; i < Creature::noOfTalents(); i++) {
 			// Indeks zasobu
@@ -104,7 +111,6 @@ GARealAlleleSetArray Creature::allelesDefinition() {
 			alleles.add(TALENTS_F_BOUNDS[0], TALENTS_F_BOUNDS[1],
 					TALENTS_F_BOUNDS[2]);
 		}
-
 		for (i = 0; i < Creature::noOfNeeds(); i++) {
 			// Indeks produktu
 			alleles.add(0, World::NO_OF_PRODUCTS - 1, 1);
@@ -126,7 +132,7 @@ void Creature::RandomInitializer(GAGenome &g) {
 	GARealGenome *h = (GARealGenome *) &g;
 	int i = 0;
 	unsigned j = 0;
-	for (; i < Creature::noOfTalents(); i++) {
+	for (; i < species->noOfTalents(); i++) {
 		// Indeks zasobu
 		h->gene(j++, randBetweenAndStepped(0, World::NO_OF_RESOURCES - 1, 1));
 		// Indeks produktu
@@ -152,12 +158,59 @@ void Creature::RandomInitializer(GAGenome &g) {
 	}
 }
 
-Creature::Creature() :
+Creature::Creature(const Population *population) :
 	GARealGenome(Creature::allelesDefinition(), Objective) {
 	LOG4CXX_TRACE(logger, "Creature::Creature");
+	evalData(CreatureFenotype(population));
 	initializer(RandomInitializer);
 	initialize();
-	this->evd = new CreatureFenotype();
+	LOG4CXX_DEBUG(logger, "genome : " << *this);
+}
+
+void Creature::JSONInitializer(GAGenome &g) {
+	GARealGenome *h = (GARealGenome *) &g;
+	JSONObject *creature = (JSONObject *) h->userData();
+	JSONArray talents = creature->at(L"talents")->AsArray();
+	int talentsSize = talents.size();
+	LOG4CXX_DEBUG(logger, "Talents size: " << talentsSize << ", NO_OF_TALENTS: " << Creature::noOfTalents());
+	int i;
+	int geneShift = 0;
+	for (i = 0; i < talentsSize; i++) {
+		JSONArray talent = talents.at(i)->AsArray();
+		// surowiec
+		h->gene(geneShift++, talent.at(0)->AsNumber());
+		// Indeks produktu
+		h->gene(geneShift++, talent.at(1)->AsNumber());
+		// Wspolczynnik przetwarzania
+		h->gene(geneShift++, talent.at(2)->AsNumber());
+	}
+	LOG4CXX_DEBUG(logger, "Needs size: " << talentsSize << ", NO_OF_NEEDS: " << Creature::noOfNeeds());
+	JSONArray needs = creature->at(L"needs")->AsArray();
+	int needsSize = needs.size();
+	for (i = 0; i < needsSize; i++) {
+		JSONArray need = needs.at(i)->AsArray();
+		// Produkt
+		h->gene(geneShift++, need.at(0)->AsNumber());
+		// Potrzeba
+		h->gene(geneShift++, need.at(1)->AsNumber());
+	}
+	JSONArray directions = creature->at(L"directions")->AsArray();
+	int directionsSize = directions.size();
+	for (i = 0; i < directionsSize; i++) {
+		// Kierunek
+		h->gene(geneShift++, directions.at(i)->AsNumber());
+	}
+}
+
+Creature::Creature(const Population *population, JSONObject &creature) :
+	GARealGenome(Creature::allelesDefinition(), Objective) {
+	// Wypełnij tymczasową strukturę z definicją osobnika
+	userData(&creature);
+	evalData(CreatureFenotype(population));
+	initializer(JSONInitializer);
+	initialize();
+	// Można już wyczyścić dane
+	userData(NULL);
 	LOG4CXX_DEBUG(logger, "genome : " << *this);
 }
 
@@ -177,7 +230,8 @@ float Creature::produce(float resourceQuantity, unsigned index) {
 				productIndex);
 		if (processingRate > 0.0) {
 			LOG4CXX_DEBUG(logger, "processingRate " << this << processingRate);
-			productQuant = resourceQuantity * processingRate * getFenotype()->performanceRatio;
+			productQuant = resourceQuantity * processingRate
+					* getFenotype()->performanceRatio;
 			LOG4CXX_DEBUG(logger, "resourceQuantity: " << resourceQuantity << ", processingRate: " << processingRate );
 			LOG4CXX_DEBUG(logger, "creature " << this << " produced " << productQuant);
 			getFenotype()->createdProductQuants.at(productIndex) = productQuant;
@@ -201,7 +255,7 @@ Creature::Directions Creature::nextDirection(unsigned step) {
 	Creature::Directions direction = Creature::NoDirection;
 	if (step < MAX_POINT_ON_ROAD) {
 		float direction =
-				this->gene(3 * noOfTalents() + 2 * noOfNeeds() + step);
+				this->gene(TALENT_BITS_COUNT * noOfTalents() + NEED_BITS_COUNT * noOfNeeds() + step);
 		LOG4CXX_DEBUG(logger, " nextDirection (" << step << ") = " << direction);
 		if (direction == 0.0) {
 			direction = Creature::DirLeft;
@@ -218,22 +272,21 @@ Creature::Directions Creature::nextDirection(unsigned step) {
 }
 
 float Creature::getNeedOfProductRatio(unsigned productIndex) {
-	LOG4CXX_TRACE(logger, "getNeedAmount [" << productIndex << "]");
-	LOG4CXX_DEBUG(logger, "this " << this);
 	float needAmount = 0.0;
 	float summary = 0.0;
 	// Znajdź gen odpowiadający za potrzebę danego produktu
 	int genIndex = -1;
 	for (int i = 0; i < noOfNeeds(); i++) {
-		int index = noOfTalents() * 3 + 2 * i;
+		int index = noOfTalents() * TALENT_BITS_COUNT + NEED_BITS_COUNT * i;
 		if (gene(index) == productIndex) {
 			genIndex = index;
 		}
-		summary += gene(index + 1);
+		summary += gene(index + NEED_RATIO_BIT);
 	}
 	if (genIndex != -1) {
-		needAmount = gene(genIndex + 1) / summary;
+		needAmount = gene(genIndex + NEED_RATIO_BIT) / summary;
 	}
+	LOG4CXX_DEBUG(logger, "getNeedOfProductRatio: productIndex  = " << productIndex << ", needAmount = " << needAmount);
 	return needAmount;
 }
 
@@ -244,23 +297,23 @@ float Creature::getNeedOfResource(unsigned resourceIndex) {
 
 float Creature::getProcessingRateAndProductIndex(unsigned resourceIndex,
 		int &productIndex) {
-	LOG4CXX_DEBUG(logger, "getProcessingRateAndProductIndex [" << resourceIndex << "]");
-	LOG4CXX_DEBUG(logger, "this " << this);
 	float rate = 0.0;
 	float summary = 0.0;
+	productIndex = -1;
 	// Znajdź gen odpowiadający za potrzebę danego produktu
 	int genIndex = -1;
 	for (int i = 0; i < noOfTalents(); i++) {
-		int index = 3 * i;
+		int index = TALENT_BITS_COUNT * i;
 		if (gene(index) == resourceIndex) {
 			genIndex = index;
 		}
-		summary += gene(index + 2);
+		summary += gene(index + PROCESSING_RATIO_BIT);
 	}
 	if (genIndex != -1) {
-		productIndex = gene(genIndex + 1);
-		rate = gene(genIndex + 2) / summary;
+		productIndex = gene(genIndex + CREATING_PRODUCT_BIT);
+		rate = gene(genIndex + PROCESSING_RATIO_BIT) / summary;
 	}
+	LOG4CXX_DEBUG(logger, "getProcessingRateAndProductIndex: resourceIndex = " << resourceIndex << ", productIndex = " << productIndex << ", procesingRate " << rate);
 	return rate;
 }
 

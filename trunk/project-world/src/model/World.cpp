@@ -110,7 +110,7 @@ public:
 	void visit(Creature *creature, Field *field, Population *population,
 			unsigned x, unsigned y) {
 		creature->prepare4Meal();
-		for (unsigned productIndex = 0; productIndex < World::NO_OF_RESOURCES; productIndex++) {
+		for (int productIndex = 0; productIndex < World::NO_OF_RESOURCES; productIndex++) {
 			float productAmount = population->keptProductSum(productIndex);
 			float productNeeds = population->productNeeds(productIndex);
 			if (productNeeds > 0) {
@@ -130,9 +130,8 @@ private:
 	static LoggerPtr logger;
 	list<int> moves;
 public:
-	MovingVisitor(FieldsMatrix *fields, PopulationsMatrix *populations) {
+	MovingVisitor(FieldsMatrix *fields) {
 		this->fields = fields;
-		this->populations = populations;
 	}
 
 	void visit(Creature *creature, Field *field, Population *population,
@@ -162,9 +161,12 @@ public:
 
 			if (destField != field) {
 				// Ruszyliśmy się
-				destPopulation = populations->at(x).at(y);
+				destPopulation = World::getWorld()->findPopulationOnField(
+						population->getName(), x, y);
+				assert (destPopulation != NULL);
 				population->remove(creature);
 				destPopulation->add(creature);
+
 				f->yearsOld = 0;
 				f->previousFieldIdexes = pair<unsigned, unsigned> (sX, sY);
 				LOG4CXX_DEBUG(logger, "move from (" << sX << "," << sY << ") to (" << x << "," << y <<")");
@@ -179,7 +181,6 @@ public:
 	}
 private:
 	FieldsMatrix *fields;
-	PopulationsMatrix *populations;
 
 	void calculateNextCoordinates(unsigned &x, unsigned &y,
 			Creature::Directions direction) {
@@ -241,16 +242,15 @@ void World::createFieldsAndPopulations(unsigned X, unsigned Y) {
 	World *w = World::getWorld();
 	for (unsigned x = 0; x < X; x++) {
 		FieldsVector fVector;
-		//CreaturesListsVector cVector;
-		PopulationsVector pVector;
 		for (unsigned y = 0; y < Y; y++) {
 			Field *field = new Field();
+			wstringstream name;
+			name << "random" << x << "x" << y;
+			NamedPopulation randomPopulationPair(name.str(), new Population());
+			field->populations.insert(randomPopulationPair);
 			fVector.push_back(field);
-			//CreaturesList cList;
-			pVector.push_back(new Population(field));
 		}
 		w->fields.push_back(fVector);
-		w->populations.push_back(pVector);
 	}
 
 }
@@ -263,7 +263,7 @@ World *World::createRandomWorld(unsigned X, unsigned Y) {
 	World *world = World::getWorld();
 	world->createFieldsAndPopulations(X, Y);
 	world->initializeRandomly();
-	world->createCreatures();
+	world->createRandomCreatures();
 	return world;
 }
 
@@ -285,52 +285,63 @@ World *World::readWorldFromFile(const char *fileName) {
 
 		LOG4CXX_DEBUG(logger, "fileContent:" << fileContent);
 		JSONValue *value = JSON::Parse(fileContent.c_str());
+		assert (value != NULL);
 		if (value != NULL) {
 			JSONObject root = value->AsObject();
 			root = root[L"world"]->AsObject();
 			int X = root.at(L"sizeX")->AsNumber();
 			int Y = root.at(L"sizeY")->AsNumber();
 			LOG4CXX_DEBUG(logger, "wordlSize (" << X << "," << Y << ")");
-
 			World::NO_OF_PRODUCTS = root.at(L"productsNo")->AsNumber();
 			LOG4CXX_DEBUG(logger, "NO_OF_PRODUCTS :" << World::NO_OF_PRODUCTS);
-
 			World::NO_OF_RESOURCES = root.at(L"resourcesNo")->AsNumber();
 			LOG4CXX_DEBUG(logger, "NO_OF_RESOURCES :" << World::NO_OF_RESOURCES);
-
+			world = World::getWorld();
 			for (int i = 0; i < X; i++) {
+				FieldsVector fVector;
 				for (int j = 0; j < Y; j++) {
-					std::wstringstream populationName;
-					populationName << "population" << i << "x" << j;
-					LOG4CXX_DEBUG(logger, populationName.str());
-					if (root.count(populationName.str())) {
-						JSONObject population =
-								root.at(populationName.str())->AsObject();
-						int k = 0;
-						std::wstringstream creatureName;
-						creatureName << "creature" << k;
-						LOG4CXX_DEBUG(logger, creatureName.str());
-						while (root.count(creatureName.str())) {
-							JSONObject creature =
-									root.at(creatureName.str())->AsObject();
-							creatureName << "creature" << k;
-							LOG4CXX_DEBUG(logger, creatureName.str());
-							creature = root.at(creatureName.str())->AsObject();
-
-/*
-							JSONArray talents =
-									creature.at(L"talents")->AsArray();
-
-							LOG4CXX_DEBUG(logger, "Talents size: " << talents.size());
-*/
+					std::wstringstream fieldName;
+					fieldName << "field" << i << "x" << j;
+					LOG4CXX_DEBUG(logger, L" field : " << fieldName);
+					Field *field = NULL;
+					if (root.count(fieldName.str()) > 0) {
+						JSONObject JSONfield =
+								root.at(fieldName.str())->AsObject();
+						field = new Field(JSONfield);
+						if (JSONfield.count(L"populations") > 0) {
+							JSONArray populations =
+									JSONfield.at(L"populations")->AsArray();
+							JSONArray::iterator population =
+									populations.begin();
+							LOG4CXX_DEBUG(logger, "loading populations : " << populations.size());
+							for (; population != populations.end(); population++) {
+								Population *populationObject = new Population(
+										(*population)->AsObject());
+								NamedPopulation namedPopulation(
+										populationObject->getName(),
+										populationObject);
+								field->populations.insert(namedPopulation);
+							}
 						}
 					}
+					assert(field != NULL);
+					fVector.push_back(field);
 
+					for (int r = 0; r < World::NO_OF_RESOURCES; r++) {
+						//float productPrice(int i);
+						float price = field->resourcePrice(r);
+						LOG4CXX_DEBUG(logger, "resource [" << r << "]: price = " << price);
+					}
+					for (int p = 0; p < World::NO_OF_PRODUCTS; p++) {
+						//float productPrice(int i);
+						float price = field->productPrice(p);
+						LOG4CXX_DEBUG(logger, "product [" << p << "]: price = " << price);
+					}
 				}
+				world->fields.push_back(fVector);
 			}
 
-			//	world = World::getWorld();
-			// world->createFieldsAndPopulations(X, Y);
+			LOG4CXX_DEBUG(logger, "");
 		}
 
 	}
@@ -348,7 +359,7 @@ void World::initializeRandomly() {
 	}
 }
 
-void World::createCreatures() {
+void World::createRandomCreatures() {
 	LOG4CXX_TRACE(logger, "createCreatures");
 	// Wybierz losowe pole
 	for (int z = 0; z < NO_OF_POPULATIONS; z++) {
@@ -356,7 +367,8 @@ void World::createCreatures() {
 		unsigned y = (random() / (float) RAND_MAX)
 				* getWorld()->fields.begin()->size();
 		LOG4CXX_DEBUG(logger, "Initial Field: x  " << x << ", y " << y);
-		Population *population = getWorld()->populations.at(x).at(y);
+		Population *population =
+				getWorld()->fields.at(x).at(y)->populations.begin()->second;
 		for (int i = 0; i < INITIAL_NO_OF_CREATURES_IN_FIELD; i++) {
 			Creature * creature = new Creature();
 			population->add(creature);
@@ -398,8 +410,7 @@ void World::creaturesReproducting() {
 
 void World::creaturesMoving() {
 	LOG4CXX_TRACE(logger, "creaturesMoving");
-	CreaturesOnFieldVisitor * visitor =
-			new MovingVisitor(&fields, &populations);
+	CreaturesOnFieldVisitor * visitor = new MovingVisitor(&fields);
 	iterateCreaturesOnFields(visitor);
 	delete visitor;
 }
@@ -453,9 +464,21 @@ void World::iteratePopulationOnFields(PopulationOnFieldVisitor *visitor) {
 		for (; j != i->end(); j++) {
 			unsigned x = i - getWorld()->fields.begin();
 			unsigned y = j - i->begin();
-			Population *population = populations.at(x).at(y);
-			visitor->visit(population, *j, x, y);
+			PopulationsMap::iterator p = (*j)->populations.begin();
+			for (; p != (*j)->populations.end(); p++) {
+				Population *population = p->second;
+				visitor->visit(population, *j, x, y);
+			}
 		}
 	}
 }
 
+Population *World::findPopulationOnField(std::wstring name, int x, int y) {
+	Population *population = NULL;
+	Field *field = fields.at(x).at(y);
+	PopulationsMap::iterator i = field->populations.find(name);
+	if (i != field->populations.end()) {
+		population = i->second;
+	}
+	return population;
+}

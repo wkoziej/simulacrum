@@ -23,7 +23,8 @@ int main(int argc, char **argv) {
 		// BasicConfigurator replaced with PropertyConfigurator.
 		PropertyConfigurator::configure(argv[1]);
 	} else {
-		BasicConfigurator::configure();
+		//BasicConfigurator::configure();
+		PropertyConfigurator::configure("log.properties");
 	}
 
 	int i = 1298309352;//time(0); //time(0);
@@ -32,9 +33,9 @@ int main(int argc, char **argv) {
 	if (world == NULL)
 		return 0;
 	else {
-		Viewer viewer(world);
-		//world->step();
-		viewer.go();
+		//Viewer viewer(world);
+		world->step();
+		//viewer.go();
 
 		cerr << i << endl;
 	}
