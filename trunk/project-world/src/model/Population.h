@@ -7,28 +7,26 @@
 
 #ifndef POPULATION_H_
 #define POPULATION_H_
-#include "JSON/JSON.h"
+#include "JSON/JSONValue.h"
 #include <ga/GAPopulation.h>
-//#include "Field.h"
+#include <log4cxx/logger.h>
+class Field;
+using namespace log4cxx;
 
-
-class Population: public GAPopulation {
+class CreaturesPopulation: public GAPopulation {
 public:
-	Population();
-	Population(const JSONObject &population);
-	virtual ~Population();
+	CreaturesPopulation();
+	CreaturesPopulation(const Field *field, const JSONObject &population);
+	virtual ~CreaturesPopulation();
 	float productNeeds(int i);
 	float resourceNeeds(int i);
 	float objectiveAvarage ();
 	std::wstring getName () { return name; };
-	//	float neededProductSum (int i);
-	float keptProductSum(int i) {
-		return productsStock.at(i);
-	}
-	;
+	float keptProductSum(int i);
+	void updateProductStock (int i, float delta);
 	void loadCreatures (const JSONObject &population);
-	int getCreaturesTalentsCount () { return creaturesTalentsCount; };
-	int getCreaturesNeedsCount () { return creaturesNeedsCount; };
+	int getCreaturesTalentsCount () const { return creaturesTalentsCount; }
+	int getCreaturesNeedsCount () const { return creaturesNeedsCount; }
 private:
 	//Field *field;
 	std::vector<float> productsStock;

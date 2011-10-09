@@ -16,7 +16,10 @@ Field::Field() {
 	resourceQuantities.assign(World::NO_OF_RESOURCES, 0);
 	resourceRenewal.assign(World::NO_OF_RESOURCES, 0);
 	maxResourcesQuantities.assign(World::NO_OF_RESOURCES, 0);
-	maxProductsQuantities.assign(World::NO_OF_RESOURCES, 0);
+	maxProductsQuantities.assign(World::NO_OF_PRODUCTS, 0);
+	resourcePriceCache.assign(World::NO_OF_RESOURCES, POSITIVE_INFINITY);
+	productPriceCache.assign(World::NO_OF_PRODUCTS, POSITIVE_INFINITY);
+
 }
 
 Field::Field(const JSONObject &field) {
@@ -28,6 +31,8 @@ Field::Field(const JSONObject &field) {
 		resourceQuantities.push_back(properies.at(0)->AsNumber());
 		resourceRenewal.push_back(properies.at(1)->AsNumber());
 	}
+	resourcePriceCache.assign(World::NO_OF_RESOURCES, POSITIVE_INFINITY);
+	productPriceCache.assign(World::NO_OF_PRODUCTS, POSITIVE_INFINITY);
 	FloatVector::iterator q;
 	FloatVector::iterator r;
 	r = resourceRenewal.begin();
@@ -68,39 +73,70 @@ void Field::renovateResources() {
 
 }
 
-float Field::getResourceQuantity(unsigned index) {
+float Field::getResourceQuantity(unsigned index) const {
 	return resourceQuantities.at(index);
 }
 
-float Field::productPrice(int i) {
-	// Wartość wytworzonych produktów
-	float price = POSITIVE_INFINITY;
-	// Jaka ilosc produktu jest dostepna w zapasach populacji
-	PopulationsMap::iterator population = populations.begin();
+float Field::productStock(int i) const {
 	float kept = 0.0;
-	float needs = 0.0;
+	PopulationsMap::const_iterator population = populations.begin();
 	for (; population != populations.end(); population++) {
 		kept += population->second->keptProductSum(i);
-		needs += population->second->productNeeds(i);
 	}
-	LOG4CXX_DEBUG(logger, "product [" << i << "]: kept = " << kept << ", needs = " << needs);
-	if (kept > 0)
-		price = needs / kept;
-	return price;
+	return kept;
 }
 
-float Field::resourcePrice(int i) {
-	float price = POSITIVE_INFINITY;
-	// Jaka ilosc produktu jest dostepna w zapasach populacji
-	PopulationsMap::iterator population = populations.begin();
-	float availabble = getResourceQuantity(i);
+float Field::productNeeds(int i) const {
+	float needs = 0.0;
+	PopulationsMap::const_iterator population = populations.begin();
+	for (; population != populations.end(); population++) {
+		needs += population->second->productNeeds(i);
+	}
+	return needs;
+}
+
+float Field::resourceNeeds(int i) const {
+	PopulationsMap::const_iterator population = populations.begin();
 	float needs = 0.0;
 	for (; population != populations.end(); population++) {
 		needs += population->second->resourceNeeds(i);
 	}
+	return needs;
+}
+
+float Field::productPrice(int i) const {
+	// Wartość wytworzonych produktów
+	float price = productPriceCache.at(i);
+	return price;
+}
+
+float Field::resourcePrice(int i) const {
+	float price = resourcePriceCache.at(i);
+	return price;
+}
+
+float Field::updateProductPrice(int i) {
+	float price = productPriceCache.at(i);
+	// Jaka ilosc produktu jest dostepna w zapasach populacji
+	float kept = productStock(i);
+	float needs = productNeeds(i);
+	if (kept > 0)
+		price = needs / kept;
+	LOG4CXX_DEBUG(logger, "product [" << i << "]: kept = " << kept << ", needs = " << needs << ", price = " << price);
+	productPriceCache.at(i) = price;
+	return price;
+}
+
+float Field::updateResourcePrice(int i) {
+	float price = resourcePriceCache.at(i);
+	// Jaka ilosc produktu jest dostepna w zapasach populacji
+	PopulationsMap::const_iterator population = populations.begin();
+	float availabble = getResourceQuantity(i);
+	float needs = resourceNeeds(i);
 	LOG4CXX_DEBUG(logger, "resource [" << i << "]: available = " << availabble << ", needs = " << needs);
 	if (availabble > 0)
 		price = needs / availabble;
+	resourcePriceCache.at(i) = price;
 	return price;
 }
 
@@ -116,6 +152,7 @@ float Field::resourcePrice(int i) {
 void Field::decreaseResourceQuantity(unsigned resourceIndex, float resourceUsed) {
 	LOG4CXX_DEBUG(logger, "resourceQuantities [" << resourceIndex << "] decreased from " <<resourceQuantities.at(resourceIndex) << " to " << resourceQuantities.at(resourceIndex) - resourceUsed);
 	resourceQuantities.at(resourceIndex) -= resourceUsed;
+	assert(resourceQuantities.at(resourceIndex) >= 0);
 }
 /*
  float Field::getProductQuantity(unsigned productIndex) {

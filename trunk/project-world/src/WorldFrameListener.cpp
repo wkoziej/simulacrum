@@ -30,7 +30,7 @@ void WorldFrameListener::stepAndVisualize() {
 	//viewer->world->step();
 	switch (stepNo) {
 	case 0:
-		viewer->world->resourcesRenovation();
+		viewer->world->stepWorld();
 		LOG4CXX_INFO(logger, "Renovating")
 		;
 		break;

@@ -9,13 +9,15 @@
 #define MODELHELPERS_H_
 
 #include "Creature.h"
+#include "Field.h"
+#include "Population.h"
 
 class CreaturesOnFieldVisitor {
 public:
 	CreaturesOnFieldVisitor() {
 	}
 	;
-	virtual void visit(Creature *creature, Field *field, Population *,
+	virtual void visit(Creature *creature, Field *field, CreaturesPopulation *,
 			unsigned x, unsigned y) = 0;
 	virtual ~CreaturesOnFieldVisitor() {
 	}
@@ -27,7 +29,7 @@ public:
 	PopulationOnFieldVisitor() {
 	}
 	;
-	virtual void visit(Population *population, Field *field, unsigned x,
+	virtual void visit(CreaturesPopulation *population, Field *field, unsigned x,
 			unsigned y) = 0;
 	virtual ~PopulationOnFieldVisitor() {
 	}
@@ -43,7 +45,7 @@ private:
 	static LoggerPtr logger;
 public:
 	CreaturesOfPopulationOnFieldVisitor(CreaturesOnFieldVisitor *v);
-	virtual void visit(Population *population, Field *field, unsigned x,
+	virtual void visit(CreaturesPopulation *population, Field *field, unsigned x,
 			unsigned y);
 };
 
