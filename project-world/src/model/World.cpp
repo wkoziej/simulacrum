@@ -148,7 +148,7 @@ public:
 };
 LoggerPtr SteppingVisitor::logger(Logger::getLogger("SteppingVisitor"));
 
-class ResourceUseVisitor: public CreaturesOnFieldVisitor {
+class UpdateFieldResourceUseVisitor: public CreaturesOnFieldVisitor {
 private:
 	// Logowanie
 	static LoggerPtr logger;
@@ -164,9 +164,9 @@ public:
 		}
 	}
 };
-LoggerPtr ResourceUseVisitor::logger(Logger::getLogger("ResourceUseVisitor"));
+LoggerPtr UpdateFieldResourceUseVisitor::logger(Logger::getLogger("UpdateFieldResourceUseVisitor"));
 
-class ProductionVisitor: public CreaturesOnFieldVisitor {
+class UpdatePopulationStackVisitor: public CreaturesOnFieldVisitor {
 private:
 	// Logowanie
 	static LoggerPtr logger;
@@ -181,7 +181,7 @@ public:
 
 	}
 };
-LoggerPtr ProductionVisitor::logger(Logger::getLogger("ProductionVisitor"));
+LoggerPtr UpdatePopulationStackVisitor::logger(Logger::getLogger("UpdatePopulationStackVisitor"));
 
 class SuplyVisitor: public CreaturesOnFieldVisitor {
 public:
@@ -481,14 +481,14 @@ void World::creaturesReproducting() {
 void World::creaturesMoving() {
 	LOG4CXX_TRACE(logger, "creaturesMoving");
 	// Aktualizuj zuzyte surowce
-	CreaturesOnFieldVisitor * visitor = new ResourceUseVisitor();
+	CreaturesOnFieldVisitor * visitor = new UpdateFieldResourceUseVisitor();
 	iterateCreaturesOnFields(visitor);
 	delete visitor;
 	visitor = new MovingVisitor(&fields);
 	iterateCreaturesOnFields(visitor);
 	delete visitor;
 	// Aktualizuj w nowej populacji utworzone produkty
-	visitor = new ProductionVisitor();
+	visitor = new UpdatePopulationStackVisitor();
 	iterateCreaturesOnFields(visitor);
 	delete visitor;
 
