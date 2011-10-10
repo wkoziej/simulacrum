@@ -32,6 +32,7 @@
 <option id="gnu.cpp.compiler.option.include.paths.1254736751" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="/home/wojtas/devel/include"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/project-world_old/src}&quot;"/>
+<listOptionValue builtIn="false" value="/usr/include/qt4"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1301074789" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
@@ -509,6 +510,9 @@
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1928368276" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release">
 <option id="gnu.cpp.compiler.exe.release.option.optimization.level.662466389" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.exe.release.option.debugging.level.528627320" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.option.include.paths.883772326" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+<listOptionValue builtIn="false" value="/usr/include/qt4"/>
+</option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.62827642" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.release.544364365" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.release">

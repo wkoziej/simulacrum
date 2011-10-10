@@ -33,6 +33,8 @@ Field::Field(const JSONObject &field) {
 	}
 	resourcePriceCache.assign(World::NO_OF_RESOURCES, POSITIVE_INFINITY);
 	productPriceCache.assign(World::NO_OF_PRODUCTS, POSITIVE_INFINITY);
+	maxResourcesQuantities.assign(World::NO_OF_RESOURCES, POSITIVE_INFINITY);
+	maxProductsQuantities.assign(World::NO_OF_PRODUCTS, POSITIVE_INFINITY);
 	FloatVector::iterator q;
 	FloatVector::iterator r;
 	r = resourceRenewal.begin();
@@ -68,7 +70,7 @@ void Field::renovateResources() {
 		if (*q > *mR) {
 			*q = *mR;
 		}
-		LOG4CXX_DEBUG(logger, "resourceQuantity [" << r - resourceRenewal.begin() << "]: " << *q << ", ren:" << *r << ", maxRen : " << *mR);
+		LOG4CXX_DEBUG(logger, "resourceQuantity [" << r - resourceRenewal.begin() << "]: " << *q << ", ren:" << *r << ", maxRes : " << *mR);
 	}
 
 }

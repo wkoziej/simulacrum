@@ -14,7 +14,7 @@
 			"populations" :
 			[
 				{
-					"species"	: "?",
+					"name"	: "species0",
 					"talentsNo" : 2,
 					"needsNo"	: 2, 
 					"creatures" : 

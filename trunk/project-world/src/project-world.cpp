@@ -13,6 +13,9 @@
 #include "model/World.h"
 #include "Viewer.h"
 
+#include "QtSql/qsqldatabase.h"
+
+
 using namespace std;
 using namespace log4cxx;
 using namespace log4cxx::helpers;
@@ -34,10 +37,16 @@ int main(int argc, char **argv) {
 		return 0;
 	else {
 		//Viewer viewer(world);
-		world->step();
-		//viewer.go();
+		while (true) {
+			world->step();
 
-		cerr << i << endl;
+//			QSqlDatabase *db = new QSqlDatabase ();
+
+			//viewer.go();
+			char i;
+			cin >> i;
+		}
+
 	}
 	return 0;
 }
