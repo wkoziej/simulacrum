@@ -7,13 +7,15 @@
 //============================================================================
 
 #include <iostream>
-#include "log4cxx/basicconfigurator.h"
-#include "log4cxx/propertyconfigurator.h"
 
+#include <qsqldatabase.h>
+#include <qsqlerror.h>
+#include <qsqlquery.h>
 #include "model/World.h"
 #include "Viewer.h"
 
-#include "QtSql/qsqldatabase.h"
+#include "log4cxx/basicconfigurator.h"
+#include "log4cxx/propertyconfigurator.h"
 
 
 using namespace std;
@@ -39,10 +41,12 @@ int main(int argc, char **argv) {
 		//Viewer viewer(world);
 		while (true) {
 			world->step();
+			// Zapisz stan świata
+//world->saveState ();
+			// Odnów zasoby świata
+			world->nextYear();
 
-//			QSqlDatabase *db = new QSqlDatabase ();
 
-			//viewer.go();
 			char i;
 			cin >> i;
 		}
