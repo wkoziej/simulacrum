@@ -4,4 +4,4 @@
 
 USER_OBJS :=
 
-LIBS := -llog4cxx -lOgreMain -lOIS
+LIBS := -llog4cxx -lQtSql -lQtCore -lOgreMain -lOIS

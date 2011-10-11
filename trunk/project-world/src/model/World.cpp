@@ -7,11 +7,24 @@
 
 #include <numeric>
 #include <utility>
+#include <list>
 #include <stdlib.h>
+
 #include <ga/GASimpleGA.h>
 #include "JSON/JSON.h"
 
 #include "World.h"
+
+
+#include <qsqlquery.h>
+/*
+class WorldChangeInformer : public QObject {
+	Q_OBJECT
+public:
+	signals:
+	void worldChanged (const World *world);
+};
+*/
 
 using namespace std;
 
@@ -136,7 +149,7 @@ public:
 };
 LoggerPtr StatsVisitor::logger(Logger::getLogger("StatsVisitor"));
 
-class SteppingVisitor: public CreaturesOnFieldVisitor {
+class NextYearVisitor: public CreaturesOnFieldVisitor {
 private:
 	// Logowanie
 	static LoggerPtr logger;
@@ -146,7 +159,7 @@ public:
 		creature->step();
 	}
 };
-LoggerPtr SteppingVisitor::logger(Logger::getLogger("SteppingVisitor"));
+LoggerPtr NextYearVisitor::logger(Logger::getLogger("NextYearVisitor"));
 
 class UpdateFieldResourceUseVisitor: public CreaturesOnFieldVisitor {
 private:
@@ -494,9 +507,9 @@ void World::creaturesMoving() {
 
 }
 
-void World::stepWorld() {
-	LOG4CXX_TRACE(logger, "stepWorld");
-	CreaturesOnFieldVisitor * visitor = new SteppingVisitor();
+void World::nextYear() {
+	LOG4CXX_TRACE(logger, "nextYear");
+	CreaturesOnFieldVisitor * visitor = new NextYearVisitor();
 	iterateCreaturesOnFields(visitor);
 	delete visitor;
 	FieldsMatrix::iterator i = getWorld()->fields.begin();
@@ -562,8 +575,17 @@ void World::step() {
 	creaturesReproducting();
 	// Usuń z populacji najmniej przystosowane
 	creaturesDying();
-	// Odnów zasoby świata
-	stepWorld();
+}
+
+void World::saveState () {
+/*
+
+	QSqlQuery insWordlSnapshot;
+	insWordlSnapshot.prepare("insert worlds_snapshots (world_id, time) values (:world_id, :time)");
+	insWordlSnapshot.bindValue(0, worldId);
+	insWordlSnapshot.bindValue(1, currentTime);
+*/
+
 }
 
 World::~World() {

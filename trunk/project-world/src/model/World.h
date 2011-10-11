@@ -9,24 +9,23 @@
 #define WORLD_H_
 
 #include <vector>
-#include <list>
+//#include <list>
 #include <log4cxx/logger.h>
 
 #include "Field.h"
 #include "ModelHelpers.h"
 
-using namespace std;
-using namespace log4cxx;
+//using namespace std;
+//using namespace log4cxx;
 
 typedef std::vector<Field *> FieldsVector;
 typedef std::vector<FieldsVector> FieldsMatrix;
 //typedef std::list<Creature *> CreaturesList;
-
-
 //typedef std::vector<PopulationsList> PopulationsListVector;
 //typedef std::vector<PopulationsListVector> PopulationsMatrix;
 
-class World {
+class World  {
+
 public:
 	static World *createRandomWorld(unsigned X, unsigned Y);
 	static World *readWorldFromFile(const char *fileName);
@@ -45,9 +44,10 @@ public:
 	void creaturesDying();
 	void creaturesReproducting();
 	void creaturesMoving();
-	void stepWorld();
+	void nextYear();
 	bool creaturesExists();
 	void step();
+	void saveState ();
 	void countResourcesPrices() ;
 	void countProductsPrices() ;
 
