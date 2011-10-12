@@ -47,7 +47,6 @@ public:
 	void nextYear();
 	bool creaturesExists();
 	void step();
-	void saveState ();
 	void countResourcesPrices() ;
 	void countProductsPrices() ;
 

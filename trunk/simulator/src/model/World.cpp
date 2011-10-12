@@ -15,18 +15,14 @@
 
 #include "World.h"
 
-
-#include <QtSql/QSqlQuery>
-#include <QtCore/QVariant>
-
 /*
-class WorldChangeInformer : public QObject {
-	Q_OBJECT
-public:
-	signals:
-	void worldChanged (const World *world);
-};
-*/
+ class WorldChangeInformer : public QObject {
+ Q_OBJECT
+ public:
+ signals:
+ void worldChanged (const World *world);
+ };
+ */
 
 using namespace std;
 
@@ -179,7 +175,8 @@ public:
 		}
 	}
 };
-LoggerPtr UpdateFieldResourceUseVisitor::logger(Logger::getLogger("UpdateFieldResourceUseVisitor"));
+LoggerPtr UpdateFieldResourceUseVisitor::logger(Logger::getLogger(
+		"UpdateFieldResourceUseVisitor"));
 
 class UpdatePopulationStackVisitor: public CreaturesOnFieldVisitor {
 private:
@@ -196,7 +193,8 @@ public:
 
 	}
 };
-LoggerPtr UpdatePopulationStackVisitor::logger(Logger::getLogger("UpdatePopulationStackVisitor"));
+LoggerPtr UpdatePopulationStackVisitor::logger(Logger::getLogger(
+		"UpdatePopulationStackVisitor"));
 
 class SuplyVisitor: public CreaturesOnFieldVisitor {
 public:
@@ -577,24 +575,6 @@ void World::step() {
 	creaturesReproducting();
 	// Usuń z populacji najmniej przystosowane
 	creaturesDying();
-}
-
-void World::saveState () {
-
-
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-
-    if (db.isValid())
-        db.setDatabaseName("project-world.db");
-
-	QSqlQuery insWordlSnapshot;
-        insWordlSnapshot.prepare("insert worlds_snapshots (world_id, time) values (:world_id, date('now'))");
-        insWordlSnapshot.bindValue(0, QVariant(1));
-        if ( insWordlSnapshot.exec() ) {
-           // insWordlSnapshot.exec("select seq from SQLITE_SEQUENCE where NAME='WORLDS_SNAPSHOTS'");
-            QVariant i = insWordlSnapshot.lastInsertId();
-            LOG4CXX_DEBUG(logger, " WORLD_RUN_ID = " << i.toInt());
-        }
 }
 
 World::~World() {

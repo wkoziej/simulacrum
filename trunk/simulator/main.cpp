@@ -1,9 +1,9 @@
-#include <QtCore/QCoreApplication>
 
 #include <iostream>
 #include "log4cxx/basicconfigurator.h"
 #include "log4cxx/propertyconfigurator.h"
 #include "model/World.h"
+#include "StateSaver.h"
 using namespace std;
 using namespace log4cxx;
 using namespace log4cxx::helpers;
@@ -25,10 +25,11 @@ int main(int argc, char *argv[])
         return 0;
     else {
         //Viewer viewer(world);
-        while (true) {
+    	StateSaver stateSaver (world, "project-world.db");
+    		while (true) {
             world->step();
             // Zapisz stan świata
-            world->saveState ();
+            stateSaver.save ();
             // Odnów zasoby świata
             world->nextYear();
             char i;
