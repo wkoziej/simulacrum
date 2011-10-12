@@ -17,6 +17,8 @@
 
 
 #include <QtSql/QSqlQuery>
+#include <QtCore/QVariant>
+
 /*
 class WorldChangeInformer : public QObject {
 	Q_OBJECT
@@ -578,14 +580,21 @@ void World::step() {
 }
 
 void World::saveState () {
-/*
+
+
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+
+    if (db.isValid())
+        db.setDatabaseName("project-world.db");
 
 	QSqlQuery insWordlSnapshot;
-	insWordlSnapshot.prepare("insert worlds_snapshots (world_id, time) values (:world_id, :time)");
-	insWordlSnapshot.bindValue(0, worldId);
-	insWordlSnapshot.bindValue(1, currentTime);
-*/
-
+        insWordlSnapshot.prepare("insert worlds_snapshots (world_id, time) values (:world_id, date('now'))");
+        insWordlSnapshot.bindValue(0, QVariant(1));
+        if ( insWordlSnapshot.exec() ) {
+           // insWordlSnapshot.exec("select seq from SQLITE_SEQUENCE where NAME='WORLDS_SNAPSHOTS'");
+            QVariant i = insWordlSnapshot.lastInsertId();
+            LOG4CXX_DEBUG(logger, " WORLD_RUN_ID = " << i.toInt());
+        }
 }
 
 World::~World() {
