@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "qmessagebox.h"
 #include <qt4/QtSql/QSqlDatabase>
 #include <qt4/QtSql/QSqlTableModel>
 MainWindow::MainWindow(QWidget *parent) :
