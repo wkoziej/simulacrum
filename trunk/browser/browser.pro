@@ -16,3 +16,7 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
+
+
+target.path = ../bin
+INSTALLS += target
