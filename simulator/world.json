@@ -1,0 +1,60 @@
+{ 
+	"world" : 
+	{
+		"sizeX" : 1,
+		"sizeY" : 1,
+		"productsNo" : 3,
+		"resourcesNo" : 3,
+		"field0x0" : 
+		{
+			"lag" : 0.1,
+			"resources" : [ 
+				[1, 1], [2, 2], [4, 3]
+			],
+			"populations" :
+			[
+				{
+					"name"	: "species0",
+					"talentsNo" : 2,
+					"needsNo"	: 2, 
+					"creatures" : 
+					[
+						{
+							"talents" : [ 
+								[0, 1, 0.3], 
+								[2, 0, 0.7] 
+							],					
+							"needs" : [
+								[1, 0.1],
+								[2, 0.9]
+							],
+							"directions" : [0, 0, 0, 0]
+						},
+						{
+							"talents" : [ 
+								[0, 1, 0.1], 
+								[1, 1, 0.9] 
+							],					
+							"needs" : [
+								[0, 1.0],
+								[1, 0.0]
+							],
+							"directions" : [0, 0, 0, 0]
+						},
+						{
+							"talents" : [ 
+								[2, 2, 0.5], 
+								[1, 0, 0.5] 
+							],					
+							"needs" : [
+								[1, 0.5],
+								[0, 0.5]
+							],
+							"directions" : [0, 0, 0, 0]
+						}
+					]
+				}		
+			]
+		}
+	}
+}
