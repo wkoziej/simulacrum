@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core
+QT       += core sql
 
 QT       -= gui
 
@@ -29,3 +29,9 @@ SOURCES += main.cpp src/model/World.cpp src/model/Field.cpp src/model/Population
 INCLUDEPATH += src/
 
 LIBS += -llog4cxx
+
+target.files += world.json log.properties
+target.path = ../bin
+INSTALLS += target
+
+#DESTDIR = ../bin
