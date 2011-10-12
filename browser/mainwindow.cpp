@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
 
     if (db.isValid())
-        db.setDatabaseName("/home/wojtas/devel/simulacrum/project-world.db");
+        db.setDatabaseName("project-world.db");
     if (!db.isValid() || !db.open()) {
         // Give error message, e.g., using QMessageBox
         // QMessageBox::information("Error", "Cannot open database");
