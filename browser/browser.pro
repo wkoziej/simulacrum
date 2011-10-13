@@ -17,6 +17,7 @@ HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
 
+LIBS += -llog4cxx
 
 target.path = ../bin
 INSTALLS += target
