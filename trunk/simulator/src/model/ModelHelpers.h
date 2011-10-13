@@ -49,5 +49,10 @@ public:
 			unsigned y);
 };
 
+class FieldsVisitor {
+public:
+	virtual void visit(Field *field) = 0;
+};
+
 
 #endif /* MODELHELPERS_H_ */

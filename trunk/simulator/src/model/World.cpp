@@ -606,6 +606,17 @@ void World::iteratePopulationOnFields(PopulationOnFieldVisitor *visitor) {
 	}
 }
 
+void World::visitFields (FieldsVisitor *fieldVisitor) {
+	FieldsMatrix::iterator i = getWorld()->fields.begin();
+	for (; i != getWorld()->fields.end(); i++) {
+		FieldsVector::iterator j = i->begin();
+		for (; j != i->end(); j++) {
+			fieldVisitor->visit(*j);
+		}
+	}
+
+}
+
 CreaturesPopulation *World::findPopulationOnField(std::wstring name, int x,
 		int y) {
 	CreaturesPopulation *population = NULL;

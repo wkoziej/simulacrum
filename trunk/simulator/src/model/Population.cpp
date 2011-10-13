@@ -84,6 +84,7 @@ CreaturesPopulation::CreaturesPopulation(const Field *field, const JSONObject &p
 		LOG4CXX_TRACE(logger, "Creating creature");
 		creaturesTalentsCount = population.at(L"talentsNo")->AsNumber();
 		creaturesNeedsCount = population.at(L"needsNo")->AsNumber();
+		name = population.at(L"name")->AsString();
 		LOG4CXX_DEBUG(logger, "creaturesTalentsCount = " << creaturesTalentsCount << ", creaturesNeedsCount =  " << creaturesNeedsCount);
 		JSONArray creatures = population.at(L"creatures")->AsArray();
 		JSONArray::iterator creature = creatures.begin();
