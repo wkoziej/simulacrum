@@ -20,6 +20,8 @@
 using namespace std;
 using namespace log4cxx;
 
+float Objective(GAGenome &g);
+
 class CreatureFenotype: public GAEvalData {
 
 public:

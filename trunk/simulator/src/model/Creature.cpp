@@ -75,12 +75,14 @@ GAEvalData* CreatureFenotype::clone() const {
 }
 
 void CreatureFenotype::copy(const GAEvalData&src) {
+	//createdProductQuants.assign(World::NO_OF_PRODUCTS, 0);
+	//usedResourcesQuants.assign(World::NO_OF_RESOURCES, 0);
 	createdProductQuants = (((CreatureFenotype &) src).createdProductQuants);
 	usedResourcesQuants = (((CreatureFenotype &) src).usedResourcesQuants);
 	//	notSatisfiedNeedsQuants
 	//			= (((CreatureFenotype &) src).notSatisfiedNeedsQuants);
 	objectiveValue = (((CreatureFenotype &) src).objectiveValue);
-	yearsOld = (((CreatureFenotype &) src).yearsOld);
+	yearsOld = 0;// (((CreatureFenotype &) src).yearsOld);
 	population = (((CreatureFenotype &) src).population);
 	field = (((CreatureFenotype &) src).field);
 }

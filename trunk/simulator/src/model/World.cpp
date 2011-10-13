@@ -12,6 +12,7 @@
 
 #include <ga/GASimpleGA.h>
 #include "JSON/JSON.h"
+#include "../StateSaver.h"
 
 #include "World.h"
 
@@ -42,11 +43,14 @@ public:
 		LOG4CXX_DEBUG(logger, "Population size before reproduction: " << population->size());
 		int c;
 		for (c = 0; c < population->size(); c++) {
+			GAGenome g = population->individual(c);
+			//Creature *c = (Creature *) g;
+			float f = Objective(g);
+			LOG4CXX_DEBUG(logger, " objective " << f);
 			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
 		}
 		if (population->size()) {
 			GASimpleGA simpleGA(*population);
-			//simpleGA.objectiveFunction();
 			simpleGA.pMutation(MUTATION);
 			simpleGA.pCrossover(CROSSOVER);
 			simpleGA.step();
@@ -72,7 +76,7 @@ public:
 	void visit(CreaturesPopulation *population, Field *field, unsigned x,
 			unsigned y) {
 		int psize = population->size();
-		for (int c = 0; c < population->size();) {
+		for (int c = 0; c < population->size() && population->size() > 2;) {
 			CreatureFenotype *f =
 					(CreatureFenotype *) population->individual(c).evalData();
 			// Jezeli wartosc funkcji celu jest mniejsza od sredniej populacji, to wyrzuc osobnika z populacji
@@ -509,9 +513,6 @@ void World::creaturesMoving() {
 
 void World::nextYear() {
 	LOG4CXX_TRACE(logger, "nextYear");
-	CreaturesOnFieldVisitor * visitor = new NextYearVisitor();
-	iterateCreaturesOnFields(visitor);
-	delete visitor;
 	FieldsMatrix::iterator i = getWorld()->fields.begin();
 	for (; i != getWorld()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();
@@ -558,23 +559,36 @@ void World::countProductsPrices() {
 	}
 }
 
-void World::step() {
+void World::step(StateSaver *stateSaver) {
+	CreaturesOnFieldVisitor * visitor = new NextYearVisitor();
+	iterateCreaturesOnFields(visitor);
+	delete visitor;
+	stateSaver->save("nextYear");
+
 	// Zapamiętajmy ceny surowców
 	countResourcesPrices();
+	stateSaver->save("haveResourcePrices");
+
 	// Karmimy istoty i dzięki temu ustalamy ich wydajność
 	// Zużywamy produkty przechowywane przez populacje
 	creaturesSupplying();
+	stateSaver->save("creaturesSuplied");
 	// Zużywamy surowce do produkcji. Zgodnie z wydajnoscia istot powstają produkty. Trafiają do magazynów populacji.
 	// Aktualizuj zapasy populacji na podstawie wyprodukowanych towarow
 	creaturesWorking();
+	stateSaver->save("creaturesWorked");
 	// Istoty zgodnie ze swoją wydajnością i preferencjami poruszają się
 	creaturesMoving();
+	stateSaver->save("creaturesMoved");
 	// Wyliczmy ceny produktów (po wędrówce osobnikow)
 	countProductsPrices();
+	stateSaver->save("haveProductPrices");
 	// Na podstawie funkcji celu dokonaj roznmożenia
 	creaturesReproducting();
+	stateSaver->save("reproduction");
 	// Usuń z populacji najmniej przystosowane
 	creaturesDying();
+	stateSaver->save("die");
 }
 
 World::~World() {
@@ -606,7 +620,7 @@ void World::iteratePopulationOnFields(PopulationOnFieldVisitor *visitor) {
 	}
 }
 
-void World::visitFields (FieldsVisitor *fieldVisitor) {
+void World::visitFields(FieldsVisitor *fieldVisitor) {
 	FieldsMatrix::iterator i = getWorld()->fields.begin();
 	for (; i != getWorld()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();

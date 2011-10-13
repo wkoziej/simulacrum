@@ -37,12 +37,13 @@ void StateSaver::startSession() {
 StateSaver::~StateSaver() {
 }
 
-void StateSaver::save() {
+void StateSaver::save(std::string description) {
 	std::vector<QVariant> params;
 	params.push_back(runId);
+	params.push_back(description.c_str());
 	int worldSnapshotId;
 	executeQuery(
-			"insert into worlds_snapshots (world_run_id, snapshot_time) values (:1, datetime('now'));",
+			"insert into worlds_snapshots (world_run_id, snapshot_time, description) values (:1, datetime('now'), :2);",
 			params, worldSnapshotId);
 	FieldsMatrix::iterator i = world->fields.begin();
 	for (; i != world->fields.end(); i++) {
