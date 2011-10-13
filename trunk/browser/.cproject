@@ -15,7 +15,7 @@
 </extensions>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<configuration artifactName="browser" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.exe.debug.1627863788" name="Debug" parent="cdt.managedbuild.config.gnu.exe.debug" prebuildStep="uic-qt4 mainwindow.ui -o ui_mainwindow.h">
+<configuration artifactName="browser" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.exe.debug.1627863788" name="Debug" parent="cdt.managedbuild.config.gnu.exe.debug" prebuildStep="uic-qt4 ../mainwindow.ui -o ../ui_mainwindow.h">
 <folderInfo id="cdt.managedbuild.config.gnu.exe.debug.1627863788." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.692888263" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug">
 <targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug.677460201" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
@@ -38,8 +38,9 @@
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.329313895" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 <tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.335939011" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
-<option id="gnu.cpp.link.option.libs.944029181" superClass="gnu.cpp.link.option.libs" valueType="libs">
+<option id="gnu.cpp.link.option.libs.944029181" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 <listOptionValue builtIn="false" value="QtSql"/>
+<listOptionValue builtIn="false" value="log4cxx"/>
 <listOptionValue builtIn="false" value="QtCore"/>
 <listOptionValue builtIn="false" value="QtGui"/>
 </option>
@@ -306,7 +307,7 @@
 </scannerInfoProvider>
 </profile>
 </scannerConfigBuildInfo>
-<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.230987809;cdt.managedbuild.config.gnu.exe.release.230987809.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.818462084;cdt.managedbuild.tool.gnu.c.compiler.input.1217231370">
+<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1627863788;cdt.managedbuild.config.gnu.exe.debug.1627863788.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1868316832;cdt.managedbuild.tool.gnu.c.compiler.input.953573649">
 <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 <profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
 <buildOutputProvider>
@@ -389,7 +390,7 @@
 </scannerInfoProvider>
 </profile>
 </scannerConfigBuildInfo>
-<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1627863788;cdt.managedbuild.config.gnu.exe.debug.1627863788.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1868316832;cdt.managedbuild.tool.gnu.c.compiler.input.953573649">
+<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.230987809;cdt.managedbuild.config.gnu.exe.release.230987809.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.818462084;cdt.managedbuild.tool.gnu.c.compiler.input.1217231370">
 <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 <profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
 <buildOutputProvider>
@@ -771,7 +772,7 @@
 </scannerInfoProvider>
 </profile>
 </scannerConfigBuildInfo>
-<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.230987809;cdt.managedbuild.config.gnu.exe.release.230987809.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.818462084;cdt.managedbuild.tool.gnu.c.compiler.input.1217231370">
+<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1627863788;cdt.managedbuild.config.gnu.exe.debug.1627863788.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1868316832;cdt.managedbuild.tool.gnu.c.compiler.input.953573649">
 <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 <profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
 <buildOutputProvider>
@@ -854,7 +855,7 @@
 </scannerInfoProvider>
 </profile>
 </scannerConfigBuildInfo>
-<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1627863788;cdt.managedbuild.config.gnu.exe.debug.1627863788.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1868316832;cdt.managedbuild.tool.gnu.c.compiler.input.953573649">
+<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.230987809;cdt.managedbuild.config.gnu.exe.release.230987809.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.818462084;cdt.managedbuild.tool.gnu.c.compiler.input.1217231370">
 <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 <profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
 <buildOutputProvider>
