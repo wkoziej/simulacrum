@@ -95,6 +95,12 @@ int Creature::noOfNeeds() {
 	return getFenotype()->population->getCreaturesNeedsCount();
 }
 
+std::string Creature::genomeStr() const {
+	stringstream buf;
+	buf << *this;
+	return buf.str();
+}
+
 GARealAlleleSetArray Creature::allelesDefinition(
 		const CreaturesPopulation *population) {
 	if (alleles.size() == 0) {
@@ -217,7 +223,7 @@ void Creature::step() {
 	CreatureFenotype *fenotype = getFenotype();
 	fenotype->createdProductQuants.assign(World::NO_OF_PRODUCTS, 0);
 	fenotype->usedResourcesQuants.assign(World::NO_OF_RESOURCES, 0);
-	fenotype->yearsOld ++ ;
+	fenotype->yearsOld++;
 	fenotype->objectiveValue = 0;
 }
 

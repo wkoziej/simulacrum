@@ -42,6 +42,7 @@ public:
 	float updateProductPrice(int i);
 	float updateResourcePrice(int i);
 	PopulationsMap populations;
+	float getMoveLag () const { return moveLag; }
 private:
 	float moveLag; // Opóźnienie ruchu
 	FloatVector resourceQuantities;

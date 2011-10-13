@@ -13,12 +13,16 @@
 class StateSaver {
 public:
 	StateSaver(World *world, std::string dbName);
-	void save ();
+	void startSession ();
+	void save();
 	virtual ~StateSaver();
 private:
 
-	bool executeQuery (std::string query, std::vector<QVariant> params);
+	bool executeQuery(std::string query, std::vector<QVariant> params,
+			int &lastInsertId);
 	static LoggerPtr logger;
+	int runId;
+	World *world;
 };
 
 #endif /* STATESAVER_H_ */

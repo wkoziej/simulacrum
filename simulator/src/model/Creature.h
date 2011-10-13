@@ -80,7 +80,7 @@ public:
 
 	int noOfTalents();
 	int noOfNeeds();
-
+	std::string genomeStr() const;
 	CreatureFenotype *getFenotype() {
 		return (CreatureFenotype *) evalData();
 	}

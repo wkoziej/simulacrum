@@ -55,6 +55,7 @@ public:
 	//PopulationsMatrix populations;
 	void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);
 	void iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor);
+	void visitFields (FieldsVisitor *fieldVisitor);
 	static int NO_OF_RESOURCES; //3 // Liczba surowców -> 0 - natchnienie, 1 - materia
 	static int NO_OF_PRODUCTS; //3 // Liczba surowców -> 0 - natchnienie, 1 - materia
 
