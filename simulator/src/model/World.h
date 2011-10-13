@@ -17,7 +17,7 @@
 
 //using namespace std;
 //using namespace log4cxx;
-
+class StateSaver;
 typedef std::vector<Field *> FieldsVector;
 typedef std::vector<FieldsVector> FieldsMatrix;
 //typedef std::list<Creature *> CreaturesList;
@@ -46,7 +46,7 @@ public:
 	void creaturesMoving();
 	void nextYear();
 	bool creaturesExists();
-	void step();
+	void step(StateSaver *stateSaver);
 	void countResourcesPrices() ;
 	void countProductsPrices() ;
 

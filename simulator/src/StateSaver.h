@@ -14,7 +14,7 @@ class StateSaver {
 public:
 	StateSaver(World *world, std::string dbName);
 	void startSession ();
-	void save();
+	void save(std::string description);
 	virtual ~StateSaver();
 private:
 
