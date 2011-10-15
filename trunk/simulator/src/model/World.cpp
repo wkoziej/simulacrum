@@ -44,18 +44,21 @@ public:
 		int c;
 		for (c = 0; c < population->size(); c++) {
 			GAGenome g = population->individual(c);
-			//Creature *c = (Creature *) g;
-			float f = Objective(g);
-			LOG4CXX_DEBUG(logger, " objective " << f);
 			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
 		}
 		if (population->size()) {
 			GASimpleGA simpleGA(*population);
+			simpleGA.initialize(time(0));
 			simpleGA.pMutation(MUTATION);
 			simpleGA.pCrossover(CROSSOVER);
 			simpleGA.step();
 			GAPopulation p = simpleGA.population();
-			int maxInd = p.size() > 2 ? 2 : p.size();
+			for (c = 0; c < p.size(); c++) {
+				GAGenome g = p.individual(c);
+				LOG4CXX_DEBUG(logger, " N [" << c << "]: " << p.individual(c) << " UD: " << p.individual(c).evalData());
+			}
+
+			int maxInd = p.size();// > 2 ? 2 : p.size();
 			for (c = 0; c < maxInd; c++) {
 				LOG4CXX_DEBUG(logger, " J [" << c << "]: " << p.individual(c) << " UD: " << p.individual(c).evalData());
 				population->add(p.individual(c));
@@ -82,7 +85,8 @@ public:
 			// Jezeli wartosc funkcji celu jest mniejsza od sredniej populacji, to wyrzuc osobnika z populacji
 			// Pomijaj dzieci
 			float objAvg = population->objectiveAvarage();
-			float creatureObjVal = f->objectiveValue;
+			float creatureObjVal = population->individual(c).score();
+			LOG4CXX_DEBUG(logger, "population->individual("<<c<<") " << population->individual(c) << ", objective: " << creatureObjVal);
 			if (objAvg > creatureObjVal && f->yearsOld > 0) {
 				population->remove(&(population->individual(c)));
 			} else {
@@ -94,6 +98,22 @@ public:
 };
 
 LoggerPtr DyingVisitor::logger(Logger::getLogger("DyingVisitor"));
+
+class ObjectiveEvaluatorVisitor: public PopulationOnFieldVisitor {
+
+private:
+      // Logowanie
+      static LoggerPtr logger;
+public:
+      void visit(CreaturesPopulation *population, Field *field, unsigned x,
+                      unsigned y) {
+              population->evaluate(gaTrue);
+              LOG4CXX_DEBUG(logger, L"population " << population->getName() << L" evaluated");
+      }
+};
+LoggerPtr ObjectiveEvaluatorVisitor::logger(Logger::getLogger("ObjectiveEvaluatorVisitor"));
+
+
 
 class WorkerVisitor: public CreaturesOnFieldVisitor {
 public:
@@ -508,7 +528,6 @@ void World::creaturesMoving() {
 	visitor = new UpdatePopulationStackVisitor();
 	iterateCreaturesOnFields(visitor);
 	delete visitor;
-
 }
 
 void World::nextYear() {

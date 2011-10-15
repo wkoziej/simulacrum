@@ -31,7 +31,7 @@ public:
 	int fieldCoordX;
 	int fieldCoordY;
 	unsigned yearsOld;
-	float objectiveValue;
+	//float objectiveValue;
 	const CreaturesPopulation *population;
 	const Field *field;
 	CreatureFenotype(const CreaturesPopulation *population, const Field *field);
@@ -48,6 +48,7 @@ public:
 	}
 private:
 	float performanceRatio;
+	static LoggerPtr logger;
 };
 
 class Creature: public GARealGenome {
@@ -93,6 +94,7 @@ private:
 			int &productIndex);
 	static float randBetweenAndStepped(float min, float max, float step);
 	static void RandomInitializer(GAGenome &g);
+	static void DoNothingInitializer(GAGenome &g);
 	static void JSONInitializer(GAGenome &g);
 	static GARealAlleleSetArray allelesDefinition(
 			const CreaturesPopulation *population);

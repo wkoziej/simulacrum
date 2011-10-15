@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 			// Odnów zasoby świata
 			world->nextYear();
 			char i;
-			//cin >> i;
+			cin >> i;
 		}
 
 	}

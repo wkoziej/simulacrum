@@ -42,6 +42,8 @@ void StateSaver::save(std::string description) {
 	params.push_back(runId);
 	params.push_back(description.c_str());
 	int worldSnapshotId;
+	QSqlDatabase::database().transaction();
+
 	executeQuery(
 			"insert into worlds_snapshots (world_run_id, snapshot_time, description) values (:1, datetime('now'), :2);",
 			params, worldSnapshotId);
@@ -100,13 +102,12 @@ void StateSaver::save(std::string description) {
 				int popSize = population->size();
 				for (int i = 0; i < popSize; i++) {
 					Creature * creature =
-							(Creature *) &(population->individual(i,
-									GAPopulation::RAW));
+							(Creature *) &(population->individual(i));
 					int creatureSnapshotId;
 					params.clear();
 					params.push_back(populationSnapshotId);
 					params.push_back(creature->getFenotype()->yearsOld);
-					params.push_back(creature->getFenotype()->objectiveValue);
+					params.push_back(creature->score());
 					params.push_back(creature->genomeStr().c_str());
 					executeQuery(
 							"insert into creatures_snapshots (population_snapshot_id, age, objective_value, genome) "
@@ -148,7 +149,7 @@ void StateSaver::save(std::string description) {
 
 		}
 	}
-
+	QSqlDatabase::database().commit();
 }
 
 bool StateSaver::executeQuery(std::string query, std::vector<QVariant> params,
@@ -158,9 +159,11 @@ bool StateSaver::executeQuery(std::string query, std::vector<QVariant> params,
 	for (int i = 0; i < params.size(); i++) {
 		sqlQuery.bindValue(i, params.at(i));
 	}
+
 	if (!sqlQuery.exec()) {
+		QSqlDatabase::database().rollback();
 		LOG4CXX_ERROR (logger, "Error executing query " << query << " : " << sqlQuery.lastError().text().toStdString());
-		return false;
+		exit(-1);
 	} else {
 		QVariant i = sqlQuery.lastInsertId();
 		lastInsertId = i.toInt();
