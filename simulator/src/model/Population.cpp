@@ -66,7 +66,7 @@ class SumObjectiveVisitor: public UpdateValueVisitor {
 public:
 	void updateValue(Creature *creature, Field *field, CreaturesPopulation *p,
 			unsigned x, unsigned y) {
-		value += creature->getFenotype()->objectiveValue;
+		value += creature->score();
 	}
 };
 

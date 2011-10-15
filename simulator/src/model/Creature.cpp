@@ -25,6 +25,7 @@ float DIRECTION_BOUNDS[3] = { 0.0, 3.0, 1.0 };
 float Objective(GAGenome &g) {
 	Creature *c = (Creature *) &g;
 	CreatureFenotype * fenotype = c->getFenotype();
+	float value = 0.0;
 	//World *world = World::getWorld();
 	const Field *field = fenotype->field;
 	// Możliwe funkcje celu
@@ -39,30 +40,30 @@ float Objective(GAGenome &g) {
 		productsValueSum += field->productPrice(i)
 				* fenotype->createdProductQuants.at(i);
 	}
-	// Wartość zużytych surowców
-	float resourcesValueSum = 0.0;
-	for (int i = 0; i < World::NO_OF_PRODUCTS; i++) {
-		resourcesValueSum += field->resourcePrice(i)
-				* fenotype->usedResourcesQuants.at(i);
+	if (productsValueSum != 0) {
+		// Wartość zużytych surowców
+		float resourcesValueSum = 0.0;
+		for (int i = 0; i < World::NO_OF_PRODUCTS; i++) {
+			resourcesValueSum += field->resourcePrice(i)
+					* fenotype->usedResourcesQuants.at(i);
+		}
+		// Stosunek wartości produktu do wartości zużycia
+		value = POSITIVE_INFINITY;
+		if (resourcesValueSum > 0)
+			value = productsValueSum / resourcesValueSum;
 	}
-	// Stosunek wartości produktu do wartości zużycia
-	float value = POSITIVE_INFINITY;
-	if (resourcesValueSum > 0)
-		value = productsValueSum / resourcesValueSum;
-
-	fenotype->objectiveValue = value;
 	LOG4CXX_DEBUG(Creature::getLogger(), "Objective  : " << value);
 	return value;
 }
+
+LoggerPtr CreatureFenotype::logger(Logger::getLogger("creatureFenotype"));
 
 CreatureFenotype::CreatureFenotype(const CreaturesPopulation * population,
 		const Field *field) {
 	createdProductQuants.assign(World::NO_OF_PRODUCTS, 0);
 	usedResourcesQuants.assign(World::NO_OF_RESOURCES, 0);
-	//notSatisfiedNeedsQuants.assign(NO_OF_PRODUCTS, 0);
 	yearsOld = 0;
 	previousFieldIdexes = std::pair<unsigned, unsigned>(0, 0);
-	objectiveValue = 0;
 	this->population = population;
 	this->field = field;
 }
@@ -75,13 +76,9 @@ GAEvalData* CreatureFenotype::clone() const {
 }
 
 void CreatureFenotype::copy(const GAEvalData&src) {
-	//createdProductQuants.assign(World::NO_OF_PRODUCTS, 0);
-	//usedResourcesQuants.assign(World::NO_OF_RESOURCES, 0);
-	createdProductQuants = (((CreatureFenotype &) src).createdProductQuants);
-	usedResourcesQuants = (((CreatureFenotype &) src).usedResourcesQuants);
-	//	notSatisfiedNeedsQuants
-	//			= (((CreatureFenotype &) src).notSatisfiedNeedsQuants);
-	objectiveValue = (((CreatureFenotype &) src).objectiveValue);
+	LOG4CXX_TRACE(logger, "CreatureFenotype::copy");
+	createdProductQuants.assign(World::NO_OF_PRODUCTS, 0);
+	usedResourcesQuants.assign(World::NO_OF_RESOURCES, 0);
 	yearsOld = 0;// (((CreatureFenotype &) src).yearsOld);
 	population = (((CreatureFenotype &) src).population);
 	field = (((CreatureFenotype &) src).field);
@@ -163,6 +160,10 @@ void Creature::RandomInitializer(GAGenome &g) {
 	}
 }
 
+void Creature::DoNothingInitializer(GAGenome &g) {
+
+}
+
 Creature::Creature(const CreaturesPopulation *population, const Field * field) :
 	GARealGenome(Creature::allelesDefinition(population), Objective) {
 	LOG4CXX_TRACE(logger, "Creature::Creature");
@@ -218,6 +219,7 @@ Creature::Creature(const CreaturesPopulation *population, const Field * field,
 	initialize();
 	// Można już wyczyścić dane
 	userData(NULL);
+	initializer(DoNothingInitializer);
 	LOG4CXX_DEBUG(logger, "genome : " << *this);
 }
 
@@ -225,8 +227,9 @@ void Creature::step() {
 	CreatureFenotype *fenotype = getFenotype();
 	fenotype->createdProductQuants.assign(World::NO_OF_PRODUCTS, 0);
 	fenotype->usedResourcesQuants.assign(World::NO_OF_RESOURCES, 0);
+	this->_evaluated = gaFalse;
 	fenotype->yearsOld++;
-	fenotype->objectiveValue = 0;
+	//fenotype->objectiveValue = 0;
 }
 
 void Creature::changePopulation(CreaturesPopulation *from,
@@ -263,6 +266,7 @@ float Creature::produce(float resourceQuantity, unsigned index,
 			getFenotype()->usedResourcesQuants.at(index) += resourceUsed;
 		}
 	}
+	this->_evaluated = gaFalse;
 	return productQuant;
 }
 
