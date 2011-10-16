@@ -61,7 +61,7 @@ void StateSaver::save(std::string description) {
 					params, fieldSnapshotId);
 			// PRODUKTY
 			int tmp;
-			for (int productIndex = 0; productIndex < World::NO_OF_PRODUCTS; productIndex++) {
+			for (int productIndex = 0; productIndex < World::NO_OF_ARTICLES; productIndex++) {
 				params.clear();
 				params.push_back(fieldSnapshotId);
 				params.push_back(productIndex);
@@ -73,7 +73,7 @@ void StateSaver::save(std::string description) {
 
 			}
 			// ZASOBY
-			for (int resourceIndex = 0; resourceIndex < World::NO_OF_RESOURCES; resourceIndex++) {
+			for (int resourceIndex = 0; resourceIndex < World::NO_OF_ARTICLES; resourceIndex++) {
 				params.clear();
 				params.push_back(fieldSnapshotId);
 				params.push_back(resourceIndex);
@@ -116,12 +116,12 @@ void StateSaver::save(std::string description) {
 
 					int tmp;
 					for (int productIndex = 0; productIndex
-							< World::NO_OF_PRODUCTS; productIndex++) {
+							< World::NO_OF_ARTICLES; productIndex++) {
 						params.clear();
 						params.push_back(creatureSnapshotId);
 						params.push_back(productIndex);
 						params.push_back(
-								creature->getFenotype()->createdProductQuants.at(
+								creature->getFenotype()->gainedArticlesQuants.at(
 										productIndex));
 						params.push_back(creature->getNeedOfProductRatio(
 								productIndex));
@@ -132,13 +132,13 @@ void StateSaver::save(std::string description) {
 					}
 
 					for (int resourceIndex = 0; resourceIndex
-							< World::NO_OF_RESOURCES; resourceIndex++) {
+							< World::NO_OF_ARTICLES; resourceIndex++) {
 
 						params.clear();
 						params.push_back(creatureSnapshotId);
 						params.push_back(resourceIndex);
 						params.push_back(
-								creature->getFenotype()->usedResourcesQuants.at(
+								creature->getFenotype()->lostArticlesQuants.at(
 										resourceIndex));
 						executeQuery(
 								"insert into creatures_resources_snapshots (creature_snapshot_id, resource_id, used) "

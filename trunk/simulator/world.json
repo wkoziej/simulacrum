@@ -3,54 +3,30 @@
 	{
 		"sizeX" : 1,
 		"sizeY" : 1,
-		"productsNo" : 3,
-		"resourcesNo" : 3,
+		"articles" : ["energy",	"water",	"wood",		"corn", 	"tool"]
 		"field0x0" : 
 		{
-			"lag" : 0.1,
-			"resources" : [ 
-				[1, 1], [2, 2], [4, 3]
+			"stocks" : [ 
+					 [0, 0], 	[100, 50], 	[50, 25], 	[10, 0], 	[0,0]
 			],
 			"populations" :
 			[
 				{
 					"name"	: "species0",
-					"talentsNo" : 2,
-					"needsNo"	: 2, 
+					"0ArgActivityRoom" : 2,
+					"1ArgActivityRoom"	: 2, 
+					"2ArgActivityRoom"	: 0, 
 					"creatures" : 
 					[
 						{
-							"talents" : [ 
-								[0, 1, 0.3], 
-								[2, 0, 0.7] 
+							"0ArgActivity" : [ 
+								[0], 
+								[2] 
 							],					
-							"needs" : [
-								[1, 0.1],
-								[2, 0.9]
-							],
-							"directions" : [0, 0, 0, 0]
-						},
-						{
-							"talents" : [ 
-								[0, 1, 0.1], 
-								[1, 1, 0.9] 
-							],					
-							"needs" : [
-								[0, 1.0],
-								[1, 0.0]
-							],
-							"directions" : [0, 0, 0, 0]
-						},
-						{
-							"talents" : [ 
-								[2, 2, 0.5], 
-								[1, 0, 0.5] 
-							],					
-							"needs" : [
-								[1, 0.5],
-								[0, 0.5]
-							],
-							"directions" : [0, 0, 0, 0]
+							"1ArgActivity" : [
+								[0, 0],
+								[1, 2]
+							]
 						}
 					]
 				}		

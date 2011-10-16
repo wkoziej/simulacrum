@@ -18,21 +18,21 @@ public:
 	CreaturesPopulation();
 	CreaturesPopulation(const Field *field, const JSONObject &population);
 	virtual ~CreaturesPopulation();
-	float productNeeds(int i);
-	float resourceNeeds(int i);
+	//float productNeeds(int i);
+	//float resourceNeeds(int i);
 	float objectiveAvarage ();
 	std::wstring getName () { return name; };
-	float keptProductSum(int i);
-	void updateProductStock (int i, float delta);
+	//float keptProductSum(int i);
+	//void updateProductStock (int i, float delta);
 	void loadCreatures (const JSONObject &population);
-	int getCreaturesTalentsCount () const { return creaturesTalentsCount; }
-	int getCreaturesNeedsCount () const { return creaturesNeedsCount; }
+	//int getCreaturesTalentsCount () const { return creaturesTalentsCount; }
+	//int getCreaturesNeedsCount () const { return creaturesNeedsCount; }
 private:
 	//Field *field;
-	std::vector<float> productsStock;
+	//std::vector<float> productsStock;
 	std::wstring name;
-	int creaturesTalentsCount;
-	int creaturesNeedsCount;
+	//int creaturesTalentsCount;
+	//int creaturesNeedsCount;
 	// Logowanie
 	static LoggerPtr logger;
 };

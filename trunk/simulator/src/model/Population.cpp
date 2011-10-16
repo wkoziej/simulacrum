@@ -71,7 +71,7 @@ public:
 };
 
 CreaturesPopulation::CreaturesPopulation() {
-	productsStock.assign(World::NO_OF_PRODUCTS, 0.0);
+	productsStock.assign(World::NO_OF_ARTICLES, 0.0);
 	name = L"noname";
 	creaturesTalentsCount = 2;
 	creaturesNeedsCount = 2;
@@ -79,7 +79,7 @@ CreaturesPopulation::CreaturesPopulation() {
 
 CreaturesPopulation::CreaturesPopulation(const Field *field, const JSONObject &population) {
 	//this->field = field;
-	productsStock.assign(World::NO_OF_PRODUCTS, 0.0);
+	productsStock.assign(World::NO_OF_ARTICLES, 0.0);
 	if (population.count(L"creatures") > 0) {
 		LOG4CXX_TRACE(logger, "Creating creature");
 		creaturesTalentsCount = population.at(L"talentsNo")->AsNumber();

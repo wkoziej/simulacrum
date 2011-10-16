@@ -29,8 +29,8 @@ using namespace std;
 
 LoggerPtr World::logger(Logger::getLogger("world"));
 World *World::singleton = NULL;
-int World::NO_OF_RESOURCES = 3; // Liczba surowców -> 0 - natchnienie, 1 - materia
-int World::NO_OF_PRODUCTS = 3; // Liczba surowców -> 0 - natchnienie, 1 - materia
+int World::NO_OF_ARTICLES = 3; // Liczba surowców -> 0 - natchnienie, 1 - materia
+int World::NO_OF_ARTICLES = 3; // Liczba surowców -> 0 - natchnienie, 1 - materia
 
 
 class ReproductionVisitor: public PopulationOnFieldVisitor {
@@ -102,26 +102,25 @@ LoggerPtr DyingVisitor::logger(Logger::getLogger("DyingVisitor"));
 class ObjectiveEvaluatorVisitor: public PopulationOnFieldVisitor {
 
 private:
-      // Logowanie
-      static LoggerPtr logger;
+	// Logowanie
+	static LoggerPtr logger;
 public:
-      void visit(CreaturesPopulation *population, Field *field, unsigned x,
-                      unsigned y) {
-              population->evaluate(gaTrue);
-              LOG4CXX_DEBUG(logger, L"population " << population->getName() << L" evaluated");
-      }
+	void visit(CreaturesPopulation *population, Field *field, unsigned x,
+			unsigned y) {
+		population->evaluate(gaTrue);
+		LOG4CXX_DEBUG(logger, L"population " << population->getName() << L" evaluated");
+	}
 };
-LoggerPtr ObjectiveEvaluatorVisitor::logger(Logger::getLogger("ObjectiveEvaluatorVisitor"));
-
-
+LoggerPtr ObjectiveEvaluatorVisitor::logger(Logger::getLogger(
+		"ObjectiveEvaluatorVisitor"));
 
 class WorkerVisitor: public CreaturesOnFieldVisitor {
 public:
 	void visit(Creature *creature, Field *field,
 			CreaturesPopulation *population, unsigned x, unsigned y) {
 
-		for (int resourceIndex = 0; resourceIndex < World::NO_OF_RESOURCES; resourceIndex++) {
-			float fieldResourceQuantity = field->getResourceQuantity(
+		for (int resourceIndex = 0; resourceIndex < World::NO_OF_ARTICLES; resourceIndex++) {
+			float fieldResourceQuantity = field->getArticleQuantity(
 					resourceIndex);
 			// TODO - nie wyliczać za każdym razem potrzebnych surowców ale brać je z cache, który będzie aktualizowany przy zmianach - podobnie z produktami/potrzebami?
 			float populationResourceNeeds = field->resourceNeeds(resourceIndex);
@@ -155,13 +154,13 @@ public:
 	void visit(Creature *creature, Field *field,
 			CreaturesPopulation *population, unsigned x, unsigned y) {
 		LOG4CXX_DEBUG(logger, "creature (" << creature << ") use resorces  ");
-		FloatVector *v = &creature->getFenotype()->usedResourcesQuants;
+		FloatVector *v = &creature->getFenotype()->lostArticlesQuants;
 		FloatVector::iterator f = v->begin();
 		for (; f != v->end(); f++) {
 			LOG4CXX_DEBUG(logger, "resource [" << f - v->begin() << "] = " << *f);
 		}
 		LOG4CXX_DEBUG(logger, "creature (" << creature << ") produce  ");
-		v = &creature->getFenotype()->createdProductQuants;
+		v = &creature->getFenotype()->gainedArticlesQuants;
 		f = v->begin();
 		for (; f != v->end(); f++) {
 			LOG4CXX_DEBUG(logger, "product [" << f - v->begin() << "] = " << *f);
@@ -171,17 +170,21 @@ public:
 };
 LoggerPtr StatsVisitor::logger(Logger::getLogger("StatsVisitor"));
 
-class NextYearVisitor: public CreaturesOnFieldVisitor {
+class CreatureActivity: public PopulationOnFieldVisitor {
 private:
 	// Logowanie
 	static LoggerPtr logger;
 public:
-	void visit(Creature *creature, Field *field,
-			CreaturesPopulation *population, unsigned x, unsigned y) {
-		creature->step();
+	void visit(CreaturesPopulation *population, Field *field, unsigned x,
+			unsigned y) {
+		for (; p != (*j)->populations.end(); p++) {
+			CreaturesPopulation *population = p->second;
+			CreatureActivityThread activityThread = new CreatureActivityThread ();
+			activityThread.run ();
+		}
 	}
 };
-LoggerPtr NextYearVisitor::logger(Logger::getLogger("NextYearVisitor"));
+LoggerPtr CreatureActivity::logger(Logger::getLogger("CreatureActivity"));
 
 class UpdateFieldResourceUseVisitor: public CreaturesOnFieldVisitor {
 private:
@@ -190,11 +193,11 @@ private:
 public:
 	void visit(Creature *creature, Field *field,
 			CreaturesPopulation *population, unsigned x, unsigned y) {
-		for (int resourceIndex = 0; resourceIndex < World::NO_OF_RESOURCES; resourceIndex++) {
-			float used = creature->getFenotype()->usedResourcesQuants.at(
+		for (int resourceIndex = 0; resourceIndex < World::NO_OF_ARTICLES; resourceIndex++) {
+			float used = creature->getFenotype()->lostArticlesQuants.at(
 					resourceIndex);
 			if (used > 0.0) {
-				field->decreaseResourceQuantity(resourceIndex, used);
+				field->decreaseArticleQuantity(resourceIndex, used);
 			}
 		}
 	}
@@ -209,8 +212,8 @@ private:
 public:
 	void visit(Creature *creature, Field *field,
 			CreaturesPopulation *population, unsigned x, unsigned y) {
-		for (int productIndex = 0; productIndex < World::NO_OF_PRODUCTS; productIndex++) {
-			float created = creature->getFenotype()->createdProductQuants.at(
+		for (int productIndex = 0; productIndex < World::NO_OF_ARTICLES; productIndex++) {
+			float created = creature->getFenotype()->gainedArticlesQuants.at(
 					productIndex);
 			population->updateProductStock(productIndex, created);
 		}
@@ -225,7 +228,7 @@ public:
 	void visit(Creature *creature, Field *field,
 			CreaturesPopulation *population, unsigned x, unsigned y) {
 		creature->prepare4Meal();
-		for (int productIndex = 0; productIndex < World::NO_OF_PRODUCTS; productIndex++) {
+		for (int productIndex = 0; productIndex < World::NO_OF_ARTICLES; productIndex++) {
 			float productAmount = field->productStock(productIndex);
 			float productNeeds = field->productNeeds(productIndex);
 			if (productNeeds > 0) {
@@ -396,10 +399,10 @@ World *World::readWorldFromFile(const char *fileName) {
 			int X = root.at(L"sizeX")->AsNumber();
 			int Y = root.at(L"sizeY")->AsNumber();
 			LOG4CXX_DEBUG(logger, "wordlSize (" << X << "," << Y << ")");
-			World::NO_OF_PRODUCTS = root.at(L"productsNo")->AsNumber();
-			LOG4CXX_DEBUG(logger, "NO_OF_PRODUCTS :" << World::NO_OF_PRODUCTS);
-			World::NO_OF_RESOURCES = root.at(L"resourcesNo")->AsNumber();
-			LOG4CXX_DEBUG(logger, "NO_OF_RESOURCES :" << World::NO_OF_RESOURCES);
+			World::NO_OF_ARTICLES = root.at(L"productsNo")->AsNumber();
+			LOG4CXX_DEBUG(logger, "NO_OF_PRODUCTS :" << World::NO_OF_ARTICLES);
+			World::NO_OF_ARTICLES = root.at(L"resourcesNo")->AsNumber();
+			LOG4CXX_DEBUG(logger, "NO_OF_RESOURCES :" << World::NO_OF_ARTICLES);
 			world = World::getWorld();
 			for (int i = 0; i < X; i++) {
 				FieldsVector fVector;
@@ -432,12 +435,12 @@ World *World::readWorldFromFile(const char *fileName) {
 					assert(field != NULL);
 					fVector.push_back(field);
 
-					for (int r = 0; r < World::NO_OF_RESOURCES; r++) {
+					for (int r = 0; r < World::NO_OF_ARTICLES; r++) {
 						//float productPrice(int i);
 						float price = field->resourcePrice(r);
 						LOG4CXX_DEBUG(logger, "resource [" << r << "]: price = " << price);
 					}
-					for (int p = 0; p < World::NO_OF_PRODUCTS; p++) {
+					for (int p = 0; p < World::NO_OF_ARTICLES; p++) {
 						//float productPrice(int i);
 						float price = field->productPrice(p);
 						LOG4CXX_DEBUG(logger, "product [" << p << "]: price = " << price);
@@ -555,7 +558,7 @@ void World::countResourcesPrices() {
 	for (; i != getWorld()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();
 		for (; j != i->end(); j++) {
-			for (int r = 0; r < World::NO_OF_RESOURCES; r++) {
+			for (int r = 0; r < World::NO_OF_ARTICLES; r++) {
 				float price = (*j)->updateResourcePrice(r);
 				LOG4CXX_DEBUG(logger, "resource [" << r << "]: price = " << price);
 			}
@@ -570,7 +573,7 @@ void World::countProductsPrices() {
 	for (; i != getWorld()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();
 		for (; j != i->end(); j++) {
-			for (int p = 0; p < World::NO_OF_PRODUCTS; p++) {
+			for (int p = 0; p < World::NO_OF_ARTICLES; p++) {
 				float price = (*j)->updateProductPrice(p);
 				LOG4CXX_DEBUG(logger, "product [" << p << "]: price = " << price);
 			}
@@ -579,35 +582,35 @@ void World::countProductsPrices() {
 }
 
 void World::step(StateSaver *stateSaver) {
-	CreaturesOnFieldVisitor * visitor = new NextYearVisitor();
+	PopulationOnFieldVisitor * visitor = new NextYearVisitor();
 	iterateCreaturesOnFields(visitor);
 	delete visitor;
-	stateSaver->save("nextYear");
+	/*
+	 stateSaver->save("nextYear");
+	 // Zapamiętajmy ceny surowców
+	 countResourcesPrices();
+	 stateSaver->save("haveResourcePrices");
 
-	// Zapamiętajmy ceny surowców
-	countResourcesPrices();
-	stateSaver->save("haveResourcePrices");
-
-	// Karmimy istoty i dzięki temu ustalamy ich wydajność
-	// Zużywamy produkty przechowywane przez populacje
-	creaturesSupplying();
-	stateSaver->save("creaturesSuplied");
-	// Zużywamy surowce do produkcji. Zgodnie z wydajnoscia istot powstają produkty. Trafiają do magazynów populacji.
-	// Aktualizuj zapasy populacji na podstawie wyprodukowanych towarow
-	creaturesWorking();
-	stateSaver->save("creaturesWorked");
-	// Istoty zgodnie ze swoją wydajnością i preferencjami poruszają się
-	creaturesMoving();
-	stateSaver->save("creaturesMoved");
-	// Wyliczmy ceny produktów (po wędrówce osobnikow)
-	countProductsPrices();
-	stateSaver->save("haveProductPrices");
-	// Na podstawie funkcji celu dokonaj roznmożenia
-	creaturesReproducting();
-	stateSaver->save("reproduction");
-	// Usuń z populacji najmniej przystosowane
-	creaturesDying();
-	stateSaver->save("die");
+	 // Karmimy istoty i dzięki temu ustalamy ich wydajność
+	 // Zużywamy produkty przechowywane przez populacje
+	 creaturesSupplying();
+	 stateSaver->save("creaturesSuplied");
+	 // Zużywamy surowce do produkcji. Zgodnie z wydajnoscia istot powstają produkty. Trafiają do magazynów populacji.
+	 // Aktualizuj zapasy populacji na podstawie wyprodukowanych towarow
+	 creaturesWorking();
+	 stateSaver->save("creaturesWorked");
+	 // Istoty zgodnie ze swoją wydajnością i preferencjami poruszają się
+	 creaturesMoving();
+	 stateSaver->save("creaturesMoved");
+	 // Wyliczmy ceny produktów (po wędrówce osobnikow)
+	 countProductsPrices();
+	 stateSaver->save("haveProductPrices");
+	 // Na podstawie funkcji celu dokonaj roznmożenia
+	 creaturesReproducting();
+	 stateSaver->save("reproduction");
+	 // Usuń z populacji najmniej przystosowane
+	 creaturesDying();
+	 stateSaver->save("die");*/
 }
 
 World::~World() {
