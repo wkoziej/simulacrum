@@ -13,34 +13,34 @@
 LoggerPtr Field::logger(Logger::getLogger("field"));
 
 Field::Field() {
-	resourceQuantities.assign(World::NO_OF_RESOURCES, 0);
-	resourceRenewal.assign(World::NO_OF_RESOURCES, 0);
-	maxResourcesQuantities.assign(World::NO_OF_RESOURCES, 0);
-	maxProductsQuantities.assign(World::NO_OF_PRODUCTS, 0);
-	resourcePriceCache.assign(World::NO_OF_RESOURCES, POSITIVE_INFINITY);
-	productPriceCache.assign(World::NO_OF_PRODUCTS, POSITIVE_INFINITY);
+	resourceQuantities.assign(World::NO_OF_ARTICLES, 0);
+	articleRenewal.assign(World::NO_OF_ARTICLES, 0);
+	maxResourcesQuantities.assign(World::NO_OF_ARTICLES, 0);
+	maxProductsQuantities.assign(World::NO_OF_ARTICLES, 0);
+	resourcePriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	productPriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
 
 }
 
 Field::Field(const JSONObject &field) {
 	JSONArray resources = field.at(L"resources")->AsArray();
-	assert (resources.size() == World::NO_OF_RESOURCES);
+	assert (resources.size() == World::NO_OF_ARTICLES);
 	JSONArray::iterator resource = resources.begin();
 	for (; resource != resources.end(); resource++) {
 		JSONArray properies = (*resource)->AsArray();
 		resourceQuantities.push_back(properies.at(0)->AsNumber());
-		resourceRenewal.push_back(properies.at(1)->AsNumber());
+		articleRenewal.push_back(properies.at(1)->AsNumber());
 	}
-	resourcePriceCache.assign(World::NO_OF_RESOURCES, POSITIVE_INFINITY);
-	productPriceCache.assign(World::NO_OF_PRODUCTS, POSITIVE_INFINITY);
-	maxResourcesQuantities.assign(World::NO_OF_RESOURCES, POSITIVE_INFINITY);
-	maxProductsQuantities.assign(World::NO_OF_PRODUCTS, POSITIVE_INFINITY);
+	resourcePriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	productPriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	maxResourcesQuantities.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	maxProductsQuantities.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
 	FloatVector::iterator q;
 	FloatVector::iterator r;
-	r = resourceRenewal.begin();
+	r = articleRenewal.begin();
 	q = resourceQuantities.begin();
-	for (; r != resourceRenewal.end(); r++, q++) {
-		LOG4CXX_DEBUG(logger, "resource [" << r - resourceRenewal.begin( ) << "] = [" << *q << "," << *r <<"]");
+	for (; r != articleRenewal.end(); r++, q++) {
+		LOG4CXX_DEBUG(logger, "resource [" << r - articleRenewal.begin( ) << "] = [" << *q << "," << *r <<"]");
 	}
 }
 
@@ -48,34 +48,34 @@ void Field::initializeRandomly() {
 	LOG4CXX_TRACE(logger, "initializeRandomly");
 	moveLag = (random() / (float) RAND_MAX) * MAX_MOVE_LAG;
 	LOG4CXX_TRACE(logger, "moveLag: " << moveLag);
-	resourceQuantities.assign(World::NO_OF_RESOURCES, 0);
+	resourceQuantities.assign(World::NO_OF_ARTICLES, 0);
 	FloatVector::iterator f;
 	FloatVector::iterator mP = maxProductsQuantities.begin();
 	FloatVector::iterator mR = maxResourcesQuantities.begin();
-	for (f = resourceRenewal.begin(); f != resourceRenewal.end(); f++, mP++, mR++) {
+	for (f = articleRenewal.begin(); f != articleRenewal.end(); f++, mP++, mR++) {
 		*f = (random() / (float) RAND_MAX) * MAX_RENEWAL;
 		*mP = (random() / (float) RAND_MAX) * MAX_PRODUCT_QUANT;
 		*mR = (random() / (float) RAND_MAX) * MAX_RESOURCE_QUANT;
-		LOG4CXX_DEBUG(logger, "resourceRenewal [" << f - resourceRenewal.begin( ) << "]: " << *f);
+		LOG4CXX_DEBUG(logger, "resourceRenewal [" << f - articleRenewal.begin( ) << "]: " << *f);
 	}
 }
 
 void Field::renovateResources() {
 	LOG4CXX_TRACE(logger, "renovateResources");
-	FloatVector::iterator r = resourceRenewal.begin();
+	FloatVector::iterator r = articleRenewal.begin();
 	FloatVector::iterator q = resourceQuantities.begin();
 	FloatVector::iterator mR = maxResourcesQuantities.begin();
-	for (; r != resourceRenewal.end(); r++, q++, mR++) {
+	for (; r != articleRenewal.end(); r++, q++, mR++) {
 		*q += *r;
 		if (*q > *mR) {
 			*q = *mR;
 		}
-		LOG4CXX_DEBUG(logger, "resourceQuantity [" << r - resourceRenewal.begin() << "]: " << *q << ", ren:" << *r << ", maxRes : " << *mR);
+		LOG4CXX_DEBUG(logger, "resourceQuantity [" << r - articleRenewal.begin() << "]: " << *q << ", ren:" << *r << ", maxRes : " << *mR);
 	}
 
 }
 
-float Field::getResourceQuantity(unsigned index) const {
+float Field::getArticleQuantity(unsigned index) const {
 	return resourceQuantities.at(index);
 }
 
@@ -133,7 +133,7 @@ float Field::updateResourcePrice(int i) {
 	float price = resourcePriceCache.at(i);
 	// Jaka ilosc produktu jest dostepna w zapasach populacji
 	PopulationsMap::const_iterator population = populations.begin();
-	float availabble = getResourceQuantity(i);
+	float availabble = getArticleQuantity(i);
 	float needs = resourceNeeds(i);
 	LOG4CXX_DEBUG(logger, "resource [" << i << "]: available = " << availabble << ", needs = " << needs);
 	if (availabble > 0)
@@ -151,7 +151,7 @@ float Field::updateResourcePrice(int i) {
  }
  }*/
 
-void Field::decreaseResourceQuantity(unsigned resourceIndex, float resourceUsed) {
+void Field::decreaseArticleQuantity(unsigned resourceIndex, float resourceUsed) {
 	LOG4CXX_DEBUG(logger, "resourceQuantities [" << resourceIndex << "] decreased from " <<resourceQuantities.at(resourceIndex) << " to " << resourceQuantities.at(resourceIndex) - resourceUsed);
 	resourceQuantities.at(resourceIndex) -= resourceUsed;
 	assert(resourceQuantities.at(resourceIndex) >= 0);

@@ -26,32 +26,33 @@ class Field {
 public:
 	Field();
 	Field(const JSONObject &JSONfield);
-	void initializeRandomly();
+	//void initializeRandomly();
 	void renovateResources();
-	float getResourceQuantity(unsigned index) const ;
-	void decreaseResourceQuantity(unsigned resourceIndex, float resourceUsed);
-	void decreaseProductQuantity(float productEaten, unsigned productIndex);
-	bool getOut (float &velocity);
+	float getArticleQuantity(unsigned index) const ;
+	void decreaseArticleQuantity(unsigned resourceIndex, float resourceUsed);
+	//void decreaseProductQuantity(float productEaten, unsigned productIndex);
+	//bool getOut (float &velocity);
 	virtual ~Field();
-	const FloatVector &resourceQuantitiesVector () const {return resourceQuantities; }
-	float productStock(int i) const ;
-	float productNeeds(int i) const ;
-	float resourceNeeds(int i) const;
+	//const FloatVector &resourceQuantitiesVector () const {return resourceQuantities; }
+	//float productStock(int i) const ;
+	//float productNeeds(int i) const ;
+	//float resourceNeeds(int i) const;
 	float productPrice(int i) const;
 	float resourcePrice(int i) const;
-	float updateProductPrice(int i);
-	float updateResourcePrice(int i);
+	//float updateProductPrice(int i);
+	//float updateResourcePrice(int i);
 	PopulationsMap populations;
-	float getMoveLag () const { return moveLag; }
+	Market market;
+	//float getMoveLag () const { return moveLag; }
 private:
-	float moveLag; // Opóźnienie ruchu
-	FloatVector resourceQuantities;
-	FloatVector resourceRenewal;
+	//float moveLag; // Opóźnienie ruchu
+	//FloatVector resourceQuantities;
+	FloatVector articleRenewal;
 	//FloatVector productsQuantities;
-	FloatVector maxResourcesQuantities;
-	FloatVector maxProductsQuantities;
-	FloatVector resourcePriceCache;
-	FloatVector	productPriceCache;
+	//FloatVector maxResourcesQuantities;
+	//FloatVector maxProductsQuantities;
+	//FloatVector resourcePriceCache;
+	//FloatVector	productPriceCache;
 	// Logowanie
 	static LoggerPtr logger;
 };
