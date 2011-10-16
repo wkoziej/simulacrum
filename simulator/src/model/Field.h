@@ -8,27 +8,25 @@
 #ifndef FIELD_H_
 #define FIELD_H_
 
-#include <vector>
+
+//#include <QtCore/QSemaphore>
 #include "log4cxx/logger.h"
 #include "JSON/JSON.h"
 
 #include "Config.h"
 #include "Population.h"
 
-using namespace std;
 using namespace log4cxx;
 
-typedef std::vector<float> FloatVector;
-typedef std::pair<std::wstring, CreaturesPopulation *> NamedPopulation;
-typedef std::map<std::wstring, CreaturesPopulation *> PopulationsMap;
-
+class FieldPrivate;
+class Recipe;
 class Field {
 public:
 	Field();
 	Field(const JSONObject &JSONfield);
 	//void initializeRandomly();
 	void renovateResources();
-	float getArticleQuantity(unsigned index) const ;
+	//float getArticleQuantity(unsigned index) const ;
 	void decreaseArticleQuantity(unsigned resourceIndex, float resourceUsed);
 	//void decreaseProductQuantity(float productEaten, unsigned productIndex);
 	//bool getOut (float &velocity);
@@ -37,17 +35,16 @@ public:
 	//float productStock(int i) const ;
 	//float productNeeds(int i) const ;
 	//float resourceNeeds(int i) const;
-	float productPrice(int i) const;
-	float resourcePrice(int i) const;
-	//float updateProductPrice(int i);
-	//float updateResourcePrice(int i);
-	PopulationsMap populations;
-	Market market;
+	float productPrice(unsigned  i) const;
+	float resourcePrice(unsigned  i) const;
+	const Recipe *getRecipe(unsigned articleId) const;
+	bool tryTakeArticle (unsigned articleId);
+	void putArticle (unsigned articleId);
 	//float getMoveLag () const { return moveLag; }
 private:
+	FieldPrivate *prv;
 	//float moveLag; // Opóźnienie ruchu
 	//FloatVector resourceQuantities;
-	FloatVector articleRenewal;
 	//FloatVector productsQuantities;
 	//FloatVector maxResourcesQuantities;
 	//FloatVector maxProductsQuantities;

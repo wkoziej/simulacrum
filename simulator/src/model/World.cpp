@@ -170,21 +170,27 @@ public:
 };
 LoggerPtr StatsVisitor::logger(Logger::getLogger("StatsVisitor"));
 
-class CreatureActivity: public PopulationOnFieldVisitor {
+class CreatureActivityVisitor: public PopulationOnFieldVisitor {
 private:
 	// Logowanie
 	static LoggerPtr logger;
 public:
 	void visit(CreaturesPopulation *population, Field *field, unsigned x,
 			unsigned y) {
+		std::list<CreatureActivityThread *> threadsToWait;
 		for (; p != (*j)->populations.end(); p++) {
 			CreaturesPopulation *population = p->second;
-			CreatureActivityThread activityThread = new CreatureActivityThread ();
+			CreatureActivityThread *activityThread = new CreatureActivityThread ();
 			activityThread.run ();
+			threadsToWait.push_back(activityThread);
+		}
+		while (threadsToWait.size()) {
+			threadsToWait.front()->wait();
+			threadsToWait.pop_front();
 		}
 	}
 };
-LoggerPtr CreatureActivity::logger(Logger::getLogger("CreatureActivity"));
+LoggerPtr CreatureActivityVisitor::logger(Logger::getLogger("CreatureActivityVisitor"));
 
 class UpdateFieldResourceUseVisitor: public CreaturesOnFieldVisitor {
 private:
@@ -281,7 +287,7 @@ public:
 		if (destField != field) {
 			// Ruszyliśmy się
 			LOG4CXX_DEBUG(logger, "move from (" << sX << "," << sY << ") to (" << x << "," << y <<")");
-			destPopulation = World::getWorld()->findPopulationOnField(
+			destPopulation = World::getWorld()->findOrCreatePopulationOnField(
 					population->getName(), x, y);
 			assert (destPopulation != NULL);
 			creature->changePopulation(population, destPopulation);
@@ -653,13 +659,20 @@ void World::visitFields(FieldsVisitor *fieldVisitor) {
 
 }
 
-CreaturesPopulation *World::findPopulationOnField(std::wstring name, int x,
+CreaturesPopulation *World::findOrCreatePopulationOnField(const CreaturesPopulation *species, int x,
 		int y) {
 	CreaturesPopulation *population = NULL;
 	Field *field = fields.at(x).at(y);
-	PopulationsMap::iterator i = field->populations.find(name);
+	PopulationsMap::iterator i = field->populations.find(species->getName());
 	if (i != field->populations.end()) {
 		population = i->second;
+	} else {
+		NamedPopulation newPopulation;
+		newPopulation.first = species->getName();
+		population = new CreaturesPopulation ();
+		population->setSpecies (species);
+		newPopulation.second = population;
+		field->populations.push_back (newPopulation);
 	}
 	return population;
 }

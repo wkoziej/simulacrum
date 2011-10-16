@@ -15,7 +15,7 @@
 #include "JSON/JSON.h"
 #include "Config.h"
 #include "Population.h"
-#include "Field.h"
+
 #include <QtCore/qthread.h>
 
 using namespace std;
@@ -23,37 +23,33 @@ using namespace log4cxx;
 
 float Objective(GAGenome &g);
 
-class CreatureFenotype: public GAEvalData {
+class CreatureFenotype;
+class Field;
 
-public:
-	FloatVector gainedArticlesQuants;
-	FloatVector lostArticlesQuants;
-	std::pair<unsigned, unsigned> previousFieldIdexes;
-	int fieldCoordX;
-	int fieldCoordY;
-	unsigned yearsOld;
-	const CreaturesPopulation *population;
-	const Field *field;
-
-	float wallet;
-	FloatVector articleStocks;
-
-	CreatureFenotype(const CreaturesPopulation *population, const Field *field);
-	virtual GAEvalData* clone() const;
-	virtual void copy(const GAEvalData &src);
-	/*void clearPerformanceRatio() {
-	 performanceRatio = 0;
-	 }
-	 void increasePerformanceRatio(float amount) {
-	 performanceRatio += amount;
-	 }
-	 float getPerformanceRatio() {
-	 return performanceRatio;
-	 }*/
-private:
-	float performanceRatio;
-	static LoggerPtr logger;
+enum ActivitiesStrategy {
+	AscengingArgumentCountOrder
 };
+
+enum ZeroArgActivities {
+	GoUp, GoDown, GoLeft, GoRight, RestActivity, ZeroArgActivitiesSIZE
+};
+
+enum OneArgActivities {
+	ProduceArticle,
+	CollectArticle,
+	LeaveArticle,
+	SellArticle,
+	BuyArticle,
+	CheckArticle,
+	OneArgActivitiesSIZE
+};
+
+enum TwoArgActivities {
+	ExchangeArticles, TwoArgActivitiesSIZE
+};
+
+class CreatureActivity;
+typedef std::list<CreatureActivity *> CreatureActivityList;
 
 class Creature: public GARealGenome {
 public:
@@ -61,8 +57,8 @@ public:
 		NoDirection, DirLeft, DirRight, DirUp, DirDown
 	};
 	Creature(const Creature &creature);
-	Creature(const CreaturesPopulation *population, const Field * field);
-	Creature(const CreaturesPopulation *population, const Field * field,
+	//Creature(const CreaturesPopulation *population, const Field * field);
+	Creature(CreaturesPopulation *population, Field * field,
 			JSONObject &creature);
 	Creature & operator=(const Creature & arg) {
 		copy(arg);
@@ -97,11 +93,24 @@ public:
 	 int noOfNeeds();*/
 
 	std::string genomeStr() const;
-	CreatureFenotype *getFenotype() {
+	CreatureFenotype *getFenotype() const {
 		return (CreatureFenotype *) evalData();
 	}
-private:
+	Field *getField();
+	unsigned getX() const;
+	unsigned getY() const;
 
+	bool hasEnergy() const;
+	void rest();
+	bool produce(unsigned articleId, const std::vector<float> &ingredients);
+	bool collect(unsigned articleId);
+	bool leave(unsigned articleId);
+	bool move(unsigned x, unsigned y);
+
+	// Logowanie
+	static LoggerPtr logger;
+private:
+	CreatureActivityList getCreatureActivities();
 	//float getProcessingVelocity(unsigned index);
 	/*	float getProcessingRateAndProductIndex(unsigned resourceIndex,
 	 int &productIndex);*/
@@ -114,26 +123,13 @@ private:
 	//void productMissed(float quant, unsigned productIndex);
 	//GAGenome *genome;
 	// float missedProductsFactor;
-	// Logowanie
-	static LoggerPtr logger;
+
 	static GARealAlleleSetArray alleles;
 	//	void step ();
 	void changePopulation(CreaturesPopulation *from, CreaturesPopulation *to);
-
-};
-
-class CreatureActivity {
-private:
-	CreatureFenotype *fenotype;
-	Field *field;
-	FloatVector arguments;
-public:
-	CreatureActivity(Creature *creature, FloatVector &arguments) {
-		this->fenotype = creature->getFenotype();
-		this->field = this->fenotype->field;
-		copy(arguments.begin(), arguments.end(), this->arguments);
-	}
-	virtual void make() = 0;
+	CreatureActivity *createActivity(unsigned activityGenIndex,
+			unsigned parametersCount);
+	ActivitiesStrategy getActiviviesStrategy() const;
 };
 
 class CreatureActivityThread: public QThread {

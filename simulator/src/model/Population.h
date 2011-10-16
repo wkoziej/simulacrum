@@ -25,6 +25,10 @@ public:
 	//float keptProductSum(int i);
 	//void updateProductStock (int i, float delta);
 	void loadCreatures (const JSONObject &population);
+	unsigned get0ArgActivitiesRoom() const;
+	unsigned get1ArgActivitiesRoom() const;
+	unsigned get2ArgActivitiesRoom() const;
+
 	//int getCreaturesTalentsCount () const { return creaturesTalentsCount; }
 	//int getCreaturesNeedsCount () const { return creaturesNeedsCount; }
 private:

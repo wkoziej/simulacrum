@@ -6,19 +6,35 @@
  */
 
 #include "stdlib.h"
+#include <vector>
 
 #include "Field.h"
 #include "World.h"
+#include "Market.h"
+#include "Types.h"
+
+using namespace std;
 
 LoggerPtr Field::logger(Logger::getLogger("field"));
 
+class FieldPrivate {
+public:
+	//float updateProductPrice(int i);
+	//float updateResourcePrice(int i);
+	PopulationsMap populations;
+	Market * market;
+	ArticleStocks stocks;
+	FloatVector articleRenewal;
+};
+
 Field::Field() {
-	resourceQuantities.assign(World::NO_OF_ARTICLES, 0);
-	articleRenewal.assign(World::NO_OF_ARTICLES, 0);
-	maxResourcesQuantities.assign(World::NO_OF_ARTICLES, 0);
-	maxProductsQuantities.assign(World::NO_OF_ARTICLES, 0);
-	resourcePriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
-	productPriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	prv = new FieldPrivate();
+	prv->resourceQuantities.assign(World::NO_OF_ARTICLES, 0);
+	prv->articleRenewal.assign(World::NO_OF_ARTICLES, 0);
+	prv->maxResourcesQuantities.assign(World::NO_OF_ARTICLES, 0);
+	prv->maxProductsQuantities.assign(World::NO_OF_ARTICLES, 0);
+	prv->resourcePriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	prv->productPriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
 
 }
 
@@ -31,16 +47,16 @@ Field::Field(const JSONObject &field) {
 		resourceQuantities.push_back(properies.at(0)->AsNumber());
 		articleRenewal.push_back(properies.at(1)->AsNumber());
 	}
-	resourcePriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
-	productPriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
-	maxResourcesQuantities.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
-	maxProductsQuantities.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	prv->resourcePriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	prv->productPriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	prv->maxResourcesQuantities.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
+	prv->maxProductsQuantities.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
 	FloatVector::iterator q;
 	FloatVector::iterator r;
-	r = articleRenewal.begin();
-	q = resourceQuantities.begin();
-	for (; r != articleRenewal.end(); r++, q++) {
-		LOG4CXX_DEBUG(logger, "resource [" << r - articleRenewal.begin( ) << "] = [" << *q << "," << *r <<"]");
+	r = prv->articleRenewal.begin();
+	q = prv->resourceQuantities.begin();
+	for (; r != prv->articleRenewal.end(); r++, q++) {
+		LOG4CXX_DEBUG(logger, "resource [" << r - prv->articleRenewal.begin( ) << "] = [" << *q << "," << *r <<"]");
 	}
 }
 
@@ -117,6 +133,14 @@ float Field::resourcePrice(int i) const {
 	return price;
 }
 
+bool Field::tryTakeArticle(unsigned articleId) {
+	return prv->stocks.at(articleId).tryAcquire();
+}
+
+void Field::putArticle(unsigned articleId) {
+	prv->stocks.at(articleId).release();
+}
+
 float Field::updateProductPrice(int i) {
 	float price = productPriceCache.at(i);
 	// Jaka ilosc produktu jest dostepna w zapasach populacji
@@ -179,5 +203,5 @@ bool Field::getOut(float &velocity) {
 }
 
 Field::~Field() {
-	// TODO Auto-generated destructor stub
+	delete prv;
 }
