@@ -5,14 +5,16 @@
  *      Author: wojtas
  */
 
-#include "Creature.h"
+
 #include "Config.h"
-#include "World.h"
+
 #include "Field.h"
 #include "Types.h"
 #include "Recipe.h"
-#include <numeric>
-
+#include "Market.h"
+#include "Creature.h"
+#include "World.h"
+#include "Population.h"
 LoggerPtr Creature::logger(Logger::getLogger("creature"));
 
 // Liczba róznych strategii wyboru aktywności
@@ -27,8 +29,8 @@ LoggerPtr Creature::logger(Logger::getLogger("creature"));
 class CreatureFenotype: public GAEvalData {
 
 public:
-	FloatVector gainedArticlesQuants;
-	FloatVector lostArticlesQuants;
+	UnsignedVector gainedArticlesQuants;
+	UnsignedVector lostArticlesQuants;
 	int fieldCoordX;
 	int fieldCoordY;
 	unsigned yearsOld;
@@ -36,7 +38,7 @@ public:
 	Field *field;
 
 	float wallet;
-	FloatVector articleStocks;
+	UnsignedVector articleStocks;
 
 	CreatureFenotype(CreaturesPopulation *population, Field *field);
 	virtual GAEvalData* clone() const;
@@ -51,19 +53,19 @@ class CreatureActivity {
 protected:
 	Creature *creature;
 	const Field *field;
-	FloatVector arguments;
+	UnsignedVector arguments;
 public:
-	CreatureActivity(Creature *creature, FloatVector &arguments) {
+	CreatureActivity(Creature *creature, UnsignedVector &arguments) {
 		this->creature = creature;
 		this->field = creature->getField();
-		copy(arguments.begin(), arguments.end(), this->arguments);
+		copy(arguments.begin(), arguments.end(), this->arguments.begin());
 	}
 	virtual void make() = 0;
 };
 
 class Arg0CreatureActivity: public CreatureActivity {
 public:
-	Arg0CreatureActivity(Creature *creature, FloatVector &arguments) :
+	Arg0CreatureActivity(Creature *creature, UnsignedVector &arguments) :
 		CreatureActivity(creature, arguments) {
 	}
 	void make() {
@@ -76,7 +78,7 @@ protected:
 
 class MoveActivity: public Arg0CreatureActivity {
 public:
-	MoveActivity(Creature *creature, FloatVector &arguments) :
+	MoveActivity(Creature *creature, UnsignedVector &arguments) :
 		Arg0CreatureActivity(creature, arguments) {
 	}
 protected:
@@ -91,7 +93,7 @@ protected:
 
 class GoUpActivity: public MoveActivity {
 public:
-	GoUpActivity(Creature *creature, FloatVector &arguments) :
+	GoUpActivity(Creature *creature, UnsignedVector &arguments) :
 		MoveActivity(creature, arguments) {
 	}
 protected:
@@ -165,7 +167,7 @@ public:
 		const Recipe *recipe = field->getRecipe(articleId);
 		bool recipeExists = recipe != NULL;
 		if (recipeExists) {
-			FloatVector ingredients = recipe->getIngredientsVector();
+			UnsignedVector ingredients = recipe->getIngredientsVector();
 			creature->produce(articleId, ingredients);
 		}
 	}
@@ -188,29 +190,21 @@ public:
 class SellArticle: public Arg1CreatureActivity {
 public:
 	void makeActvity(unsigned articleId) {
-		bool canSell = fenotype->articleStocks.at(articleId) >= 1.0;
-		if (canSell) {
-			float moneyEarned = fenotype->field->market.buyArticleFromClient(
-					creature->getId(), articleId, 1.0);
-			fenotype->wallet += moneyEarned;
-		}
+		creature->sell(articleId);
 	}
 };
 
 class BuyArticle: public Arg1CreatureActivity {
 public:
 	void makeActvity(unsigned articleId) {
-		float earned = fenotype->field->market.buyArticleFromClient(
-				creature->getId(), articleId);
-		fenotype->wallet += earned;
+		creature->buy(articleId);
 	}
 };
 
 class CheckArticle: public Arg1CreatureActivity {
 public:
 	void makeActvity(unsigned articleId) {
-		float priceOfArticle = fenotype->field->market.articleSellPrice(
-				creature->getId(), articleId);
+		creature->check(articleId);
 	}
 };
 
@@ -290,7 +284,7 @@ GARealAlleleSetArray Creature::alleles;
  }*/
 
 std::string Creature::genomeStr() const {
-	stringstream buf;
+	std::stringstream buf;
 	buf << *this;
 	return buf.str();
 }
@@ -442,108 +436,6 @@ float Creature::randBetweenAndStepped(float min, float max, float step) {
 	return intVal * step;
 }
 
-/*float Creature::produce(float resourceQuantity, unsigned index,
- float &resourceUsed, int &productIndex) {
- LOG4CXX_TRACE(logger, "produce");
- float productQuant = 0.0;
- resourceUsed = 0.0;
- productIndex = -1;
- if (resourceQuantity > 0.0) {
-
- float processingRate = getProcessingRateAndProductIndex(index,
- productIndex);
- if (processingRate > 0.0) {
- resourceUsed = resourceQuantity * processingRate;
- productQuant = resourceUsed * getPerformanceRatio();
- LOG4CXX_DEBUG(logger, "resourceQuantity = " << resourceQuantity << ", processingRate = " << processingRate << ", produced = " << productQuant);
- getFenotype()->createdProductQuants.at(productIndex)
- += productQuant;
- getFenotype()->usedResourcesQuants.at(index) += resourceUsed;
- }
- }
- this->_evaluated = gaFalse;
- return productQuant;
- }*/
-
-/*
- void Creature::feed(float productAmount, unsigned productIndex, float &eaten) {
- LOG4CXX_TRACE(logger, "feed");
- float needRatio = getNeedOfProductRatio(productIndex);
- if (productAmount > 1.0)
- productAmount = 1.0;
- eaten = productAmount * needRatio;
- getFenotype()->increasePerformanceRatio(eaten);
- LOG4CXX_DEBUG(logger, "productIndex:" << productIndex << ", productAmount: " << productAmount << " needs: " << needRatio << ", eaten: " << eaten);
- }
- */
-/*
- Creature::Directions Creature::nextDirection(unsigned step) {
- Creature::Directions direction = Creature::NoDirection;
- if (step < MAX_POINT_ON_ROAD) {
- float direction = this->gene(TALENT_BITS_COUNT * noOfTalents()
- + NEED_BITS_COUNT * noOfNeeds() + step);
- LOG4CXX_DEBUG(logger, " nextDirection (" << step << ") = " << direction);
- if (direction == 0.0) {
- direction = Creature::DirLeft;
- } else if (direction == 1.0) {
- direction = Creature::DirRight;
- } else if (direction == 2.0) {
- direction = Creature::DirUp;
- } else {
- direction = Creature::DirDown;
- }
- }
- LOG4CXX_DEBUG(logger, " direction (" << step << ") = " << direction);
- return direction;
- }
-
- float Creature::getNeedOfProductRatio(unsigned productIndex) {
- float needAmount = 0.0;
- float summary = 0.0;
- // Znajdź gen odpowiadający za potrzebę danego produktu
- int genIndex = -1;
- for (int i = 0; i < noOfNeeds(); i++) {
- int index = noOfTalents() * TALENT_BITS_COUNT + NEED_BITS_COUNT * i;
- if (gene(index) == productIndex) {
- genIndex = index;
- }
- summary += gene(index + NEED_RATIO_BIT);
- }
- if (genIndex != -1) {
- needAmount = gene(genIndex + NEED_RATIO_BIT) / summary;
- }
- LOG4CXX_DEBUG(logger, "getNeedOfProductRatio: productIndex  = " << productIndex << ", needAmount = " << needAmount);
- return needAmount;
- }
-
- float Creature::getNeedOfResource(unsigned resourceIndex) {
- int productIndex;
- return getProcessingRateAndProductIndex(resourceIndex, productIndex);
- }
-
- float Creature::getProcessingRateAndProductIndex(unsigned resourceIndex,
- int &productIndex) {
- float rate = 0.0;
- float summary = 0.0;
- productIndex = -1;
- // Znajdź gen odpowiadający za potrzebę danego produktu
- int genIndex = -1;
- for (int i = 0; i < noOfTalents(); i++) {
- int index = TALENT_BITS_COUNT * i;
- if (gene(index) == resourceIndex) {
- genIndex = index;
- }
- summary += gene(index + PROCESSING_RATIO_BIT);
- }
- if (genIndex != -1) {
- productIndex = gene(genIndex + CREATING_PRODUCT_BIT);
- rate = gene(genIndex + PROCESSING_RATIO_BIT) / summary;
- }
- LOG4CXX_DEBUG(logger, "getProcessingRateAndProductIndex: resourceIndex = " << resourceIndex << ", productIndex = " << productIndex << ", procesingRate " << rate);
- return rate;
- }
- */
-
 Creature* Creature::clone(GAGenome::CloneMethod flag) {
 	return new Creature(*this);
 }
@@ -557,12 +449,12 @@ Creature::~Creature() {
 }
 
 void Creature::doAllActivities() {
-	CreatureActivityList activities = getCreatureActivities();
+	/*CreatureActivityList activities = getCreatureActivities();
 	CreatureActivityList::iterator activity = activities.begin();
 	for (; activity != activities.end(); activity++) {
 		(*activity)->make();
 		delete (*activity);
-	}
+	}*/
 }
 
 bool Creature::hasEnergy() const {
@@ -573,12 +465,12 @@ void Creature::rest() {
 }
 
 bool Creature::produce(unsigned articleId,
-		const std::vector<float> &ingredients) {
+		 std::vector<unsigned> ingredients) {
 	bool produced = true;
 	assert (getFenotype()->articleStocks.size() == ingredients.size());
-	FloatVector::const_iterator i = ingredients.begin();
-	FloatVector::iterator s = getFenotype()->articleStocks.begin();
-	for (; produced && i != ingredients.end(); s++) {
+	UnsignedVector::const_iterator i = ingredients.begin();
+	UnsignedVector::iterator s = getFenotype()->articleStocks.begin();
+	for (; produced && i != ingredients.end(); s++, i++) {
 		if (*i > *s) {
 			produced = false;
 		}
@@ -586,10 +478,10 @@ bool Creature::produce(unsigned articleId,
 	if (produced) {
 		i = ingredients.begin();
 		s = getFenotype()->articleStocks.begin();
-		for (; i != ingredients.end(); s++) {
+		for (; i != ingredients.end(); s++, i++) {
 			*s -= *i;
 		}
-		getFenotype()->articleStocks.at(articleId)++;
+		getFenotype()->articleStocks.at(articleId) += 1;
 	}
 	return produced;
 }
@@ -611,6 +503,31 @@ bool Creature::leave(unsigned articleId) {
 	}
 	return canLeave;
 }
+
+bool Creature::sell(unsigned articleId) {
+	CreatureFenotype *fenotype = getFenotype();
+	bool canSell = fenotype->articleStocks.at(articleId) >= 1.0;
+	if (canSell) {
+		float moneyEarned = fenotype->field->getMarket()->buyArticleFromClient(
+				getId(), articleId);
+		fenotype->wallet += moneyEarned;
+	}
+	return canSell;
+}
+
+bool Creature::buy(unsigned articleId) {
+	CreatureFenotype *fenotype = getFenotype();
+	bool bought = fenotype->field->getMarket()->sellArticleToClient(getId(),
+			articleId, fenotype->wallet);
+	return bought;
+}
+
+bool Creature::check(unsigned articleId) {
+	CreatureFenotype *fenotype = getFenotype();
+	fenotype->field->getMarket()->articleSellPrice(getId(), articleId);
+	return true;
+}
+
 unsigned Creature::getX() const {
 	return getFenotype()->fieldCoordX;
 }
@@ -621,10 +538,10 @@ unsigned Creature::getY() const {
 
 CreatureActivity *Creature::createActivity(unsigned activityGenIndex,
 		unsigned parametersCount) {
-	FloatVector parameters;
+	UnsignedVector parameters;
 	CreatureActivity *activity;
 
-	for (int i = 0; i < parametersCount; i++) {
+	for (unsigned i = 0; i < parametersCount; i++) {
 		parameters.push_back(gene(i + 1));
 	}
 	switch (parametersCount) {
@@ -642,8 +559,8 @@ CreatureActivity *Creature::createActivity(unsigned activityGenIndex,
 		}
 		unsigned activityTableIndex = gene(activityGenIndex);
 
-		return activity;
 	}
+	return activity;
 }
 
 CreatureActivityList Creature::getCreatureActivities() {
@@ -696,21 +613,8 @@ bool Creature::move(unsigned x, unsigned y) {
 		changePopulation(population, newPopulation);
 		getFenotype()->fieldCoordX = x;
 		getFenotype()->fieldCoordY = y;
-		getFenotype()->articleStocks.at(ENERGY_INDEX)--;
+		getFenotype()->articleStocks.at(ENERGY_INDEX) -= 1;
 	}
 	return moved;
 }
 
-CreatureActivityThread::CreatureActivityThread(Creature *creature) :
-	QThread() {
-	this->creature = creature;
-}
-
-CreatureActivityThread::~CreatureActivityThread() {
-	// TODO Auto-generated destructor stub
-}
-
-void CreatureActivityThread::run() {
-	// Wyznacz czynność do wykonania i
-	this->creature->doAllActivities();
-}

@@ -34,33 +34,35 @@ public:
 			CreaturesPopulation *p, unsigned x, unsigned y) = 0;
 };
 
-class NeededProductVisitor: public UpdateValueVisitor {
-private:
-	int index;
-public:
-	NeededProductVisitor(int productIndex) {
-		this->index = productIndex;
-	}
+/*class NeededProductVisitor: public UpdateValueVisitor {
+ private:
+ int index;
+ public:
+ NeededProductVisitor(int productIndex) {
+ this->index = productIndex;
+ }
 
-	void updateValue(Creature *creature, Field *field, CreaturesPopulation *p,
-			unsigned x, unsigned y) {
-		value += creature->getNeedOfProductRatio(index);
-	}
-};
+ void updateValue(Creature *creature, Field *field, CreaturesPopulation *p,
+ unsigned x, unsigned y) {
+ value += creature->getNeedOfProductRatio(index);
+ }
+ };*/
+/*
 
-class NeededResourceVisitor: public UpdateValueVisitor {
-private:
-	int index;
-public:
-	NeededResourceVisitor(int productIndex) {
-		this->index = productIndex;
-	}
+ class NeededResourceVisitor: public UpdateValueVisitor {
+ private:
+ int index;
+ public:
+ NeededResourceVisitor(int productIndex) {
+ this->index = productIndex;
+ }
 
-	void updateValue(Creature *creature, Field *field, CreaturesPopulation *p,
-			unsigned x, unsigned y) {
-		value += creature->getNeedOfResource(index);
-	}
-};
+ void updateValue(Creature *creature, Field *field, CreaturesPopulation *p,
+ unsigned x, unsigned y) {
+ value += creature->getNeedOfResource(index);
+ }
+ };
+ */
 
 class SumObjectiveVisitor: public UpdateValueVisitor {
 public:
@@ -70,22 +72,26 @@ public:
 	}
 };
 
-CreaturesPopulation::CreaturesPopulation() {
-	productsStock.assign(World::NO_OF_ARTICLES, 0.0);
-	name = L"noname";
-	creaturesTalentsCount = 2;
-	creaturesNeedsCount = 2;
-}
+/*
+ CreaturesPopulation::CreaturesPopulation() {
+ productsStock.assign(World::NO_OF_ARTICLES, 0.0);
+ name = L"noname";
+ creaturesTalentsCount = 2;
+ creaturesNeedsCount = 2;
+ }
+ */
 
-CreaturesPopulation::CreaturesPopulation(const Field *field, const JSONObject &population) {
+CreaturesPopulation::CreaturesPopulation(Field *field,
+		const JSONObject &population) {
 	//this->field = field;
-	productsStock.assign(World::NO_OF_ARTICLES, 0.0);
+	//productsStock.assign(World::NO_OF_ARTICLES, 0.0);
 	if (population.count(L"creatures") > 0) {
 		LOG4CXX_TRACE(logger, "Creating creature");
-		creaturesTalentsCount = population.at(L"talentsNo")->AsNumber();
-		creaturesNeedsCount = population.at(L"needsNo")->AsNumber();
+		_0ArgActivityRoom = population.at(L"0ArgActivityRoom")->AsNumber();
+		_1ArgActivityRoom = population.at(L"1ArgActivityRoom")->AsNumber();
+		_2ArgActivityRoom = population.at(L"2ArgActivityRoom")->AsNumber();
 		name = population.at(L"name")->AsString();
-		LOG4CXX_DEBUG(logger, "creaturesTalentsCount = " << creaturesTalentsCount << ", creaturesNeedsCount =  " << creaturesNeedsCount);
+		LOG4CXX_DEBUG(logger, "_0ArgActivityRoom = " << _0ArgActivityRoom << ", _1ArgActivityRoom =  " << _1ArgActivityRoom);
 		JSONArray creatures = population.at(L"creatures")->AsArray();
 		JSONArray::iterator creature = creatures.begin();
 		for (; creature != creatures.end(); creature++) {
@@ -111,49 +117,53 @@ float CreaturesPopulation::objectiveAvarage() {
 	return objectiveSum / size();
 }
 
-float CreaturesPopulation::keptProductSum(int i) {
-	return productsStock.at(i);
-}
+/*
+ float CreaturesPopulation::keptProductSum(int i) {
+ return productsStock.at(i);
+ }
+ */
 
-void CreaturesPopulation::updateProductStock(int i, float delta) {
-	//if (productsStock.at(i) + delta > 0)
-	LOG4CXX_DEBUG(logger, "productsStock.at(" << i << ") = " << productsStock.at(i) << ", delta = " << delta );
-	productsStock.at(i) += delta;
-	assert (productsStock.at(i) >= 0);
-}
+/*void CreaturesPopulation::updateProductStock(int i, float delta) {
+ //if (productsStock.at(i) + delta > 0)
+ LOG4CXX_DEBUG(logger, "productsStock.at(" << i << ") = " << productsStock.at(i) << ", delta = " << delta );
+ productsStock.at(i) += delta;
+ assert (productsStock.at(i) >= 0);
+ }*/
 
-float CreaturesPopulation::productNeeds(int i) {
-	// Ile osobniki potrzebuja danego produktu
-	NeededProductVisitor *visitor = new NeededProductVisitor(i);
-	CreaturesOfPopulationOnFieldVisitor *creatureVisitor =
-			new CreaturesOfPopulationOnFieldVisitor(visitor);
-	creatureVisitor->visit(this, NULL, -1, -1);
-	float needed = visitor->getValue();
-	delete creatureVisitor;
-	delete visitor;
-	return needed;
-}
+/*float CreaturesPopulation::productNeeds(int i) {
+ // Ile osobniki potrzebuja danego produktu
+ NeededProductVisitor *visitor = new NeededProductVisitor(i);
+ CreaturesOfPopulationOnFieldVisitor *creatureVisitor =
+ new CreaturesOfPopulationOnFieldVisitor(visitor);
+ creatureVisitor->visit(this, NULL, -1, -1);
+ float needed = visitor->getValue();
+ delete creatureVisitor;
+ delete visitor;
+ return needed;
+ }*/
 
-float CreaturesPopulation::resourceNeeds(int i) {
-	// Ile osobniki potrzebuja danego surowca
-	NeededResourceVisitor *visitor = new NeededResourceVisitor(i);
-	CreaturesOfPopulationOnFieldVisitor *creatureVisitor =
-			new CreaturesOfPopulationOnFieldVisitor(visitor);
-	creatureVisitor->visit(this, NULL, -1, -1);
-	float needed = visitor->getValue();
-	// Jaka ilosc produktu jest dostepna w obszarze
-	delete creatureVisitor;
-	delete visitor;
-	return needed;
-}
+/*
+ float CreaturesPopulation::resourceNeeds(int i) {
+ // Ile osobniki potrzebuja danego surowca
+ NeededResourceVisitor *visitor = new NeededResourceVisitor(i);
+ CreaturesOfPopulationOnFieldVisitor *creatureVisitor =
+ new CreaturesOfPopulationOnFieldVisitor(visitor);
+ creatureVisitor->visit(this, NULL, -1, -1);
+ float needed = visitor->getValue();
+ // Jaka ilosc produktu jest dostepna w obszarze
+ delete creatureVisitor;
+ delete visitor;
+ return needed;
+ }
+ */
 
 CreaturesOfPopulationOnFieldVisitor::CreaturesOfPopulationOnFieldVisitor(
 		CreaturesOnFieldVisitor *v) :
 	visitor(v) {
 }
 
-void CreaturesOfPopulationOnFieldVisitor::visit(CreaturesPopulation *population,
-		Field *field, unsigned x, unsigned y) {
+void CreaturesOfPopulationOnFieldVisitor::visit(
+		CreaturesPopulation *population, Field *field, unsigned x, unsigned y) {
 	LOG4CXX_DEBUG(logger, "population:" << population << ", Population size: " << population->size());
 	int popSize = population->size();
 	for (int i = 0; i < popSize; i++) {

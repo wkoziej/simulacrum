@@ -4,27 +4,29 @@
  *  Created on: 24-01-2011
  *      Author: wojtas
  */
-
 #ifndef CREATURE_H_
 #define CREATURE_H_
 
-#include <vector>
-#include <ga/GAGenome.h>
+#include <list>
+//#include <ga/GAGenome.h>
 #include <ga/GARealGenome.h>
 #include <log4cxx/logger.h>
-#include "JSON/JSON.h"
+//#include <QtCore/qthread.h>
 #include "Config.h"
-#include "Population.h"
+//#include "Population.h"
+#include "JSON/JSON.h"
 
-#include <QtCore/qthread.h>
 
-using namespace std;
+//using namespace std;
 using namespace log4cxx;
+//
 
 float Objective(GAGenome &g);
 
 class CreatureFenotype;
 class Field;
+class CreaturesPopulation;
+
 
 enum ActivitiesStrategy {
 	AscengingArgumentCountOrder
@@ -70,28 +72,6 @@ public:
 
 	void doAllActivities();
 
-	/*	float produce(float resourceQuantity, unsigned index, float &resourceUsed,
-	 int &productIndex);
-	 void feed(float productAmount, unsigned productIndex, float &eaten);
-	 float getNeedOfProductRatio(unsigned productIndex);
-	 float getNeedOfResource(unsigned productIndex);
-	 void prepare4Meal() {
-	 getFenotype()->clearPerformanceRatio();
-	 }
-
-	 float getPerformanceRatio() {
-	 float ratio = getFenotype()->getPerformanceRatio();
-	 return ratio == 0 ? 0.001 : ratio;
-	 }
-
-	 Directions nextDirection(unsigned step);
-	 static LoggerPtr getLogger() {
-	 return logger;
-	 }
-
-	 int noOfTalents();
-	 int noOfNeeds();*/
-
 	std::string genomeStr() const;
 	CreatureFenotype *getFenotype() const {
 		return (CreatureFenotype *) evalData();
@@ -99,12 +79,16 @@ public:
 	Field *getField();
 	unsigned getX() const;
 	unsigned getY() const;
+	std::string getId () const;
 
 	bool hasEnergy() const;
 	void rest();
-	bool produce(unsigned articleId, const std::vector<float> &ingredients);
+	bool produce(unsigned articleId, std::vector<unsigned> ingredients);
 	bool collect(unsigned articleId);
 	bool leave(unsigned articleId);
+	bool sell(unsigned articleId);
+	bool buy(unsigned articleId);
+	bool check(unsigned articleId);
 	bool move(unsigned x, unsigned y);
 
 	// Logowanie
@@ -132,13 +116,5 @@ private:
 	ActivitiesStrategy getActiviviesStrategy() const;
 };
 
-class CreatureActivityThread: public QThread {
-public:
-	CreatureActivityThread(Creature *creature);
-	virtual ~CreatureActivityThread();
-	void run();
-private:
-	Creature *creature;
-};
 
 #endif /* CREATURE_H_ */

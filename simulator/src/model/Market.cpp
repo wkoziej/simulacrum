@@ -7,47 +7,73 @@
 
 #include "Market.h"
 
+#include <QtCore/QSemaphore>
+#include <QtCore/QMutex>
+#include <list>
+#include <vector>
+#include <algorithm>
+#include "World.h"
+
+typedef std::list<std::string> ClientVisits;
+typedef std::vector<QSemaphore *> ArticleStocks;
+typedef std::vector<ClientVisits> ArticleQueries;
+typedef std::vector<QMutex *> ArticleLocks;
+typedef std::vector<float> PriceVector;
+
+class MarketPrivate {
+public:
+	ArticleStocks stocks;
+	ArticleQueries queries;
+	ArticleLocks locks;
+	PriceVector articleSellPricesHistory;
+	PriceVector articleBuyPricesHistory;
+};
+
 Market::Market() {
 	// TODO Auto-generated constructor stub
-	stocks.assign(World::NO_OF_ARTICLES, QSemaphore());
-	queries.assign(World::NO_OF_ARTICLES, ClientVisits());
-	locks.assign(World::NO_OF_ARTICLES, QMutex());
-	articleSellPricesHistory.assign(World::NO_OF_ARTICLES, 0);
-	articleBuyPricesHistory.assign(World::NO_OF_ARTICLES, 0);
+	prv = new MarketPrivate();
+	for (unsigned i; i < World::NO_OF_ARTICLES; i++) {
+		prv->stocks.push_back(new QSemaphore(0));
+		prv->locks.push_back(new QMutex());
+	}
+	prv->queries.assign(World::NO_OF_ARTICLES, ClientVisits());
+	prv->articleSellPricesHistory.assign(World::NO_OF_ARTICLES, 0);
+	prv->articleBuyPricesHistory.assign(World::NO_OF_ARTICLES, 0);
 }
 
 Market::~Market() {
 	// TODO Auto-generated destructor stub
+	delete prv;
 }
 
-bool Market::isArticleAvailable(QString clientId, unsigned articleId,
+bool Market::isArticleAvailable(std::string clientId, unsigned articleId,
 		float articleQuant) {
-	rememberClientQuery(clientId);
-	return stocks.at(articleId).available() > articleQuant;
+	rememberClientQuery(articleId, clientId);
+	return prv->stocks.at(articleId)->available() > articleQuant;
 }
 
-float Market::articleSellPrice(QString clientId, unsigned articleId) {
+float Market::articleSellPrice(std::string clientId, unsigned articleId) {
 	float sellPrice = 0.0;
 	float buyPrice = 0.0;
 	// Zapisz zainteresowanie klienta -> wpływ na cenę sprzedaży
-	rememberClientQuery(clientId);
+	rememberClientQuery(articleId, clientId);
 	getPrices(clientId, articleId, sellPrice, buyPrice);
 	return sellPrice;
 }
 
-float Market::articleBuyPrice(QString clientId, unsigned articleId) {
+float Market::articleBuyPrice(std::string clientId, unsigned articleId) {
 	float sellPrice = 0.0;
 	float buyPrice = 0.0;
 	getPrices(clientId, articleId, sellPrice, buyPrice);
 	return buyPrice;
 }
 
-void Market::getPrices(QString clientId, unsigned articleId, float &sellPrice,
-		float &buyPrice) {
-	int availableQuant = stocks.at(articleId).available();
-	QMutex *articleQuery = &locks.at(articleId);
+void Market::getPrices(std::string clientId, unsigned articleId,
+		float &sellPrice, float &buyPrice) {
+	int availableQuant = prv->stocks.at(articleId)->available();
+	QMutex *articleQuery = prv->locks.at(articleId);
 	articleQuery->lock();
-	int queryCount = queries.at(articleId).size();
+	int queryCount = prv->queries.at(articleId).size();
 	if (availableQuant > 0) {
 		buyPrice = calculateBuyPrice(articleId, availableQuant, queryCount);
 		sellPrice = calculateSellPrice(articleId, availableQuant, queryCount);
@@ -66,30 +92,30 @@ void Market::getPrices(QString clientId, unsigned articleId, float &sellPrice,
 float Market::calculateBuyPrice(unsigned articleId, unsigned availableQuant,
 		unsigned queryCount) {
 	float recentBuyPrice = queryCount / (availableQuant + 1.0);
-	float historyBuyPrice = articleBuyPricesHistory.at(articleId);
+	float historyBuyPrice = prv->articleBuyPricesHistory.at(articleId);
 	return (recentBuyPrice + historyBuyPrice) / 2.0;
 }
 
 float Market::calculateSellPrice(unsigned articleId, unsigned availableQuant,
 		unsigned queryCount) {
 	float recentSellPrice = queryCount / availableQuant;
-	float historySellPrice = articleSellPricesHistory.at(articleId);
+	float historySellPrice = prv->articleSellPricesHistory.at(articleId);
 	return (recentSellPrice + historySellPrice) / 2.0;
 }
 
-float Market::buyArticleFromClient(QString clientId, unsigned articleId) {
-	rememberClientQuery(clientId);
-	stocks.at(articleId).release();
+float Market::buyArticleFromClient(std::string clientId, unsigned articleId) {
+	prv->stocks.at(articleId)->release();
 	float soldAt = articleSellPrice(clientId, articleId);
 	return soldAt;
 }
 
-bool Market::sellArticleToClient(QString clientId, unsigned articleId,
+bool Market::sellArticleToClient(std::string clientId, unsigned articleId,
 		float &cash) {
 	bool sold = false;
+	rememberClientQuery(articleId, clientId);
 	float sellPrice = articleSellPrice(clientId, articleId);
 	if (sellPrice <= cash) {
-		sold = stocks.at(articleId).tryAcquire();
+		sold = prv->stocks.at(articleId)->tryAcquire();
 		if (sold) {
 			cash -= sellPrice;
 		}
@@ -97,13 +123,12 @@ bool Market::sellArticleToClient(QString clientId, unsigned articleId,
 	return sold;
 }
 
-void Market::rememberClientQuery(unsigned articleId, QString clientId) {
-	ClientVisits *clientVisit = &queries.at(articleId);
-	QMutex *articleQuery = &locks.at(articleId);
+void Market::rememberClientQuery(unsigned articleId, std::string clientId) {
+	ClientVisits *clientVisit = &prv->queries.at(articleId);
+	QMutex *articleQuery = prv->locks.at(articleId);
 	articleQuery->lock();
-	ClientVisits::iterator visit = std::find(clientVisit.begin(),
-			clientVisit.end(), clientId);
-	bool clientAskedAboutArticle = visit != clientVisit.end();
+	ClientVisits::iterator visit = find(clientVisit->begin(), clientVisit->end(), clientId);
+	bool clientAskedAboutArticle = visit != clientVisit->end();
 	if (!clientAskedAboutArticle) {
 		clientVisit->push_back(clientId);
 	}

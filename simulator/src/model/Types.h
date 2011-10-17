@@ -7,11 +7,7 @@
 
 #ifndef TYPES_H_
 #define TYPES_H_
-
-typedef std::pair<std::wstring, CreaturesPopulation *> NamedPopulation;
-typedef std::map<std::wstring, CreaturesPopulation *> PopulationsMap;
-typedef std::vector<float> FloatVector;
-
-
+#include <vector>
+typedef std::vector<unsigned> UnsignedVector;
 
 #endif /* TYPES_H_ */

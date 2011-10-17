@@ -5,47 +5,35 @@
  *      Author: wojtas
  */
 
-#include <QtCore/QSemaphore>
-#include <QtCore/QMutex>
-#include <list>
-
 #ifndef MARKET_H_
 #define MARKET_H_
-
-typedef std::list<QString> ClientVisits;
-typedef std::vector<QSemaphore > ArticleStocks;
-typedef std::vector<ClientVisits> ArticleQueries;
-typedef std::vector<QMutex> ArticleLocks;
-typedef std::vector<float> FloatVector;
+#include <string>
+class MarketPrivate;
 
 class Market {
 public:
 	Market();
 	virtual ~Market();
-	bool isArticleAvailable(QString clientId, unsigned articleId,
+	bool isArticleAvailable(std::string clientId, unsigned articleId,
 			float articleQuant);
-	float articleSellPrice(QString clientId, unsigned articleId);
-	float articleBuyPrice(QString clientId, unsigned articleId);
-	float buyArticleFromClient(QString clientId, unsigned articleId);
-	bool sellArticleToClient(QString clientId, unsigned articleId,
+	float articleSellPrice(std::string clientId, unsigned articleId);
+	float articleBuyPrice(std::string clientId, unsigned articleId);
+	float buyArticleFromClient(std::string clientId, unsigned articleId);
+	bool sellArticleToClient(std::string clientId, unsigned articleId,
 			float &cash);
 private:
+	MarketPrivate *prv;
 
-	void getPrices(QString clientId, unsigned articleId,
+	void getPrices(std::string clientId, unsigned articleId,
 			float &sellPrice, float &buyPrice);
 	float calculateBuyPrice(unsigned articleId, unsigned availableQuant,
 			unsigned queryCount);
 	float calculateSellPrice(unsigned articleId, unsigned availableQuant,
 			unsigned queryCount);
 
-	ArticleStocks stocks;
-	ArticleQueries queries;
-	ArticleLocks locks;
-	FloatVector articleSellPricesHistory;
-	FloatVector articleBuyPricesHistory;
 	//ClientVisits marketClients;
 	// articleHits;
-	void rememberClientQuery(unsigned articleId, QString clientId);
+	void rememberClientQuery(unsigned articleId, std::string clientId);
 
 };
 

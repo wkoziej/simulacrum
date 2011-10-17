@@ -15,16 +15,19 @@ using namespace log4cxx;
 
 class CreaturesPopulation: public GAPopulation {
 public:
-	CreaturesPopulation();
-	CreaturesPopulation(const Field *field, const JSONObject &population);
+	//CreaturesPopulation();
+	CreaturesPopulation(Field *field, const JSONObject &population);
 	virtual ~CreaturesPopulation();
 	//float productNeeds(int i);
 	//float resourceNeeds(int i);
-	float objectiveAvarage ();
-	std::wstring getName () { return name; };
+	float objectiveAvarage();
+	std::wstring getName() {
+		return name;
+	}
+	;
 	//float keptProductSum(int i);
 	//void updateProductStock (int i, float delta);
-	void loadCreatures (const JSONObject &population);
+	void loadCreatures(const JSONObject &population);
 	unsigned get0ArgActivitiesRoom() const;
 	unsigned get1ArgActivitiesRoom() const;
 	unsigned get2ArgActivitiesRoom() const;
@@ -35,10 +38,16 @@ private:
 	//Field *field;
 	//std::vector<float> productsStock;
 	std::wstring name;
+	unsigned _0ArgActivityRoom;
+	unsigned _1ArgActivityRoom;
+	unsigned _2ArgActivityRoom;
 	//int creaturesTalentsCount;
 	//int creaturesNeedsCount;
 	// Logowanie
 	static LoggerPtr logger;
 };
+
+typedef std::pair<std::wstring, CreaturesPopulation *> NamedPopulation;
+typedef std::map<std::wstring, CreaturesPopulation *> PopulationsMap;
 
 #endif /* POPULATION_H_ */
