@@ -24,7 +24,7 @@ typedef std::vector<FieldsVector> FieldsMatrix;
 //typedef std::vector<PopulationsList> PopulationsListVector;
 //typedef std::vector<PopulationsListVector> PopulationsMatrix;
 
-class World  {
+class World {
 
 public:
 	//static World *createRandomWorld(unsigned X, unsigned Y);
@@ -47,19 +47,19 @@ public:
 	void nextYear();
 	bool creaturesExists();
 	void step(StateSaver *stateSaver);
-	void countResourcesPrices() ;
-	void countProductsPrices() ;
+	void countResourcesPrices();
+	void countProductsPrices();
 
-	CreaturesPopulation *findOrCreatePopulationOnField (const CreaturesPopulation *species, int x,  int y);
+	CreaturesPopulation *findOrCreatePopulation(
+			const CreaturesPopulation *species, int x, int y);
 	FieldsMatrix fields;
 	//PopulationsMatrix populations;
-	//void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);
+	void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);
 	void iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor);
-	void visitFields (FieldsVisitor *fieldVisitor);
-	static unsigned NO_OF_ARTICLES; //3 // Liczba surowców -> 0 - natchnienie, 1 - materia
-	//static int NO_OF_ARTICLES; //3 // Liczba surowców -> 0 - natchnienie, 1 - materia
-	unsigned getWidth() const;
-	unsigned getHeight() const;
+	void visitFields(FieldsVisitor *fieldVisitor);
+	static unsigned NO_OF_ARTICLES;
+	static unsigned HEIGHT;
+	static unsigned WIDTH;
 private:
 	static World *singleton;
 	World() {
@@ -68,7 +68,7 @@ private:
 	}
 	// Logowanie
 	static LoggerPtr logger;
-	void createFieldsAndPopulations(unsigned X, unsigned Y);
+	//void createFieldsAndPopulations(unsigned X, unsigned Y);
 
 };
 

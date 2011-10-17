@@ -17,7 +17,6 @@
 
 typedef std::vector<QSemaphore *> ArticleStocks;
 
-
 using namespace std;
 
 LoggerPtr Field::logger(Logger::getLogger("field"));
@@ -47,12 +46,16 @@ public:
  */
 
 Field::Field(const JSONObject &field) {
-	JSONArray resources = field.at(L"stocks")->AsArray();
-	assert (resources.size() == World::NO_OF_ARTICLES);
-	JSONArray::iterator resource = resources.begin();
-	for (; resource != resources.end(); resource++) {
-		JSONArray properies = (*resource)->AsArray();
-		prv->stocks.push_back(new QSemaphore(properies.at(0)->AsNumber()));
+	prv = new FieldPrivate ();
+	prv->market = new Market();
+	JSONArray articles = field.at(L"stocks")->AsArray();
+	assert (articles.size() == World::NO_OF_ARTICLES);
+	JSONArray::iterator article = articles.begin();
+	for (; article != articles.end(); article++) {
+		JSONArray properies = (*article)->AsArray();
+		int quant = properies.at(0)->AsNumber();
+		QSemaphore *stock = new QSemaphore();
+		prv->stocks.push_back(stock);
 		prv->articleRenewal.push_back(properies.at(1)->AsNumber());
 	}
 	ArticleStocks::iterator q;
@@ -137,6 +140,15 @@ void Field::renovateResources() {
  }
 
  */
+
+const Recipe *Field::getRecipe(unsigned articleId) const {
+	return NULL;
+}
+
+Market *Field::getMarket () {
+	return prv->market;
+}
+
 bool Field::tryTakeArticle(unsigned articleId) {
 	return prv->stocks.at(articleId)->tryAcquire();
 }
@@ -145,6 +157,27 @@ void Field::putArticle(unsigned articleId) {
 	prv->stocks.at(articleId)->release();
 }
 
+void Field::addPopulation(CreaturesPopulation *population) {
+	NamedPopulation namedPopulation(population->getName(), population);
+	prv->populations.insert(namedPopulation);
+}
+
+CreaturesPopulation *Field::getPopulation(std::wstring name) {
+	PopulationsMap::iterator i = prv->populations.find(name);
+	if (i != prv->populations.end()) {
+		return i->second;
+	}
+	return NULL;
+}
+
+std::list<CreaturesPopulation *> Field::getPopulations() {
+	PopulationsMap::iterator i = prv->populations.begin();
+	std::list<CreaturesPopulation *> populationList;
+	for (; i != prv->populations.end(); i++) {
+		populationList.push_back(i->second);
+	}
+	return populationList;
+}
 /*
  float Field::updateProductPrice(int i) {
  float price = productPriceCache.at(i);
@@ -212,6 +245,7 @@ void Field::decreaseArticleQuantity(unsigned resourceIndex, float resourceUsed) 
  */
 
 Field::~Field() {
+	delete prv->market;
 	delete prv;
 	ArticleStocks::iterator q = prv->stocks.begin();
 	for (; q != prv->stocks.end(); q++) {

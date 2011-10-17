@@ -10,6 +10,8 @@
 #include <QtSql/QSqlQuery>
 #include <QtCore/QVariant>
 #include <QtSql/qsqlerror.h>
+#include "model/Market.h"
+
 LoggerPtr StateSaver::logger(Logger::getLogger("stateSaver"));
 
 StateSaver::StateSaver(World *world, std::string dbName) {
@@ -55,40 +57,31 @@ void StateSaver::save(std::string description) {
 			int fieldSnapshotId;
 			params.clear();
 			params.push_back(worldSnapshotId);
-			params.push_back(field->getMoveLag());
+			params.push_back(/*field->getMoveLag()*/0);
 			executeQuery(
 					"insert into fields_snapshots (world_snapshot_id, lag) values (:1, :2);",
 					params, fieldSnapshotId);
-			// PRODUKTY
+			// artykuły
 			int tmp;
-			for (int productIndex = 0; productIndex < World::NO_OF_ARTICLES; productIndex++) {
+			for (int articleIndex = 0; articleIndex < World::NO_OF_ARTICLES; articleIndex++) {
 				params.clear();
 				params.push_back(fieldSnapshotId);
-				params.push_back(productIndex);
-				params.push_back(field->productPrice(productIndex));
-				params.push_back(field->productStock(productIndex));
+				params.push_back(articleIndex);
+				params.push_back(field->getMarket()->articleSellPrice(
+						articleIndex));
+				params.push_back(field->getMarket()->articleStock(articleIndex));
 				executeQuery(
-						"insert into fields_products_snapshots (field_snapshot_id, product_id, price, quant) "
+						"insert into fields_articles_snapshots (field_snapshot_id, article_id, price, quant) "
 							" values (:1, :2, :3, :4);", params, tmp);
 
-			}
-			// ZASOBY
-			for (int resourceIndex = 0; resourceIndex < World::NO_OF_ARTICLES; resourceIndex++) {
-				params.clear();
-				params.push_back(fieldSnapshotId);
-				params.push_back(resourceIndex);
-				params.push_back(field->resourcePrice(resourceIndex));
-				params.push_back(field->resourceQuantitiesVector().at(
-						resourceIndex));
-				executeQuery(
-						"insert into fields_resources_snapshots (field_snapshot_id, resource_id, price, amount) "
-							" values (:1, :2, :3, :4);", params, tmp);
 			}
 
 			// POPULACJE
-			PopulationsMap::iterator i = field->populations.begin();
-			if (i != field->populations.end()) {
-				CreaturesPopulation *population = i->second;
+			std::list<CreaturesPopulation *> populations =
+					field->getPopulations();
+			std::list<CreaturesPopulation *>::iterator p = populations.begin();
+			for (; p != populations.end(); p++) {
+				CreaturesPopulation *population = *p;
 				int populationSnapshotId;
 				params.clear();
 				params.push_back(fieldSnapshotId);
@@ -106,44 +99,43 @@ void StateSaver::save(std::string description) {
 					int creatureSnapshotId;
 					params.clear();
 					params.push_back(populationSnapshotId);
-					params.push_back(creature->getFenotype()->yearsOld);
+					params.push_back(creature->getAge());
 					params.push_back(creature->score());
-					params.push_back(creature->genomeStr().c_str());
+					params.push_back((creature->getId() + " : " + creature->genomeStr()).c_str());
 					executeQuery(
 							"insert into creatures_snapshots (population_snapshot_id, age, objective_value, genome) "
 								" values (:1, :2, :3, :4);", params,
 							creatureSnapshotId);
 
 					int tmp;
-					for (int productIndex = 0; productIndex
-							< World::NO_OF_ARTICLES; productIndex++) {
+					for (int articleIndex = 0; articleIndex
+							< World::NO_OF_ARTICLES; articleIndex++) {
 						params.clear();
 						params.push_back(creatureSnapshotId);
-						params.push_back(productIndex);
+						params.push_back(articleIndex);
 						params.push_back(
-								creature->getFenotype()->gainedArticlesQuants.at(
-										productIndex));
-						params.push_back(creature->getNeedOfProductRatio(
-								productIndex));
+								creature->getArticleStock(articleIndex));
+						params.push_back(creature->getArticleQuantChange(
+								articleIndex));
 						executeQuery(
-								"insert into creatures_products_snapshots (creature_snapshot_id, product_id, produced, needs) "
+								"insert into creatures_articles_snapshots (creature_snapshot_id, article_id, stock, changed) "
 									" values (:1, :2, :3, :4);", params, tmp);
 
 					}
 
-					for (int resourceIndex = 0; resourceIndex
-							< World::NO_OF_ARTICLES; resourceIndex++) {
+					/*for (int resourceIndex = 0; resourceIndex
+					 < World::NO_OF_ARTICLES; resourceIndex++) {
 
-						params.clear();
-						params.push_back(creatureSnapshotId);
-						params.push_back(resourceIndex);
-						params.push_back(
-								creature->getFenotype()->lostArticlesQuants.at(
-										resourceIndex));
-						executeQuery(
-								"insert into creatures_resources_snapshots (creature_snapshot_id, resource_id, used) "
-									" values (:1, :2, :3);", params, tmp);
-					}
+					 params.clear();
+					 params.push_back(creatureSnapshotId);
+					 params.push_back(resourceIndex);
+					 params.push_back(
+					 creature->getFenotype()->lostArticlesQuants.at(
+					 resourceIndex));
+					 executeQuery(
+					 "insert into creatures_resources_snapshots (creature_snapshot_id, resource_id, used) "
+					 " values (:1, :2, :3);", params, tmp);
+					 }*/
 				}
 			}
 

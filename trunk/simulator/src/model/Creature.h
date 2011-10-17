@@ -55,6 +55,8 @@ typedef std::list<CreatureActivity *> CreatureActivityList;
 
 class Creature: public GARealGenome {
 public:
+	// Logowanie
+	static LoggerPtr logger;
 	enum Directions {
 		NoDirection, DirLeft, DirRight, DirUp, DirDown
 	};
@@ -80,6 +82,9 @@ public:
 	unsigned getX() const;
 	unsigned getY() const;
 	std::string getId () const;
+	unsigned getAge () const;
+	unsigned getArticleStock (unsigned articleId) const;
+	int getArticleQuantChange (unsigned articleId) const;
 
 	bool hasEnergy() const;
 	void rest();
@@ -91,14 +96,13 @@ public:
 	bool check(unsigned articleId);
 	bool move(unsigned x, unsigned y);
 
-	// Logowanie
-	static LoggerPtr logger;
 private:
+	static unsigned createuresId;
 	CreatureActivityList getCreatureActivities();
 	//float getProcessingVelocity(unsigned index);
 	/*	float getProcessingRateAndProductIndex(unsigned resourceIndex,
 	 int &productIndex);*/
-	static float randBetweenAndStepped(float min, float max, float step);
+	//static float randBetweenAndStepped(float min, float max, float step);
 	//static void RandomInitializer(GAGenome &g);
 	static void DoNothingInitializer(GAGenome &g);
 	static void JSONInitializer(GAGenome &g);
@@ -113,7 +117,7 @@ private:
 	void changePopulation(CreaturesPopulation *from, CreaturesPopulation *to);
 	CreatureActivity *createActivity(unsigned activityGenIndex,
 			unsigned parametersCount);
-	ActivitiesStrategy getActiviviesStrategy() const;
+	//ActivitiesStrategy getActiviviesStrategy() const;
 };
 
 
