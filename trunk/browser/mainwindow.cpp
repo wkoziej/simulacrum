@@ -35,11 +35,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	setUpTable(ui->fieldPopulationsTableView, "v_populations_snapshots",
 			fieldPopulationSnapshotModel);
-	setUpTable(ui->fieldProductsTableView, "v_fields_products_snapshots",
+	setUpTable(ui->fieldProductsTableView, "v_fields_articles_snapshots",
 			fieldProductsSnapshotModel);
+	/*
 	setUpTable(ui->fieldResourcesTableView, "v_fields_resources_snapshots",
 			fieldResourcesSnapshotModel);
-
+*/
 
 
 
@@ -95,8 +96,8 @@ void MainWindow::changeFieldSnapshot(const QModelIndex &index) {
 
 	changeMasterId(fieldSnapshotModel, index, fieldPopulationSnapshotModel,
 			"field_snapshot_id", ui->fieldPopulationsTableView);
-	changeMasterId(fieldSnapshotModel, index, fieldResourcesSnapshotModel,
-			"field_snapshot_id", ui->fieldResourcesTableView);
+/*	changeMasterId(fieldSnapshotModel, index, fieldResourcesSnapshotModel,
+			"field_snapshot_id", ui->fieldResourcesTableView);*/
 	changeMasterId(fieldSnapshotModel, index, fieldProductsSnapshotModel,
 			"field_snapshot_id", ui->fieldProductsTableView);
 }
