@@ -15,13 +15,13 @@ using namespace log4cxx;
 
 class CreaturesPopulation: public GAPopulation {
 public:
-	//CreaturesPopulation();
+	CreaturesPopulation(const CreaturesPopulation *species);
 	CreaturesPopulation(Field *field, const JSONObject &population);
 	virtual ~CreaturesPopulation();
 	//float productNeeds(int i);
 	//float resourceNeeds(int i);
 	float objectiveAvarage();
-	std::wstring getName() {
+	std::wstring getName() const {
 		return name;
 	}
 	;

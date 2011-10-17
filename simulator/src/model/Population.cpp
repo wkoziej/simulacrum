@@ -72,19 +72,17 @@ public:
 	}
 };
 
-/*
- CreaturesPopulation::CreaturesPopulation() {
- productsStock.assign(World::NO_OF_ARTICLES, 0.0);
- name = L"noname";
- creaturesTalentsCount = 2;
- creaturesNeedsCount = 2;
- }
- */
+CreaturesPopulation::CreaturesPopulation(const CreaturesPopulation *species) {
+//	productsStock.assign(World::NO_OF_ARTICLES, 0.0);
+	name = species->getName();
+	_0ArgActivityRoom = species->_0ArgActivityRoom;
+	_1ArgActivityRoom = species->_1ArgActivityRoom;
+	_2ArgActivityRoom = species->_2ArgActivityRoom;
+
+}
 
 CreaturesPopulation::CreaturesPopulation(Field *field,
 		const JSONObject &population) {
-	//this->field = field;
-	//productsStock.assign(World::NO_OF_ARTICLES, 0.0);
 	if (population.count(L"creatures") > 0) {
 		LOG4CXX_TRACE(logger, "Creating creature");
 		_0ArgActivityRoom = population.at(L"0ArgActivityRoom")->AsNumber();
@@ -115,6 +113,18 @@ float CreaturesPopulation::objectiveAvarage() {
 	delete creatureVisitor;
 	delete visitor;
 	return objectiveSum / size();
+}
+
+unsigned CreaturesPopulation::get0ArgActivitiesRoom() const {
+	return _0ArgActivityRoom;
+}
+
+unsigned CreaturesPopulation::get1ArgActivitiesRoom() const {
+	return _1ArgActivityRoom;
+}
+
+unsigned CreaturesPopulation::get2ArgActivitiesRoom() const {
+	return _2ArgActivityRoom;
 }
 
 /*

@@ -35,20 +35,20 @@ CREATE TABLE FIELDS_SNAPSHOTS (
     LAG REAL NOT NULL
 );
 
-drop table  if exists PRODUCTS;
-   create table PRODUCTS (
-       ID INTEGER CONSTRAINT PRODUCTS_PK PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
+drop table  if exists ARTICLES;
+   create table ARTICLES (
+       ID INTEGER CONSTRAINT ARTICLES_PK PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
       WORLD_ID INTEGER CONSTRAINT WORLDS_FK REFERENCES WORLDS (ID) ON DELETE CASCADE,      
        NAME TEXT
  );
-
+/*
 drop table  if exists  RESOURCES;
    create table RESOURCES (
        ID INTEGER CONSTRAINT RESOURCES_PK PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
        WORLD_ID INTEGER CONSTRAINT WORLDS_FK REFERENCES WORLDS (ID) ON DELETE CASCADE,      
        NAME TEXT
  );
-   
+   */
   drop table  if exists  POPULATIONS_SNAPSHOTS;
   create table POPULATIONS_SNAPSHOTS (
        ID INTEGER CONSTRAINT POPULATIONS_SNAPSHOTS_PK PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
@@ -65,14 +65,16 @@ drop table  if exists  RESOURCES;
        GENOME TEXT
  );
  
- drop table  if exists CREATURES_PRODUCTS_SNAPSHOTS;
- create table CREATURES_PRODUCTS_SNAPSHOTS (
+ drop table  if exists CREATURES_ARTICLES_SNAPSHOTS;
+ create table CREATURES_ARTICLES_SNAPSHOTS (
 	ID INTEGER  PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
        CREATURE_SNAPSHOT_ID INTEGER CONSTRAINT CREATURES_SNAPSHOTS_FK REFERENCES CREATURES_SNAPSHOTS(ID) ON DELETE CASCADE,
-       PRODUCT_ID INT,
-       PRODUCED REAL,
-       NEEDS REAL
+ARTICLE_ID INT,
+       STOCK INT,
+       CHANGED INT
  );
+ 
+ /*
  drop table  if exists CREATURES_RESOURCES_SNAPSHOTS;
  create table CREATURES_RESOURCES_SNAPSHOTS (
  	ID INTEGER  PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
@@ -80,16 +82,18 @@ drop table  if exists  RESOURCES;
        RESOURCE_ID INT,
        USED REAL
   );
+  */
   
-  drop table  if exists FIELDS_PRODUCTS_SNAPSHOTS;
-   create table FIELDS_PRODUCTS_SNAPSHOTS (
+  drop table  if exists FIELDS_ARTICLES_SNAPSHOTS;
+   create table FIELDS_ARTICLES_SNAPSHOTS (
 	ID INTEGER  PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
        FIELD_SNAPSHOT_ID INTEGER CONSTRAINT FIELDS_SNAPSHOTS_FK REFERENCES FIELDS_SNAPSHOTS(ID) ON DELETE CASCADE,
-	PRODUCT_ID INT,
+	ARTICLE_ID INT,
        PRICE REAL,
-       QUANT REAL
+       QUANT INT
  );
  
+ /*
  drop table  if exists FIELDS_RESOURCES_SNAPSHOTS;
  create table FIELDS_RESOURCES_SNAPSHOTS (
  	ID INTEGER  PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
@@ -98,6 +102,7 @@ drop table  if exists  RESOURCES;
        PRICE REAL,
        AMOUNT REAL
   );
+  */
   
  drop view V_WORLDS_RUNS;
 CREATE VIEW V_WORLDS_RUNS AS select * from WORLDS_RUNS;
@@ -119,11 +124,13 @@ select * from FIELDS_SNAPSHOTS;
 drop view V_POPULATIONS_SNAPSHOTS;
 create view V_POPULATIONS_SNAPSHOTS as select * from POPULATIONS_SNAPSHOTS;
 
-drop view v_fields_products_snapshots;
-create view v_fields_products_snapshots as select * from fields_products_snapshots;
+drop view v_fields_articles_snapshots;
+create view v_fields_articles_snapshots as select * from fields_articles_snapshots;
 
+/*
 drop view v_fields_resources_snapshots;
 create view v_fields_resources_snapshots as select * from fields_resources_snapshots;
+*/
 
 drop view v_creatures_snapshots;
 create view v_creatures_snapshots as select * from creatures_snapshots;

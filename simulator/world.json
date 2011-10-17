@@ -3,7 +3,7 @@
 	{
 		"sizeX" : 1,
 		"sizeY" : 1,
-		"articles" : ["energy",	"water",	"wood",		"corn", 	"tool"]
+		"articles" : ["energy",	"water",	"wood",		"corn", 	"tool"],
 		"field0x0" : 
 		{
 			"stocks" : [ 
@@ -19,6 +19,7 @@
 					"creatures" : 
 					[
 						{
+							"activitiesStrategy" : 0,
 							"0ArgActivity" : [ 
 								[0], 
 								[2] 
@@ -26,6 +27,8 @@
 							"1ArgActivity" : [
 								[0, 0],
 								[1, 2]
+							],
+							"2ArgActivity" : [
 							]
 						}
 					]

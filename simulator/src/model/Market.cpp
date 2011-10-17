@@ -32,7 +32,7 @@ public:
 Market::Market() {
 	// TODO Auto-generated constructor stub
 	prv = new MarketPrivate();
-	for (unsigned i; i < World::NO_OF_ARTICLES; i++) {
+	for (unsigned i = 0; i < World::NO_OF_ARTICLES; i++) {
 		prv->stocks.push_back(new QSemaphore(0));
 		prv->locks.push_back(new QMutex());
 	}
@@ -57,18 +57,29 @@ float Market::articleSellPrice(std::string clientId, unsigned articleId) {
 	float buyPrice = 0.0;
 	// Zapisz zainteresowanie klienta -> wpływ na cenę sprzedaży
 	rememberClientQuery(articleId, clientId);
-	getPrices(clientId, articleId, sellPrice, buyPrice);
+	getPrices(articleId, sellPrice, buyPrice);
 	return sellPrice;
 }
 
 float Market::articleBuyPrice(std::string clientId, unsigned articleId) {
 	float sellPrice = 0.0;
 	float buyPrice = 0.0;
-	getPrices(clientId, articleId, sellPrice, buyPrice);
+	getPrices(articleId, sellPrice, buyPrice);
 	return buyPrice;
 }
 
-void Market::getPrices(std::string clientId, unsigned articleId,
+float Market::articleSellPrice(unsigned articleId) {
+	float sellPrice = 0.0;
+	float buyPrice = 0.0;
+	getPrices(articleId, sellPrice, buyPrice);
+	return sellPrice;
+}
+
+unsigned Market::articleStock(unsigned articleId) {
+	return prv->stocks.at(articleId)->available();
+}
+
+void Market::getPrices(unsigned articleId,
 		float &sellPrice, float &buyPrice) {
 	int availableQuant = prv->stocks.at(articleId)->available();
 	QMutex *articleQuery = prv->locks.at(articleId);
@@ -127,7 +138,8 @@ void Market::rememberClientQuery(unsigned articleId, std::string clientId) {
 	ClientVisits *clientVisit = &prv->queries.at(articleId);
 	QMutex *articleQuery = prv->locks.at(articleId);
 	articleQuery->lock();
-	ClientVisits::iterator visit = find(clientVisit->begin(), clientVisit->end(), clientId);
+	ClientVisits::iterator visit = find(clientVisit->begin(),
+			clientVisit->end(), clientId);
 	bool clientAskedAboutArticle = visit != clientVisit->end();
 	if (!clientAskedAboutArticle) {
 		clientVisit->push_back(clientId);

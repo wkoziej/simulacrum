@@ -18,14 +18,16 @@ public:
 			float articleQuant);
 	float articleSellPrice(std::string clientId, unsigned articleId);
 	float articleBuyPrice(std::string clientId, unsigned articleId);
+	// Nie wplywa na cenę, bo nie pyta się klient
+	float articleSellPrice(unsigned articleId);
+	unsigned articleStock(unsigned articleId);
 	float buyArticleFromClient(std::string clientId, unsigned articleId);
 	bool sellArticleToClient(std::string clientId, unsigned articleId,
 			float &cash);
 private:
 	MarketPrivate *prv;
 
-	void getPrices(std::string clientId, unsigned articleId,
-			float &sellPrice, float &buyPrice);
+	void getPrices(unsigned articleId, float &sellPrice, float &buyPrice);
 	float calculateBuyPrice(unsigned articleId, unsigned availableQuant,
 			unsigned queryCount);
 	float calculateSellPrice(unsigned articleId, unsigned availableQuant,

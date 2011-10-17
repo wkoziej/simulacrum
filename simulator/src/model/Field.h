@@ -13,12 +13,14 @@
 #include "log4cxx/logger.h"
 #include "JSON/JSON.h"
 #include "Config.h"
+#include <list>
 
 using namespace log4cxx;
 
 class FieldPrivate;
 class Recipe;
 class Market;
+class CreaturesPopulation;
 
 class Field {
 public:
@@ -41,6 +43,10 @@ public:
 	Market *getMarket ();
 	bool tryTakeArticle (unsigned articleId);
 	void putArticle (unsigned articleId);
+	void addPopulation (CreaturesPopulation *population);
+	CreaturesPopulation *getPopulation (std::wstring name);
+	std::list<CreaturesPopulation *> getPopulations ();
+
 	//float getMoveLag () const { return moveLag; }
 private:
 	FieldPrivate *prv;
