@@ -13,9 +13,9 @@
 #include <log4cxx/logger.h>
 //#include <QtCore/qthread.h>
 #include "Config.h"
+#include "Types.h"
 //#include "Population.h"
 #include "JSON/JSON.h"
-
 
 //using namespace std;
 using namespace log4cxx;
@@ -26,7 +26,6 @@ float Objective(GAGenome &g);
 class CreatureFenotype;
 class Field;
 class CreaturesPopulation;
-
 
 enum ActivitiesStrategy {
 	AscengingArgumentCountOrder
@@ -51,6 +50,7 @@ enum TwoArgActivities {
 };
 
 class CreatureActivity;
+
 typedef std::list<CreatureActivity *> CreatureActivityList;
 
 class Creature: public GARealGenome {
@@ -61,15 +61,20 @@ public:
 		NoDirection, DirLeft, DirRight, DirUp, DirDown
 	};
 	Creature(const Creature &creature);
-	//Creature(const CreaturesPopulation *population, const Field * field);
 	Creature(CreaturesPopulation *population, Field * field,
 			JSONObject &creature, unsigned x, unsigned y);
 	Creature & operator=(const Creature & arg) {
+		LOG4CXX_TRACE(logger, "operator=");
 		copy(arg);
 		return *this;
 	}
-	virtual Creature* clone(GAGenome::CloneMethod flag = CONTENTS);
-	virtual void copy(const Creature&);
+	//virtual Creature* clone(GAGenome::CloneMethod flag = CONTENTS);
+	//virtual void copy(const Creature&);
+
+
+	virtual GAGenome* clone(GAGenome::CloneMethod flag = CONTENTS);
+	virtual void copy(const GAGenome&);
+
 	virtual ~Creature();
 
 	void doAllActivities();
@@ -81,11 +86,11 @@ public:
 	Field *getField();
 	unsigned getX() const;
 	unsigned getY() const;
-	std::string getId () const;
-	unsigned getAge () const;
-	float getWallet () const;
-	unsigned getArticleStock (unsigned articleId) const;
-	int getArticleQuantChange (unsigned articleId) const;
+	std::string getId() const;
+	unsigned getAge() const;
+	float getWallet() const;
+	unsigned getArticleStock(unsigned articleId) const;
+	int getArticleQuantChange(unsigned articleId) const;
 
 	bool hasEnergy() const;
 	void rest();
@@ -96,10 +101,10 @@ public:
 	bool buy(unsigned articleId);
 	bool check(unsigned articleId);
 	bool move(unsigned x, unsigned y);
-
+	CreatureActivityList getCreatureActivities();
 private:
 	static unsigned createuresId;
-	CreatureActivityList getCreatureActivities();
+
 	//float getProcessingVelocity(unsigned index);
 	/*	float getProcessingRateAndProductIndex(unsigned resourceIndex,
 	 int &productIndex);*/
@@ -121,5 +126,14 @@ private:
 	//ActivitiesStrategy getActiviviesStrategy() const;
 };
 
+class CreatureActivity {
+protected:
+	Creature *creature;
+	const Field *field;
+	UnsignedVector arguments;
+public:
+	CreatureActivity(Creature *creature, UnsignedVector &arguments);
+	virtual void make() = 0;
+};
 
 #endif /* CREATURE_H_ */

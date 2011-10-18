@@ -2,12 +2,12 @@
 	"world" : 
 	{
 		"sizeX" : 1,
-		"sizeY" : 2,
-		"articles" : ["energy",	"water",	"wood",		"corn", 	"tool"],
+		"sizeY" : 1,
+		"articles" : ["energy",	"water",	"wood",		"corn", 	"bread"],
 		"field0x0" : 
 		{
 			"stocks" : [ 
-					 [0, 0], 	[100, 50], 	[50, 25], 	[10, 0], 	[0,0]
+					 [0, 0], 	[100, 10], 	[50, 5], 	[0, 0], 	[0,0]
 			],
 			"populations" :
 			[
@@ -20,106 +20,29 @@
 					[
 						{
 							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ 
-								[0], 
-								[4] 
-							],					
-							"1ArgActivity" : [
-								[1, 2],
-								[5, 2],
-								[3, 2]
-							],
-							"2ArgActivity" : [
-							]
+							"0ArgActivity" : [ [0], 	[4] 			],					
+							"1ArgActivity" : [ [1, 1], 	[1, 1], [1, 1]	],
+							"2ArgActivity" : []
 						},
 						{
 							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ 
-								[0], 
-								[4] 
-							],					
-							"1ArgActivity" : [
-								[1, 1],
-								[5, 1],
-								[3, 1]
-							],
-							"2ArgActivity" : [
-							]
+							"0ArgActivity" : [ [1], 	[4] 			],					
+							"1ArgActivity" : [ [2, 2], 	[2, 2], [2, 2]	],
+							"2ArgActivity" : []
 						},
 						{
 							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ 
-								[0], 
-								[4] 
-							],					
-							"1ArgActivity" : [
-								[1, 1],
-								[3, 1],
-								[4, 2]
-							],
-							"2ArgActivity" : [
-							]
+							"0ArgActivity" : [ [2], 	[4] 			],					
+							"1ArgActivity" : [ [3, 3], 	[3, 3], [3, 3]	],
+							"2ArgActivity" : []
+						},
+						{
+							"activitiesStrategy" : 0,
+							"0ArgActivity" : [ [3], 	[4] 			],					
+							"1ArgActivity" : [ [4, 4], 	[4, 4], [4, 4]	],
+							"2ArgActivity" : []
 						}
-					]
-				}		
-			]
-		},
-		"field0x1" : 
-		{
-			"stocks" : [ 
-					 [0, 0], 	[1, 5], 	[5, 2], 	[10, 0], 	[0,0]
-			],
-			"populations" :
-			[
-				{
-					"name"	: "species0",
-					"0ArgActivityRoom" : 2,
-					"1ArgActivityRoom"	: 3, 
-					"2ArgActivityRoom"	: 0, 
-					"creatures" : 
-					[
-						{
-							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ 
-								[0], 
-								[4] 
-							],					
-							"1ArgActivity" : [
-								[1, 2],
-								[5, 2],
-								[3, 2]
-							],
-							"2ArgActivity" : [
-							]
-						},
-						{
-							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ 
-								[0], 
-								[4] 
-							],					
-							"1ArgActivity" : [
-								[1, 1],
-								[5, 1],
-								[3, 1]
-							],
-							"2ArgActivity" : [
-							]
-						},
-						{
-							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ 
-								[0], 
-								[4] 
-							],					
-							"1ArgActivity" : [
-								[1, 1],
-								[3, 1],
-								[4, 2]
-							],
-							"2ArgActivity" : [
-							]
-						}
+						
 					]
 				}		
 			]
