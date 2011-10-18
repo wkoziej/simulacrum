@@ -20,29 +20,22 @@ MainWindow::MainWindow(QWidget *parent) :
 		return;
 	}
 
-
-
-
-
 	setUpTable(ui->worldRunsTableView, "v_worlds_runs", worldRunsModel);
+	worldRunsModel->setSort(2, Qt::DescendingOrder);
+
 	setUpTable(ui->worldSnapshotTableView, "v_worlds_snapshots",
 			worldSnapshotModel);
 	setUpTable(ui->fieldSnapshotTableView, "v_fields_snapshots",
 			fieldSnapshotModel);
-
 	setUpTable(ui->populationCreaturesTableView, "v_creatures_snapshots",
 			populationCreatureSnapshotModel);
-
+	populationCreatureSnapshotModel->setSort(4, Qt::DescendingOrder);
 	setUpTable(ui->fieldPopulationsTableView, "v_populations_snapshots",
 			fieldPopulationSnapshotModel);
-	setUpTable(ui->fieldProductsTableView, "v_fields_articles_snapshots",
-			fieldProductsSnapshotModel);
-	/*
-	setUpTable(ui->fieldResourcesTableView, "v_fields_resources_snapshots",
-			fieldResourcesSnapshotModel);
-*/
-
-
+	setUpTable(ui->fieldArticlesTableView, "v_fields_articles_snapshots",
+			fieldArticlesSnapshotModel);
+	setUpTable(ui->creatureArticlesTableView, "v_creatures_articles_snapshots",
+			creatureArticlesSnapshotModel);
 
 	connect(
 			ui->worldRunsTableView->selectionModel(),
@@ -63,7 +56,11 @@ MainWindow::MainWindow(QWidget *parent) :
 			SIGNAL(currentRowChanged ( const QModelIndex & , const QModelIndex & )),
 			this, SLOT(changePopulationSnapshot(const QModelIndex &)));
 
-
+	connect(
+			ui->populationCreaturesTableView->selectionModel(),
+			SIGNAL(currentRowChanged ( const QModelIndex & , const QModelIndex & )),
+			this, SLOT(changeCreatureSnapshot(const QModelIndex &)));
+	connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(refreshData()));
 }
 
 void MainWindow::setUpTable(QTableView *tableView, QString sqlTableName,
@@ -93,13 +90,10 @@ void MainWindow::changeWorldSnapshot(const QModelIndex &index) {
 
 void MainWindow::changeFieldSnapshot(const QModelIndex &index) {
 	LOG4CXX_DEBUG(logger, "changeFieldSnapshot " << " index.row = " << index.row());
-
 	changeMasterId(fieldSnapshotModel, index, fieldPopulationSnapshotModel,
 			"field_snapshot_id", ui->fieldPopulationsTableView);
-/*	changeMasterId(fieldSnapshotModel, index, fieldResourcesSnapshotModel,
-			"field_snapshot_id", ui->fieldResourcesTableView);*/
-	changeMasterId(fieldSnapshotModel, index, fieldProductsSnapshotModel,
-			"field_snapshot_id", ui->fieldProductsTableView);
+	changeMasterId(fieldSnapshotModel, index, fieldArticlesSnapshotModel,
+			"field_snapshot_id", ui->fieldArticlesTableView);
 }
 
 void MainWindow::changePopulationSnapshot(const QModelIndex &index) {
@@ -107,6 +101,17 @@ void MainWindow::changePopulationSnapshot(const QModelIndex &index) {
 	changeMasterId(fieldPopulationSnapshotModel, index,
 			populationCreatureSnapshotModel, "population_snapshot_id",
 			ui->populationCreaturesTableView);
+}
+
+void MainWindow::changeCreatureSnapshot(const QModelIndex &index) {
+	LOG4CXX_DEBUG(logger, "changeCreatureSnapshot " << " index.row = " << index.row());
+	changeMasterId(populationCreatureSnapshotModel, index,
+			creatureArticlesSnapshotModel, "creature_snapshot_id",
+			ui->creatureArticlesTableView);
+}
+
+void MainWindow::refreshData() {
+	worldRunsModel->select();
 }
 
 void MainWindow::changeMasterId(QSqlTableModel *master,

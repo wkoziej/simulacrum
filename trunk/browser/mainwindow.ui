@@ -6,108 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1211</width>
-    <height>857</height>
+    <width>624</width>
+    <height>903</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_8">
-    <item row="1" column="0">
-     <widget class="QSplitter" name="splitter_3">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <widget class="QGroupBox" name="groupBox_3">
-       <property name="title">
-        <string>Worlds runs</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="0">
-         <widget class="QTableView" name="worldRunsTableView"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QSplitter" name="splitter">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <widget class="QGroupBox" name="groupBox">
-        <property name="title">
-         <string>Worlds snapshots</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout">
-         <property name="margin">
-          <number>12</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="QTableView" name="worldSnapshotTableView"/>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QGroupBox" name="groupBox_2">
-        <property name="title">
-         <string>Fields snapshots</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="0" column="0">
-          <widget class="QTableView" name="fieldSnapshotTableView"/>
-         </item>
-        </layout>
-       </widget>
-      </widget>
-      <widget class="QSplitter" name="splitter_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <widget class="QGroupBox" name="groupBox_5">
-        <property name="title">
-         <string>Resources snapshots </string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_5">
-         <item row="0" column="1">
-          <widget class="QTableView" name="fieldResourcesTableView"/>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QGroupBox" name="groupBox_6">
-        <property name="title">
-         <string>Products snapshots</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_6">
-         <item row="0" column="0">
-          <widget class="QTableView" name="fieldProductsTableView"/>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QGroupBox" name="groupBox_4">
-        <property name="title">
-         <string>Populations snapshots </string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="0" column="0">
-          <widget class="QTableView" name="fieldPopulationsTableView"/>
-         </item>
-        </layout>
-       </widget>
-      </widget>
-      <widget class="QGroupBox" name="groupBox_7">
-       <property name="title">
-        <string>Creatures snapsthots</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_7">
-        <item row="0" column="0">
-         <widget class="QTableView" name="populationCreaturesTableView"/>
-        </item>
-       </layout>
-      </widget>
-     </widget>
-    </item>
+   <layout class="QGridLayout" name="gridLayout_5">
     <item row="0" column="0">
      <widget class="QPushButton" name="pushButton">
       <property name="text">
@@ -115,15 +22,127 @@
       </property>
      </widget>
     </item>
+    <item row="1" column="0">
+     <widget class="QSplitter" name="splitter_5">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <widget class="QSplitter" name="splitter_3">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <widget class="QGroupBox" name="groupBox_3">
+        <property name="title">
+         <string>Worlds runs</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0">
+          <widget class="QTableView" name="worldRunsTableView"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QSplitter" name="splitter">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Worlds snapshots</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <property name="margin">
+           <number>12</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QTableView" name="worldSnapshotTableView"/>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Fields snapshots</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QTableView" name="fieldSnapshotTableView"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QSplitter" name="splitter_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>Fields Articles snapshots</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0">
+           <widget class="QTableView" name="fieldArticlesTableView"/>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="title">
+          <string>Populations snapshots </string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QTableView" name="fieldPopulationsTableView"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QSplitter" name="splitter_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <widget class="QGroupBox" name="groupBox_7">
+        <property name="title">
+         <string>Creatures snapsthots</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QTableView" name="populationCreaturesTableView"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_5">
+        <property name="title">
+         <string>Creature articles snapshots </string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QTableView" name="creatureArticlesTableView"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
+    </item>
    </layout>
+   <zorder>splitter_3</zorder>
+   <zorder>pushButton</zorder>
+   <zorder>groupBox_5</zorder>
+   <zorder>groupBox_7</zorder>
+   <zorder>groupBox_5</zorder>
+   <zorder>groupBox_7</zorder>
+   <zorder>groupBox_5</zorder>
+   <zorder>groupBox_7</zorder>
+   <zorder>splitter_5</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1211</width>
-     <height>21</height>
+     <width>624</width>
+     <height>28</height>
     </rect>
    </property>
   </widget>
