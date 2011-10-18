@@ -30,8 +30,8 @@ unsigned Creature::createuresId = 0;
 class CreatureFenotype: public GAEvalData {
 
 public:
-	int fieldCoordX;
-	int fieldCoordY;
+	unsigned fieldCoordX;
+	unsigned fieldCoordY;
 	unsigned yearsOld;
 	std::string id;
 	CreaturesPopulation *population;
@@ -40,7 +40,8 @@ public:
 	float wallet;
 	UnsignedVector articleStocks;
 	IntVector articleQuantsChange;
-	CreatureFenotype(CreaturesPopulation *population, Field *field);
+	CreatureFenotype(CreaturesPopulation *population, Field *field, unsigned x,
+			unsigned y);
 	virtual GAEvalData* clone() const;
 	virtual void copy(const GAEvalData &src);
 
@@ -58,7 +59,9 @@ public:
 	CreatureActivity(Creature *creature, UnsignedVector &arguments) {
 		this->creature = creature;
 		this->field = creature->getField();
-		copy(arguments.begin(), arguments.end(), this->arguments.begin());
+		this ->arguments.insert(this->arguments.begin(), arguments.begin(),
+				arguments.end());
+
 	}
 	virtual void make() = 0;
 };
@@ -83,7 +86,8 @@ public:
 	}
 protected:
 	virtual void makeActvity() {
-		unsigned X, Y;
+		unsigned X = creature->getX();
+		unsigned Y = creature->getY();
 		calculateNewCoordinates(X, Y);
 		creature->move(X, Y);
 	}
@@ -98,8 +102,7 @@ public:
 	}
 protected:
 	virtual void calculateNewCoordinates(unsigned &x, unsigned &y) {
-		x = creature->getX();
-		if (creature->getY() == 0) {
+		if (y == 0) {
 			y = World::HEIGHT - 1;
 		} else {
 			y--;
@@ -108,10 +111,13 @@ protected:
 };
 
 class GoDownActivity: public MoveActivity {
+public:
+	GoDownActivity(Creature *creature, UnsignedVector &arguments) :
+		MoveActivity(creature, arguments) {
+	}
 protected:
 	virtual void calculateNewCoordinates(unsigned &x, unsigned &y) {
-		x = creature->getX();
-		if (creature->getY() == World::HEIGHT - 1) {
+		if (y == World::HEIGHT - 1) {
 			y = 0;
 		} else {
 			y++;
@@ -119,11 +125,14 @@ protected:
 	}
 };
 
-class GoRightActivity: MoveActivity {
+class GoRightActivity: public MoveActivity {
+public:
+	GoRightActivity(Creature *creature, UnsignedVector &arguments) :
+		MoveActivity(creature, arguments) {
+	}
 protected:
 	virtual void calculateNewCoordinates(unsigned &x, unsigned &y) {
-		y = creature->getY();
-		if (creature->getX() == World::WIDTH - 1) {
+		if (x == World::WIDTH - 1) {
 			x = 0;
 		} else {
 			x++;
@@ -132,10 +141,13 @@ protected:
 };
 
 class GoLeftActivity: public MoveActivity {
+public:
+	GoLeftActivity(Creature *creature, UnsignedVector &arguments) :
+		MoveActivity(creature, arguments) {
+	}
 protected:
 	virtual void calculateNewCoordinates(unsigned &x, unsigned &y) {
-		y = creature->getY();
-		if (creature->getX() == 0) {
+		if (x == 0) {
 			x = World::WIDTH - 1;
 		} else {
 			x--;
@@ -144,6 +156,10 @@ protected:
 };
 
 class RestActivity: public Arg0CreatureActivity {
+public:
+	RestActivity(Creature *creature, UnsignedVector &arguments) :
+		Arg0CreatureActivity(creature, arguments) {
+	}
 protected:
 	virtual void makeActvity() {
 		creature->rest();
@@ -152,6 +168,10 @@ protected:
 
 class Arg1CreatureActivity: public CreatureActivity {
 public:
+	Arg1CreatureActivity(Creature *creature, UnsignedVector &arguments) :
+		CreatureActivity(creature, arguments) {
+	}
+
 	void make() {
 		assert (arguments.size() == 1);
 		unsigned articleId = arguments.at(0);
@@ -161,8 +181,12 @@ protected:
 	virtual void makeActvity(unsigned articleId) =0;
 };
 
-class ProduceArticle: public Arg1CreatureActivity {
+class ProduceArticleActivity: public Arg1CreatureActivity {
 public:
+	ProduceArticleActivity(Creature *creature, UnsignedVector &arguments) :
+		Arg1CreatureActivity(creature, arguments) {
+	}
+protected:
 	void makeActvity(unsigned articleId) {
 		const Recipe *recipe = field->getRecipe(articleId);
 		bool recipeExists = recipe != NULL;
@@ -173,36 +197,56 @@ public:
 	}
 };
 
-class CollectArticle: public Arg1CreatureActivity {
+class CollectArticleActivity: public Arg1CreatureActivity {
 public:
+	CollectArticleActivity(Creature *creature, UnsignedVector &arguments) :
+		Arg1CreatureActivity(creature, arguments) {
+	}
+protected:
 	void makeActvity(unsigned articleId) {
 		creature->collect(articleId);
 	}
 };
 
-class LeaveArticle: public Arg1CreatureActivity {
+class LeaveArticleActivity: public Arg1CreatureActivity {
 public:
+	LeaveArticleActivity(Creature *creature, UnsignedVector &arguments) :
+		Arg1CreatureActivity(creature, arguments) {
+	}
+protected:
 	void makeActvity(unsigned articleId) {
 		creature->leave(articleId);
 	}
 };
 
-class SellArticle: public Arg1CreatureActivity {
+class SellArticleActivity: public Arg1CreatureActivity {
 public:
+	SellArticleActivity(Creature *creature, UnsignedVector &arguments) :
+		Arg1CreatureActivity(creature, arguments) {
+	}
+protected:
 	void makeActvity(unsigned articleId) {
 		creature->sell(articleId);
 	}
 };
 
-class BuyArticle: public Arg1CreatureActivity {
+class BuyArticleActivity: public Arg1CreatureActivity {
 public:
+	BuyArticleActivity(Creature *creature, UnsignedVector &arguments) :
+		Arg1CreatureActivity(creature, arguments) {
+	}
+protected:
 	void makeActvity(unsigned articleId) {
 		creature->buy(articleId);
 	}
 };
 
-class CheckArticle: public Arg1CreatureActivity {
+class CheckArticleActivity: public Arg1CreatureActivity {
 public:
+	CheckArticleActivity(Creature *creature, UnsignedVector &arguments) :
+		Arg1CreatureActivity(creature, arguments) {
+	}
+protected:
 	void makeActvity(unsigned articleId) {
 		creature->check(articleId);
 	}
@@ -222,7 +266,7 @@ float Objective(GAGenome &g) {
 	// wersja 1
 	// Wartość wytworzonych produktów
 	float articlesValueSum = 0.0;
-	for (int i = 0; i < World::NO_OF_ARTICLES; i++) {
+	for (unsigned i = 0; i < World::NO_OF_ARTICLES; i++) {
 		articlesValueSum += field->getMarket()->articleSellPrice(i)
 				* fenotype->articleStocks.at(i);
 	}
@@ -234,7 +278,9 @@ float Objective(GAGenome &g) {
 LoggerPtr CreatureFenotype::logger(Logger::getLogger("creatureFenotype"));
 
 CreatureFenotype::CreatureFenotype(CreaturesPopulation * population,
-		Field *field) {
+		Field *field, unsigned x, unsigned y) {
+	fieldCoordX = x;
+	fieldCoordY = y;
 	articleQuantsChange.assign(World::NO_OF_ARTICLES, 0);
 	articleStocks.assign(World::NO_OF_ARTICLES, 0);
 	yearsOld = 0;
@@ -245,7 +291,8 @@ CreatureFenotype::CreatureFenotype(CreaturesPopulation * population,
 ;
 
 GAEvalData* CreatureFenotype::clone() const {
-	CreatureFenotype *cf = new CreatureFenotype(this->population, this->field);
+	CreatureFenotype *cf = new CreatureFenotype(this->population, this->field,
+			this->fieldCoordX, this->fieldCoordY);
 	cf->copy(*this);
 	return cf;
 }
@@ -392,11 +439,11 @@ void Creature::JSONInitializer(GAGenome &g) {
 }
 
 Creature::Creature(CreaturesPopulation *population, Field * field,
-		JSONObject &creature) :
+		JSONObject &creature, unsigned x, unsigned y) :
 	GARealGenome(Creature::allelesDefinition(population), Objective) {
 	// Wypełnij tymczasową strukturę z definicją osobnika
 	userData(&creature);
-	evalData(CreatureFenotype(population, field));
+	evalData(CreatureFenotype(population, field, x, y));
 	initializer(JSONInitializer);
 	initialize();
 	std::stringstream idBuf;
@@ -422,7 +469,6 @@ void Creature::changePopulation(CreaturesPopulation *from,
 	assert (getFenotype()->population == from);
 	from->remove(this);
 	to->add(this);
-	getFenotype()->population = to;
 }
 
 /*
@@ -438,7 +484,8 @@ Creature::Creature(const Creature &creature) :
 			Creature::allelesDefinition(creature.getFenotype()->population),
 			Objective) {
 	evalData(CreatureFenotype(creature.getFenotype()->population,
-			creature.getFenotype()->field));
+			creature.getFenotype()->field, creature.getFenotype()->fieldCoordX,
+			creature.getFenotype()->fieldCoordY));
 	initializer(DoNothingInitializer);
 	initialize();
 	std::stringstream idBuf;
@@ -460,23 +507,26 @@ Creature::~Creature() {
 }
 
 void Creature::doAllActivities() {
-	/*CreatureActivityList activities = getCreatureActivities();
-	 CreatureActivityList::iterator activity = activities.begin();
-	 for (; activity != activities.end(); activity++) {
-	 (*activity)->make();
-	 delete (*activity);
-	 }*/
+	CreatureActivityList activities = getCreatureActivities();
+	CreatureActivityList::iterator activity = activities.begin();
+	for (; activity != activities.end(); activity++) {
+		(*activity)->make();
+		delete (*activity);
+	}
 }
 
 bool Creature::hasEnergy() const {
 	return getFenotype()->articleStocks.at(ENERGY_INDEX) > 0;
 }
 void Creature::rest() {
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " resting " );
 	getFenotype()->articleStocks.at(ENERGY_INDEX)++;
 	getFenotype()->articleQuantsChange.at(ENERGY_INDEX)++;
 }
 
 bool Creature::produce(unsigned articleId, std::vector<unsigned> ingredients) {
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " producing  " << World::ARTICLES.at(articleId));
+
 	bool produced = true;
 	assert (getFenotype()->articleStocks.size() == ingredients.size());
 	UnsignedVector::const_iterator i = ingredients.begin();
@@ -499,6 +549,7 @@ bool Creature::produce(unsigned articleId, std::vector<unsigned> ingredients) {
 }
 
 bool Creature::collect(unsigned articleId) {
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " collecting  " << World::ARTICLES.at(articleId));
 	bool canCollect = getField()->tryTakeArticle(articleId);
 	if (canCollect) {
 		getFenotype()->articleStocks.at(articleId) += 1;
@@ -508,6 +559,7 @@ bool Creature::collect(unsigned articleId) {
 }
 
 bool Creature::leave(unsigned articleId) {
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " leaving  " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool canLeave = fenotype->articleStocks.at(articleId) >= 1.0;
 	if (canLeave) {
@@ -519,6 +571,7 @@ bool Creature::leave(unsigned articleId) {
 }
 
 bool Creature::sell(unsigned articleId) {
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " selling  " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool canSell = fenotype->articleStocks.at(articleId) >= 1.0;
 	if (canSell) {
@@ -532,15 +585,19 @@ bool Creature::sell(unsigned articleId) {
 }
 
 bool Creature::buy(unsigned articleId) {
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " buying  " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool bought = fenotype->field->getMarket()->sellArticleToClient(getId(),
 			articleId, fenotype->wallet);
-	fenotype->articleStocks.at(articleId) += 1;
-	fenotype->articleQuantsChange.at(articleId) += 1;
+	if (bought) {
+		fenotype->articleStocks.at(articleId) += 1;
+		fenotype->articleQuantsChange.at(articleId) += 1;
+	}
 	return bought;
 }
 
 bool Creature::check(unsigned articleId) {
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " checking  " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	fenotype->field->getMarket()->articleSellPrice(getId(), articleId);
 	return true;
@@ -565,6 +622,10 @@ unsigned Creature::getAge() const {
 	return getFenotype()->yearsOld;
 }
 
+float Creature::getWallet() const {
+	return getFenotype()->wallet;
+}
+
 unsigned Creature::getArticleStock(unsigned articleId) const {
 	return getFenotype()->articleStocks.at(articleId);
 }
@@ -581,23 +642,61 @@ CreatureActivity *Creature::createActivity(unsigned activityGenIndex,
 	CreatureActivity *activity;
 
 	for (unsigned i = 0; i < parametersCount; i++) {
-		parameters.push_back(gene(i + 1));
+		parameters.push_back(gene(activityGenIndex + i + 1));
 	}
 	switch (parametersCount) {
-	case 0:
+	case 0: {
 		ZeroArgActivities zeroArgActivity = (ZeroArgActivities) gene(
 				activityGenIndex);
 		switch (zeroArgActivity) {
 		case GoUp:
 			activity = new GoUpActivity(this, parameters);
 			break;
-		case 1:
-		case 2:
+		case GoDown:
+			activity = new GoDownActivity(this, parameters);
+			break;
+		case GoLeft:
+			activity = new GoLeftActivity(this, parameters);
+			break;
+		case GoRight:
+			activity = new GoRightActivity(this, parameters);
+			break;
+		case Rest:
+			activity = new RestActivity(this, parameters);
+			break;
 		default:
 			assert (false);
 		}
-		unsigned activityTableIndex = gene(activityGenIndex);
-
+		break;
+	}
+		//unsigned activityTableIndex = gene(activityGenIndex);
+	case 1: {
+		OneArgActivities oneArgActivity = (OneArgActivities) gene(
+				activityGenIndex);
+		switch (oneArgActivity) {
+		case ProduceArticle:
+			activity = new ProduceArticleActivity(this, parameters);
+			break;
+		case CollectArticle:
+			activity = new CollectArticleActivity(this, parameters);
+			break;
+		case LeaveArticle:
+			activity = new LeaveArticleActivity(this, parameters);
+			break;
+		case SellArticle:
+			activity = new SellArticleActivity(this, parameters);
+			break;
+		case BuyArticle:
+			activity = new BuyArticleActivity(this, parameters);
+			break;
+		case CheckArticle:
+			activity = new CheckArticleActivity(this, parameters);
+			break;
+		default:
+			assert (false);
+		}
+		break;
+	}
 	}
 	return activity;
 }
@@ -641,15 +740,18 @@ CreatureActivityList Creature::getCreatureActivities() {
 }
 
 bool Creature::move(unsigned x, unsigned y) {
-	bool moved = hasEnergy();
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " moving to " << x << "x" << y );
+	bool anotherField = (x != getFenotype()->fieldCoordX || y
+			!= getFenotype()->fieldCoordY);
+	bool moved = anotherField && hasEnergy();
 	if (moved) {
 		Field *newField = World::getWorld()->fields.at(x).at(y);
 		CreaturesPopulation *population = getFenotype()->population;
 		CreaturesPopulation *newPopulation =
 				World::getWorld()->findOrCreatePopulation(population, x, y);
+		changePopulation(population, newPopulation);
 		getFenotype()->field = newField;
 		getFenotype()->population = newPopulation;
-		changePopulation(population, newPopulation);
 		getFenotype()->fieldCoordX = x;
 		getFenotype()->fieldCoordY = y;
 		getFenotype()->articleStocks.at(ENERGY_INDEX) -= 1;

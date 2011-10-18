@@ -16,8 +16,9 @@ public:
 	virtual ~Market();
 	bool isArticleAvailable(std::string clientId, unsigned articleId,
 			float articleQuant);
+	unsigned queriesCount (unsigned articleId);
 	float articleSellPrice(std::string clientId, unsigned articleId);
-	float articleBuyPrice(std::string clientId, unsigned articleId);
+	float articleBuyPrice(unsigned articleId);
 	// Nie wplywa na cenę, bo nie pyta się klient
 	float articleSellPrice(unsigned articleId);
 	unsigned articleStock(unsigned articleId);

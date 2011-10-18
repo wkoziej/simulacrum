@@ -2,7 +2,7 @@
 	"world" : 
 	{
 		"sizeX" : 1,
-		"sizeY" : 1,
+		"sizeY" : 2,
 		"articles" : ["energy",	"water",	"wood",		"corn", 	"tool"],
 		"field0x0" : 
 		{
@@ -14,7 +14,7 @@
 				{
 					"name"	: "species0",
 					"0ArgActivityRoom" : 2,
-					"1ArgActivityRoom"	: 2, 
+					"1ArgActivityRoom"	: 3, 
 					"2ArgActivityRoom"	: 0, 
 					"creatures" : 
 					[
@@ -22,11 +22,100 @@
 							"activitiesStrategy" : 0,
 							"0ArgActivity" : [ 
 								[0], 
-								[2] 
+								[4] 
 							],					
 							"1ArgActivity" : [
-								[0, 0],
-								[1, 2]
+								[1, 2],
+								[5, 2],
+								[3, 2]
+							],
+							"2ArgActivity" : [
+							]
+						},
+						{
+							"activitiesStrategy" : 0,
+							"0ArgActivity" : [ 
+								[0], 
+								[4] 
+							],					
+							"1ArgActivity" : [
+								[1, 1],
+								[5, 1],
+								[3, 1]
+							],
+							"2ArgActivity" : [
+							]
+						},
+						{
+							"activitiesStrategy" : 0,
+							"0ArgActivity" : [ 
+								[0], 
+								[4] 
+							],					
+							"1ArgActivity" : [
+								[1, 1],
+								[3, 1],
+								[4, 2]
+							],
+							"2ArgActivity" : [
+							]
+						}
+					]
+				}		
+			]
+		},
+		"field0x1" : 
+		{
+			"stocks" : [ 
+					 [0, 0], 	[1, 5], 	[5, 2], 	[10, 0], 	[0,0]
+			],
+			"populations" :
+			[
+				{
+					"name"	: "species0",
+					"0ArgActivityRoom" : 2,
+					"1ArgActivityRoom"	: 3, 
+					"2ArgActivityRoom"	: 0, 
+					"creatures" : 
+					[
+						{
+							"activitiesStrategy" : 0,
+							"0ArgActivity" : [ 
+								[0], 
+								[4] 
+							],					
+							"1ArgActivity" : [
+								[1, 2],
+								[5, 2],
+								[3, 2]
+							],
+							"2ArgActivity" : [
+							]
+						},
+						{
+							"activitiesStrategy" : 0,
+							"0ArgActivity" : [ 
+								[0], 
+								[4] 
+							],					
+							"1ArgActivity" : [
+								[1, 1],
+								[5, 1],
+								[3, 1]
+							],
+							"2ArgActivity" : [
+							]
+						},
+						{
+							"activitiesStrategy" : 0,
+							"0ArgActivity" : [ 
+								[0], 
+								[4] 
+							],					
+							"1ArgActivity" : [
+								[1, 1],
+								[3, 1],
+								[4, 2]
 							],
 							"2ArgActivity" : [
 							]

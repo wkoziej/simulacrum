@@ -42,6 +42,7 @@ public:
 	const Recipe *getRecipe(unsigned articleId) const;
 	Market *getMarket ();
 	bool tryTakeArticle (unsigned articleId);
+	unsigned articleStock (unsigned articleId);
 	void putArticle (unsigned articleId);
 	void addPopulation (CreaturesPopulation *population);
 	CreaturesPopulation *getPopulation (std::wstring name);

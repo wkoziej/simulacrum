@@ -153,6 +153,10 @@ bool Field::tryTakeArticle(unsigned articleId) {
 	return prv->stocks.at(articleId)->tryAcquire();
 }
 
+unsigned Field::articleStock (unsigned articleId) {
+	return prv->stocks.at(articleId)->available();
+}
+
 void Field::putArticle(unsigned articleId) {
 	prv->stocks.at(articleId)->release();
 }

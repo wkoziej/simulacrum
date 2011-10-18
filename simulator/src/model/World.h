@@ -60,6 +60,7 @@ public:
 	static unsigned NO_OF_ARTICLES;
 	static unsigned HEIGHT;
 	static unsigned WIDTH;
+	static std::vector <std::string> ARTICLES;
 private:
 	static World *singleton;
 	World() {

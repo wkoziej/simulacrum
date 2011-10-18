@@ -25,12 +25,13 @@ int main(int argc, char *argv[]) {
 		//Viewer viewer(world);
 		StateSaver stateSaver(world, "project-world.db");
 		stateSaver.startSession();
+		// Zapisz stan świata
+		stateSaver.save("start");
 		while (true) {
-			// Zapisz stan świata
-			stateSaver.save("start");
 			world->step(&stateSaver);
 			// Odnów zasoby świata
 			world->nextYear();
+			stateSaver.save("resourcesRenovated");
 			char i;
 			cin >> i;
 		}

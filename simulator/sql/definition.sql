@@ -1,9 +1,13 @@
+--insert into fields_articles_snapshots (field_snapshot_id, article_id, field_stock, market_stock, sell_price, buy_price)  values (1, 2, 3, 4, 5,6); 
+
 --insert into creatures_products_snapshots (creature_snapshot_id, produced, needs)  values (:1, :2, :3);
 
 --insert into creatures_resources_snapshots (creature_snapshot_id, use)  values (:1, :2); 
 --insert into worlds_snapshots (world_run_id, snapshot_time) values (1, date('now'));
 
 --select * from SQLITE_SEQUENCE;
+
+select * from fields_snapshots;
 
 drop table if exists WORLDS;
 create table WORLDS (
@@ -38,7 +42,6 @@ CREATE TABLE FIELDS_SNAPSHOTS (
 drop table  if exists ARTICLES;
    create table ARTICLES (
        ID INTEGER CONSTRAINT ARTICLES_PK PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
-      WORLD_ID INTEGER CONSTRAINT WORLDS_FK REFERENCES WORLDS (ID) ON DELETE CASCADE,      
        NAME TEXT
  );
 /*
@@ -62,6 +65,7 @@ drop table  if exists  RESOURCES;
        POPULATION_SNAPSHOT_ID INTEGER CONSTRAINT POPULATIONS_SNAPSHOTS_FK REFERENCES POPULATIONS_SNAPSHOTS(ID) ON DELETE CASCADE,
        AGE INTEGER,
        OBJECTIVE_VALUE REAL,
+       WALLET REAL,
        GENOME TEXT
  );
  
@@ -88,21 +92,15 @@ ARTICLE_ID INT,
    create table FIELDS_ARTICLES_SNAPSHOTS (
 	ID INTEGER  PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
        FIELD_SNAPSHOT_ID INTEGER CONSTRAINT FIELDS_SNAPSHOTS_FK REFERENCES FIELDS_SNAPSHOTS(ID) ON DELETE CASCADE,
-	ARTICLE_ID INT,
-       PRICE REAL,
-       QUANT INT
+       ARTICLE_ID INT,
+       SELL_PRICE REAL,
+       BUY_PRICE REAL,
+       FIELD_STOCK INT,
+       MARKET_STOCK INT,
+       QUERIES_COUNT INT    
  );
  
- /*
- drop table  if exists FIELDS_RESOURCES_SNAPSHOTS;
- create table FIELDS_RESOURCES_SNAPSHOTS (
- 	ID INTEGER  PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
-       FIELD_SNAPSHOT_ID INTEGER CONSTRAINT RESOURCES_SNAPSHOTS_FK REFERENCES RESOURCES_SNAPSHOTS(ID) ON DELETE CASCADE,
-       RESOURCE_ID INT,
-       PRICE REAL,
-       AMOUNT REAL
-  );
-  */
+
   
  drop view V_WORLDS_RUNS;
 CREATE VIEW V_WORLDS_RUNS AS select * from WORLDS_RUNS;
@@ -115,22 +113,20 @@ drop view V_FIELDS_SNAPSHOTS;
 create view V_FIELDS_SNAPSHOTS AS 
 select * from FIELDS_SNAPSHOTS;
 
---select FS.ID ID,  FS.WORLD_SNAPSHOT_ID, LAG, COUNT(DISTINCT PS.ID)  AS SECIES_COUNT
---from FIELDS_SNAPSHOTS FS,  POPULATIONS_SNAPSHOTS PS
---WHERE FS.ID = PS.FIELD_SNAPSHOT_ID;
-
 
 
 drop view V_POPULATIONS_SNAPSHOTS;
 create view V_POPULATIONS_SNAPSHOTS as select * from POPULATIONS_SNAPSHOTS;
 
 drop view v_fields_articles_snapshots;
-create view v_fields_articles_snapshots as select * from fields_articles_snapshots;
+create view v_fields_articles_snapshots as 
+select s.id, s.field_snapshot_id,  a.name,  s.field_stock, s.market_stock,  s.queries_count, s.sell_price, s.buy_price
+ from fields_articles_snapshots s inner join articles a on a.id = s.article_id;
 
-/*
-drop view v_fields_resources_snapshots;
-create view v_fields_resources_snapshots as select * from fields_resources_snapshots;
-*/
 
 drop view v_creatures_snapshots;
 create view v_creatures_snapshots as select * from creatures_snapshots;
+
+drop view v_creatures_articles_snapshots;
+create  view v_creatures_articles_snapshots as 
+select s.id, s.creature_snapshot_id, a.name, s.stock, s.changed from creatures_articles_snapshots  s inner join articles a on a.id = s.article_id;
