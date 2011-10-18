@@ -8,7 +8,6 @@
 #include "Config.h"
 
 #include "Field.h"
-#include "Types.h"
 #include "Recipe.h"
 #include "Market.h"
 #include "Creature.h"
@@ -50,21 +49,14 @@ private:
 	static LoggerPtr logger;
 };
 
-class CreatureActivity {
-protected:
-	Creature *creature;
-	const Field *field;
-	UnsignedVector arguments;
-public:
-	CreatureActivity(Creature *creature, UnsignedVector &arguments) {
-		this->creature = creature;
-		this->field = creature->getField();
-		this ->arguments.insert(this->arguments.begin(), arguments.begin(),
-				arguments.end());
+CreatureActivity::CreatureActivity(Creature *creature,
+		UnsignedVector &arguments) {
+	this->creature = creature;
+	this->field = creature->getField();
+	this ->arguments.insert(this->arguments.begin(), arguments.begin(),
+			arguments.end());
 
-	}
-	virtual void make() = 0;
-};
+}
 
 class Arg0CreatureActivity: public CreatureActivity {
 public:
@@ -267,11 +259,13 @@ float Objective(GAGenome &g) {
 	// Wartość wytworzonych produktów
 	float articlesValueSum = 0.0;
 	for (unsigned i = 0; i < World::NO_OF_ARTICLES; i++) {
-		articlesValueSum += field->getMarket()->articleSellPrice(i)
+		articlesValueSum += field->getMarket()->articleBuyPrice(i)
 				* fenotype->articleStocks.at(i);
+
 	}
 	value = articlesValueSum + fenotype->wallet;
-	LOG4CXX_DEBUG(Creature::logger, "Objective !!!!  : " << value);
+
+	LOG4CXX_DEBUG(Creature::logger, "creature " <<c->getId() << "objective = " << value);
 	return value;
 }
 
@@ -279,6 +273,7 @@ LoggerPtr CreatureFenotype::logger(Logger::getLogger("creatureFenotype"));
 
 CreatureFenotype::CreatureFenotype(CreaturesPopulation * population,
 		Field *field, unsigned x, unsigned y) {
+	LOG4CXX_TRACE(logger, "CreatureFenotype::CreatureFenotype");
 	fieldCoordX = x;
 	fieldCoordY = y;
 	articleQuantsChange.assign(World::NO_OF_ARTICLES, 0);
@@ -291,6 +286,7 @@ CreatureFenotype::CreatureFenotype(CreaturesPopulation * population,
 ;
 
 GAEvalData* CreatureFenotype::clone() const {
+	LOG4CXX_TRACE(logger, "CreatureFenotype::clone");
 	CreatureFenotype *cf = new CreatureFenotype(this->population, this->field,
 			this->fieldCoordX, this->fieldCoordY);
 	cf->copy(*this);
@@ -330,7 +326,7 @@ GARealAlleleSetArray Creature::allelesDefinition(
 		unsigned i = 0;
 		// Kodowanie czynności bezargumentowych (np. ruch w lewo)
 		for (; i < population->get0ArgActivitiesRoom(); i++) {
-			alleles.add(0, ZeroArgActivitiesSIZE, 1);
+			alleles.add(0, ZeroArgActivitiesSIZE - 1, 1);
 		}
 		// Kodowanie czynności jednoargumentowych (np. kupno towaru)
 		for (i = 0; i < population->get1ArgActivitiesRoom(); i++) {
@@ -441,6 +437,7 @@ void Creature::JSONInitializer(GAGenome &g) {
 Creature::Creature(CreaturesPopulation *population, Field * field,
 		JSONObject &creature, unsigned x, unsigned y) :
 	GARealGenome(Creature::allelesDefinition(population), Objective) {
+	LOG4CXX_TRACE(logger, "Creature::Creature(CreaturesPopulation *population, Field * field, JSONObject &creature, unsigned x, unsigned y)");
 	// Wypełnij tymczasową strukturę z definicją osobnika
 	userData(&creature);
 	evalData(CreatureFenotype(population, field, x, y));
@@ -480,29 +477,35 @@ void Creature::changePopulation(CreaturesPopulation *from,
  }
  */
 Creature::Creature(const Creature &creature) :
-	GARealGenome(
-			Creature::allelesDefinition(creature.getFenotype()->population),
-			Objective) {
-	evalData(CreatureFenotype(creature.getFenotype()->population,
-			creature.getFenotype()->field, creature.getFenotype()->fieldCoordX,
-			creature.getFenotype()->fieldCoordY));
-	initializer(DoNothingInitializer);
-	initialize();
+	GARealGenome(creature) {
+	LOG4CXX_TRACE(logger, "Creature::Creature(const Creature &creature)");
+	/*evalData(CreatureFenotype(creature.getFenotype()->population,
+	 creature.getFenotype()->field, creature.getFenotype()->fieldCoordX,
+	 creature.getFenotype()->fieldCoordY));
+	 initializer(DoNothingInitializer);
+	 initialize();
+	 */
 	std::stringstream idBuf;
 	idBuf << Creature::createuresId++;
+	evalData(CreatureFenotype(creature.getFenotype()->population, creature.getFenotype()->field,
+			creature.getFenotype()->fieldCoordX, creature.getFenotype()->fieldCoordY));
 	getFenotype()->id = idBuf.str();
 	LOG4CXX_DEBUG(logger, "genome : " << *this);
 }
 
-Creature* Creature::clone(GAGenome::CloneMethod flag) {
+GAGenome* Creature::clone(GAGenome::CloneMethod flag) {
+	LOG4CXX_TRACE(logger, "clone");
 	return new Creature(*this);
 }
 
-void Creature::copy(const Creature&) {
-	GARealGenome::copy(*this);
+void Creature::copy(const GAGenome &g) {
+	LOG4CXX_TRACE(logger, "copy");
+	GARealGenome::copy(g);
+	//getFenotype()->copy()
 }
 
 Creature::~Creature() {
+	LOG4CXX_TRACE(logger, "Creature::~Creature");
 	delete this->evd;
 }
 

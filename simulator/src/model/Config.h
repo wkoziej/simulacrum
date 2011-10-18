@@ -14,7 +14,7 @@
 #define NO_OF_POPULATIONS 1
 #define MAX_RENEWAL 10 // Maksymalna ilość w jakiej surowiec się odnawia
 #define CROSSOVER 0.95
-#define MUTATION  0.01
+#define MUTATION  0.2
 #define MAX_POINT_ON_ROAD 4
 #define MAX_RESOURCE_QUANT 50
 #define MAX_PRODUCT_QUANT 50

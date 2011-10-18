@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 			world->nextYear();
 			stateSaver.save("resourcesRenovated");
 			char i;
-			cin >> i;
+		//	cin >> i;
 		}
 
 	}
