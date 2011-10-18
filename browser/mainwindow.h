@@ -25,15 +25,16 @@ public slots:
 	void changeWorldSnapshot(const QModelIndex &index);
 	void changeFieldSnapshot(const QModelIndex &index);
 	void changePopulationSnapshot(const QModelIndex &index);
-
+	void changeCreatureSnapshot(const QModelIndex &index);
+	void refreshData();
 private:
 	Ui::MainWindow *ui;
 
 	QSqlTableModel *worldRunsModel;
 	QSqlTableModel *worldSnapshotModel;
 	QSqlTableModel *fieldSnapshotModel;
-	QSqlTableModel *fieldProductsSnapshotModel;
-	QSqlTableModel *fieldResourcesSnapshotModel;
+	QSqlTableModel *fieldArticlesSnapshotModel;
+	QSqlTableModel *creatureArticlesSnapshotModel;
 	QSqlTableModel *fieldPopulationSnapshotModel;
 	QSqlTableModel *populationCreatureSnapshotModel;
 	static LoggerPtr logger;
