@@ -8,10 +8,12 @@
 #include "Recipe.h"
 
 Recipe::Recipe() {
-	// TODO Auto-generated constructor stub
-
 }
 
 Recipe::~Recipe() {
-	// TODO Auto-generated destructor stub
+}
+
+UnsignedVector Recipe::getIngredientsVector() const {
+	UnsignedVector empty;
+	return empty;
 }

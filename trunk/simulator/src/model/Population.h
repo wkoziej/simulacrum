@@ -16,7 +16,7 @@ using namespace log4cxx;
 class CreaturesPopulation: public GAPopulation {
 public:
 	CreaturesPopulation(const CreaturesPopulation *species);
-	CreaturesPopulation(Field *field, const JSONObject &population);
+	CreaturesPopulation(Field *field, const JSONObject &population, unsigned x, unsigned y);
 	virtual ~CreaturesPopulation();
 	//float productNeeds(int i);
 	//float resourceNeeds(int i);

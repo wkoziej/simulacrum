@@ -30,10 +30,20 @@ StateSaver::StateSaver(World *world, std::string dbName) {
 void StateSaver::startSession() {
 	std::vector<QVariant> params;
 	params.push_back(1);
+	QSqlDatabase::database().transaction();
+
 	executeQuery(
 			"insert into worlds_runs (world_id, date_start) values (:1, datetime('now'));",
 			params, runId);
-
+	std::vector<std::string>::iterator a;
+	int tmp;
+	for (a = World::ARTICLES.begin(); a < World::ARTICLES.end(); a++) {
+		params.clear();
+		params.push_back(a->c_str());
+		executeQuery("insert into articles (name) values (:1);",
+				params, tmp);
+	}
+	QSqlDatabase::database().commit();
 }
 
 StateSaver::~StateSaver() {
@@ -66,16 +76,20 @@ void StateSaver::save(std::string description) {
 			for (int articleIndex = 0; articleIndex < World::NO_OF_ARTICLES; articleIndex++) {
 				params.clear();
 				params.push_back(fieldSnapshotId);
-				params.push_back(articleIndex);
+				params.push_back(articleIndex + 1);
+				params.push_back(field->articleStock(articleIndex));
+				params.push_back(field->getMarket()->articleStock(articleIndex));
 				params.push_back(field->getMarket()->articleSellPrice(
 						articleIndex));
-				params.push_back(field->getMarket()->articleStock(articleIndex));
+				params.push_back(field->getMarket()->articleBuyPrice(
+						articleIndex));
+				params.push_back(field->getMarket()->queriesCount(
+									articleIndex));
 				executeQuery(
-						"insert into fields_articles_snapshots (field_snapshot_id, article_id, price, quant) "
-							" values (:1, :2, :3, :4);", params, tmp);
+						"insert into fields_articles_snapshots (field_snapshot_id, article_id, field_stock, market_stock, sell_price, buy_price, queries_count) "
+							" values (:1, :2, :3, :4, :5, :6, :7);", params, tmp);
 
 			}
-
 			// POPULACJE
 			std::list<CreaturesPopulation *> populations =
 					field->getPopulations();
@@ -101,18 +115,19 @@ void StateSaver::save(std::string description) {
 					params.push_back(populationSnapshotId);
 					params.push_back(creature->getAge());
 					params.push_back(creature->score());
-					params.push_back((creature->getId() + " : " + creature->genomeStr()).c_str());
+					params.push_back(creature->getWallet ());
+					params.push_back((creature->getId() + " : "
+							+ creature->genomeStr()).c_str());
 					executeQuery(
-							"insert into creatures_snapshots (population_snapshot_id, age, objective_value, genome) "
-								" values (:1, :2, :3, :4);", params,
+							"insert into creatures_snapshots (population_snapshot_id, age, objective_value, wallet, genome) "
+								" values (:1, :2, :3, :4, :5);", params,
 							creatureSnapshotId);
-
 					int tmp;
 					for (int articleIndex = 0; articleIndex
 							< World::NO_OF_ARTICLES; articleIndex++) {
 						params.clear();
 						params.push_back(creatureSnapshotId);
-						params.push_back(articleIndex);
+						params.push_back(articleIndex + 1);
 						params.push_back(
 								creature->getArticleStock(articleIndex));
 						params.push_back(creature->getArticleQuantChange(
@@ -122,23 +137,8 @@ void StateSaver::save(std::string description) {
 									" values (:1, :2, :3, :4);", params, tmp);
 
 					}
-
-					/*for (int resourceIndex = 0; resourceIndex
-					 < World::NO_OF_ARTICLES; resourceIndex++) {
-
-					 params.clear();
-					 params.push_back(creatureSnapshotId);
-					 params.push_back(resourceIndex);
-					 params.push_back(
-					 creature->getFenotype()->lostArticlesQuants.at(
-					 resourceIndex));
-					 executeQuery(
-					 "insert into creatures_resources_snapshots (creature_snapshot_id, resource_id, used) "
-					 " values (:1, :2, :3);", params, tmp);
-					 }*/
 				}
 			}
-
 		}
 	}
 	QSqlDatabase::database().commit();

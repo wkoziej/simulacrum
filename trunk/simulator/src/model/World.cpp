@@ -32,6 +32,7 @@ World *World::singleton = NULL;
 unsigned World::NO_OF_ARTICLES = 5;
 unsigned World::HEIGHT = 1;
 unsigned World::WIDTH = 1;
+std::vector<std::string> World::ARTICLES;
 
 class CreatureActivityThread: public QThread {
 public:
@@ -433,8 +434,17 @@ World *World::readWorldFromFile(const char *fileName) {
 			World::HEIGHT = Y;
 			World::WIDTH = X;
 			LOG4CXX_DEBUG(logger, "wordlSize (" << X << "," << Y << ")");
-			World::NO_OF_ARTICLES = root.at(L"articles")->AsArray().size();
+			JSONArray articles = root.at(L"articles")->AsArray();
+			World::NO_OF_ARTICLES = articles.size();
 			LOG4CXX_DEBUG(logger, "NO_OF_RESOURCES :" << World::NO_OF_ARTICLES);
+			for (unsigned z = 0; z < articles.size(); z++) {
+				std::wstring articleName = articles.at(z)->AsString();
+				std::string name(articleName.length(), ' ');
+				std::copy(articleName.begin(), articleName.end(), name.begin());
+				World::ARTICLES.push_back(name);
+			}
+
+
 			world = World::getWorld();
 			for (int i = 0; i < X; i++) {
 				FieldsVector fVector;
@@ -456,7 +466,7 @@ World *World::readWorldFromFile(const char *fileName) {
 							for (; population != populations.end(); population++) {
 								CreaturesPopulation *populationObject =
 										new CreaturesPopulation(field,
-												(*population)->AsObject());
+												(*population)->AsObject(), i, j);
 								// populations.insert(namedPopulation)
 								field->addPopulation(populationObject);
 							}
@@ -619,6 +629,7 @@ void World::step(StateSaver *stateSaver) {
 	PopulationOnFieldVisitor * visitor = new CreatureActivityVisitor();
 	iteratePopulationOnFields(visitor);
 	delete visitor;
+	stateSaver->save("avtivitiesMade");
 	/*
 	 stateSaver->save("nextYear");
 	 // Zapamiętajmy ceny surowców

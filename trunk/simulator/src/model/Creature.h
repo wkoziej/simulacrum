@@ -33,7 +33,7 @@ enum ActivitiesStrategy {
 };
 
 enum ZeroArgActivities {
-	GoUp, GoDown, GoLeft, GoRight, RestActivity, ZeroArgActivitiesSIZE
+	GoUp, GoDown, GoLeft, GoRight, Rest, ZeroArgActivitiesSIZE
 };
 
 enum OneArgActivities {
@@ -63,7 +63,7 @@ public:
 	Creature(const Creature &creature);
 	//Creature(const CreaturesPopulation *population, const Field * field);
 	Creature(CreaturesPopulation *population, Field * field,
-			JSONObject &creature);
+			JSONObject &creature, unsigned x, unsigned y);
 	Creature & operator=(const Creature & arg) {
 		copy(arg);
 		return *this;
@@ -83,6 +83,7 @@ public:
 	unsigned getY() const;
 	std::string getId () const;
 	unsigned getAge () const;
+	float getWallet () const;
 	unsigned getArticleStock (unsigned articleId) const;
 	int getArticleQuantChange (unsigned articleId) const;
 

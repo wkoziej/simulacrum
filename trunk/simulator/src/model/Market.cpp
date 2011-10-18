@@ -52,6 +52,10 @@ bool Market::isArticleAvailable(std::string clientId, unsigned articleId,
 	return prv->stocks.at(articleId)->available() > articleQuant;
 }
 
+unsigned Market::queriesCount (unsigned articleId) {
+	return prv->queries.at(articleId).size();
+}
+
 float Market::articleSellPrice(std::string clientId, unsigned articleId) {
 	float sellPrice = 0.0;
 	float buyPrice = 0.0;
@@ -61,7 +65,7 @@ float Market::articleSellPrice(std::string clientId, unsigned articleId) {
 	return sellPrice;
 }
 
-float Market::articleBuyPrice(std::string clientId, unsigned articleId) {
+float Market::articleBuyPrice(unsigned articleId) {
 	float sellPrice = 0.0;
 	float buyPrice = 0.0;
 	getPrices(articleId, sellPrice, buyPrice);
@@ -102,21 +106,21 @@ void Market::getPrices(unsigned articleId,
 
 float Market::calculateBuyPrice(unsigned articleId, unsigned availableQuant,
 		unsigned queryCount) {
-	float recentBuyPrice = queryCount / (availableQuant + 1.0);
+	float recentBuyPrice = (float) queryCount / (availableQuant + 1.0);
 	float historyBuyPrice = prv->articleBuyPricesHistory.at(articleId);
 	return (recentBuyPrice + historyBuyPrice) / 2.0;
 }
 
 float Market::calculateSellPrice(unsigned articleId, unsigned availableQuant,
 		unsigned queryCount) {
-	float recentSellPrice = queryCount / availableQuant;
+	float recentSellPrice = (float) queryCount / (float) availableQuant;
 	float historySellPrice = prv->articleSellPricesHistory.at(articleId);
 	return (recentSellPrice + historySellPrice) / 2.0;
 }
 
 float Market::buyArticleFromClient(std::string clientId, unsigned articleId) {
 	prv->stocks.at(articleId)->release();
-	float soldAt = articleSellPrice(clientId, articleId);
+	float soldAt = articleBuyPrice(articleId);
 	return soldAt;
 }
 

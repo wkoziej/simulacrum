@@ -82,7 +82,7 @@ CreaturesPopulation::CreaturesPopulation(const CreaturesPopulation *species) {
 }
 
 CreaturesPopulation::CreaturesPopulation(Field *field,
-		const JSONObject &population) {
+		const JSONObject &population, unsigned x, unsigned y) {
 	if (population.count(L"creatures") > 0) {
 		LOG4CXX_TRACE(logger, "Creating creature");
 		_0ArgActivityRoom = population.at(L"0ArgActivityRoom")->AsNumber();
@@ -94,7 +94,7 @@ CreaturesPopulation::CreaturesPopulation(Field *field,
 		JSONArray::iterator creature = creatures.begin();
 		for (; creature != creatures.end(); creature++) {
 			JSONObject creatureRepresentation = (*creature)->AsObject();
-			add(new Creature(this, field, creatureRepresentation));
+			add(new Creature(this, field, creatureRepresentation, x, y));
 		}
 	}
 }
