@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
 			fieldSnapshotModel);
 	setUpTable(ui->populationCreaturesTableView, "v_creatures_snapshots",
 			populationCreatureSnapshotModel);
-	populationCreatureSnapshotModel->setSort(4, Qt::DescendingOrder);
+	populationCreatureSnapshotModel->setSort(3, Qt::DescendingOrder);
 	setUpTable(ui->fieldPopulationsTableView, "v_populations_snapshots",
 			fieldPopulationSnapshotModel);
 	setUpTable(ui->fieldArticlesTableView, "v_fields_articles_snapshots",
@@ -61,6 +61,8 @@ MainWindow::MainWindow(QWidget *parent) :
 			SIGNAL(currentRowChanged ( const QModelIndex & , const QModelIndex & )),
 			this, SLOT(changeCreatureSnapshot(const QModelIndex &)));
 	connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(refreshData()));
+
+	worldRunsModel->select();
 }
 
 void MainWindow::setUpTable(QTableView *tableView, QString sqlTableName,
