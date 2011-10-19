@@ -4,14 +4,14 @@
  *  Created on: 24-01-2011
  *      Author: wojtas
  */
-
+#include <algorithm>
 #include "Config.h"
-
 #include "Field.h"
 #include "Recipe.h"
 #include "Market.h"
 #include "Creature.h"
 #include "World.h"
+#include "Article.h"
 #include "Population.h"
 LoggerPtr Creature::logger(Logger::getLogger("creature"));
 unsigned Creature::createuresId = 0;
@@ -25,6 +25,54 @@ unsigned Creature::createuresId = 0;
 #define ACTIVITIES_STRATEGY_GEN 0
 #define ACTIVITIES_GEN_START 1
 #define ENERGY_INDEX 0
+
+std::vector<std::string> Creature::ZeroArgActivitiesNames;
+std::vector<std::string> Creature::OneArgActivitiesNames;
+std::vector<std::string> Creature::TwoArgActivitiesNames;
+
+void Creature::initNames() {
+	const char * za[] = { "goUp", "goDown", "goLeft", "goRight", "rest" };
+	const char * oa[] = { "produce", "collect", "leave", "sell", "buy",
+			"check", "eat" };
+	const char * ta[] = { "exchange" };
+
+	int i;
+	for (i = 0; i < ZeroArgActivitiesSIZE; i++) {
+		ZeroArgActivitiesNames.push_back(za[i]);
+	}
+	for (i = 0; i < OneArgActivitiesSIZE; i++) {
+		OneArgActivitiesNames.push_back(oa[i]);
+	}
+	for (i = 0; i < TwoArgActivitiesSIZE; i++) {
+		TwoArgActivitiesNames.push_back(ta[i]);
+	}
+}
+
+unsigned Creature::get0ArgActivityIndex(std::string activityName) {
+	std::vector<std::string>::iterator activityIterator = find(
+			ZeroArgActivitiesNames.begin(), ZeroArgActivitiesNames.end(),
+			activityName);
+	LOG4CXX_DEBUG(logger, "Searching in vector: " << activityName << " ... iterator: " << *activityIterator);
+	assert(activityIterator != ZeroArgActivitiesNames.end());
+	return activityIterator - ZeroArgActivitiesNames.begin();
+}
+
+unsigned Creature::get1ArgActivityIndex(std::string activityName) {
+	std::vector<std::string>::iterator activityIterator = find(
+			OneArgActivitiesNames.begin(), OneArgActivitiesNames.end(),
+			activityName);
+	LOG4CXX_DEBUG(logger, "Searching in vector: " << activityName << " ... iterator: " << *activityIterator);
+	assert(activityIterator != OneArgActivitiesNames.end());
+	return activityIterator - OneArgActivitiesNames.begin();
+}
+unsigned Creature::get2ArgActivityIndex(std::string activityName) {
+	std::vector<std::string>::iterator activityIterator = find(
+			TwoArgActivitiesNames.begin(), TwoArgActivitiesNames.end(),
+			activityName);
+	LOG4CXX_DEBUG(logger, "Searching in vector: " << activityName << " ... iterator: " << *activityIterator);
+	assert(activityIterator != TwoArgActivitiesNames.end());
+	return activityIterator - TwoArgActivitiesNames.begin();
+}
 
 class CreatureFenotype: public GAEvalData {
 
@@ -55,6 +103,7 @@ CreatureActivity::CreatureActivity(Creature *creature,
 	this->field = creature->getField();
 	this ->arguments.insert(this->arguments.begin(), arguments.begin(),
 			arguments.end());
+	this->creature->evaluate(gaTrue);
 
 }
 
@@ -244,6 +293,16 @@ protected:
 	}
 };
 
+class EatArticleActivity: public Arg1CreatureActivity {
+public:
+	EatArticleActivity(Creature *creature, UnsignedVector &arguments) :
+		Arg1CreatureActivity(creature, arguments) {
+	}
+protected:
+	void makeActvity(unsigned articleId) {
+		creature->eat(articleId);
+	}
+};
 float Objective(GAGenome &g) {
 	Creature *c = (Creature *) &g;
 	CreatureFenotype * fenotype = c->getFenotype();
@@ -263,9 +322,11 @@ float Objective(GAGenome &g) {
 				* fenotype->articleStocks.at(i);
 
 	}
-	value = articlesValueSum + fenotype->wallet;
-
-	LOG4CXX_DEBUG(Creature::logger, "creature " <<c->getId() << "objective = " << value);
+	value = //articlesValueSum/100.0 +
+			fenotype->wallet;
+	if (!c->getId().empty()) {
+		LOG4CXX_DEBUG(Creature::logger, "creature " <<c->getId() << " objective = " << value);
+	}
 	return value;
 }
 
@@ -314,7 +375,33 @@ GARealAlleleSetArray Creature::alleles;
 
 std::string Creature::genomeStr() const {
 	std::stringstream buf;
-	buf << *this;
+	unsigned i;
+	const Creature *h = this;
+	int geneShift = 1; // pomijam strategie
+	// kodowanie czynnosci 0 argumentowych
+	unsigned activitiesSize =
+			h->getFenotype()->population->get0ArgActivitiesRoom();
+	for (i = 0; i < activitiesSize; i++) {
+		buf << ZeroArgActivitiesNames[(int) h->gene(geneShift++)] << " ";
+	}
+	// kodowanie czynnosci 1 argumentowych
+	activitiesSize = h->getFenotype()->population->get1ArgActivitiesRoom();
+	for (i = 0; i < activitiesSize; i++) {
+		// czynnosc
+		buf << OneArgActivitiesNames[(int) h->gene(geneShift++)] << "(";
+		// argument
+		buf << World::ARTICLES[h->gene(geneShift++)] << ") ";
+	}
+	// kodowanie czynnosci 1 argumentowych
+	activitiesSize = h->getFenotype()->population->get2ArgActivitiesRoom();
+	for (i = 0; i < activitiesSize; i++) {
+		// czynnosc
+		buf << TwoArgActivitiesNames[(int) h->gene(geneShift++)] << "(";
+		// argument 1
+		buf << World::ARTICLES[h->gene(geneShift++)] << ",";
+		// argument 2
+		buf << World::ARTICLES[h->gene(geneShift++)] << ")";
+	}
 	return buf.str();
 }
 
@@ -397,15 +484,16 @@ void Creature::JSONInitializer(GAGenome &g) {
 	int geneShift = 0;
 	// strategia
 	h->gene(geneShift++, creature->at(L"activitiesStrategy")->AsNumber());
-	int i;
+	unsigned i;
 	// kodowanie czynnosci 0 argumentowych
 	JSONArray activities = creature->at(L"0ArgActivity")->AsArray();
-	int activitiesSize = activities.size();
+	unsigned activitiesSize = activities.size();
 	assert (activitiesSize == h->getFenotype()->population->get0ArgActivitiesRoom());
 	for (i = 0; i < activitiesSize; i++) {
-		JSONArray activity = activities.at(i)->AsArray();
 		// czynnosc
-		h->gene(geneShift++, activity.at(0)->AsNumber());
+		std::string activityName = wstring2string(activities.at(i)->AsString());
+		int activityIndex = get0ArgActivityIndex(activityName);
+		h->gene(geneShift++, activityIndex);
 	}
 	// kodowanie czynnosci 1 argumentowych
 	activities = creature->at(L"1ArgActivity")->AsArray();
@@ -414,9 +502,13 @@ void Creature::JSONInitializer(GAGenome &g) {
 	for (i = 0; i < activitiesSize; i++) {
 		JSONArray activity = activities.at(i)->AsArray();
 		// czynnosc
-		h->gene(geneShift++, activity.at(0)->AsNumber());
+		std::string activityName = wstring2string(activity.at(0)->AsString());
+		unsigned activityIndex = get1ArgActivityIndex(activityName);
+		h->gene(geneShift++, activityIndex);
 		// argument
-		h->gene(geneShift++, activity.at(1)->AsNumber());
+		unsigned articleIndex = World::getArticleIndex(
+				activity.at(1)->AsString());
+		h->gene(geneShift++, articleIndex);
 
 	}
 	// kodowanie czynnosci 1 argumentowych
@@ -426,11 +518,17 @@ void Creature::JSONInitializer(GAGenome &g) {
 	for (i = 0; i < activitiesSize; i++) {
 		JSONArray activity = activities.at(i)->AsArray();
 		// czynnosc
-		h->gene(geneShift++, activity.at(0)->AsNumber());
+		std::string activityName = wstring2string(activity.at(0)->AsString());
+		unsigned activityIndex = get1ArgActivityIndex(activityName);
+		h->gene(geneShift++, activityIndex);
 		// argument 1
-		h->gene(geneShift++, activity.at(1)->AsNumber());
+		unsigned articleIndex1 = World::getArticleIndex(
+				activity.at(1)->AsString());
+		h->gene(geneShift++, articleIndex1);
 		// argument 2
-		h->gene(geneShift++, activity.at(2)->AsNumber());
+		unsigned articleIndex2 = World::getArticleIndex(
+				activity.at(2)->AsString());
+		h->gene(geneShift++, articleIndex2);
 	}
 }
 
@@ -487,8 +585,9 @@ Creature::Creature(const Creature &creature) :
 	 */
 	std::stringstream idBuf;
 	idBuf << Creature::createuresId++;
-	evalData(CreatureFenotype(creature.getFenotype()->population, creature.getFenotype()->field,
-			creature.getFenotype()->fieldCoordX, creature.getFenotype()->fieldCoordY));
+	evalData(CreatureFenotype(creature.getFenotype()->population,
+			creature.getFenotype()->field, creature.getFenotype()->fieldCoordX,
+			creature.getFenotype()->fieldCoordY));
 	getFenotype()->id = idBuf.str();
 	LOG4CXX_DEBUG(logger, "genome : " << *this);
 }
@@ -528,7 +627,7 @@ void Creature::rest() {
 }
 
 bool Creature::produce(unsigned articleId, std::vector<unsigned> ingredients) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " producing  " << World::ARTICLES.at(articleId));
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " producing " << World::ARTICLES.at(articleId));
 
 	bool produced = true;
 	assert (getFenotype()->articleStocks.size() == ingredients.size());
@@ -552,7 +651,7 @@ bool Creature::produce(unsigned articleId, std::vector<unsigned> ingredients) {
 }
 
 bool Creature::collect(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " collecting  " << World::ARTICLES.at(articleId));
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " collecting " << World::ARTICLES.at(articleId));
 	bool canCollect = getField()->tryTakeArticle(articleId);
 	if (canCollect) {
 		getFenotype()->articleStocks.at(articleId) += 1;
@@ -562,7 +661,7 @@ bool Creature::collect(unsigned articleId) {
 }
 
 bool Creature::leave(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " leaving  " << World::ARTICLES.at(articleId));
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " leaving " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool canLeave = fenotype->articleStocks.at(articleId) >= 1.0;
 	if (canLeave) {
@@ -574,7 +673,7 @@ bool Creature::leave(unsigned articleId) {
 }
 
 bool Creature::sell(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " selling  " << World::ARTICLES.at(articleId));
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " selling " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool canSell = fenotype->articleStocks.at(articleId) >= 1.0;
 	if (canSell) {
@@ -588,7 +687,7 @@ bool Creature::sell(unsigned articleId) {
 }
 
 bool Creature::buy(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " buying  " << World::ARTICLES.at(articleId));
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " buying " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool bought = fenotype->field->getMarket()->sellArticleToClient(getId(),
 			articleId, fenotype->wallet);
@@ -600,10 +699,24 @@ bool Creature::buy(unsigned articleId) {
 }
 
 bool Creature::check(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " checking  " << World::ARTICLES.at(articleId));
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " checking " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	fenotype->field->getMarket()->articleSellPrice(getId(), articleId);
 	return true;
+}
+
+bool Creature::eat(unsigned articleId) {
+	LOG4CXX_DEBUG(logger, "craeture " << getId() << " eating " << World::ARTICLES.at(articleId));
+	CreatureFenotype *fenotype = getFenotype();
+	bool eaten = fenotype->articleStocks.at(articleId) > 0;
+	if (fenotype->articleStocks.at(articleId) > 0) {
+		fenotype->articleStocks.at(articleId) -= 1;
+		fenotype->articleQuantsChange.at(articleId) -= 1;
+		int lessOrMore = World::articles.at(articleId)->isFood() ? 1 : -1;
+		fenotype->articleStocks.at(ENERGY_INDEX) += lessOrMore;
+		fenotype ->articleQuantsChange.at(ENERGY_INDEX) += lessOrMore;
+	}
+	return eaten;
 }
 
 Field *Creature::getField() {
@@ -694,6 +807,9 @@ CreatureActivity *Creature::createActivity(unsigned activityGenIndex,
 			break;
 		case CheckArticle:
 			activity = new CheckArticleActivity(this, parameters);
+			break;
+		case EatArticle:
+			activity = new EatArticleActivity(this, parameters);
 			break;
 		default:
 			assert (false);

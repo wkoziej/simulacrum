@@ -46,17 +46,33 @@ public:
  */
 
 Field::Field(const JSONObject &field) {
-	prv = new FieldPrivate ();
+	prv = new FieldPrivate();
 	prv->market = new Market();
 	JSONArray articles = field.at(L"stocks")->AsArray();
-	assert (articles.size() == World::NO_OF_ARTICLES);
 	JSONArray::iterator article = articles.begin();
-	for (; article != articles.end(); article++) {
-		JSONArray properies = (*article)->AsArray();
-		int quant = properies.at(0)->AsNumber();
+
+	prv->articleRenewal.assign(World::articles.size(), 0);
+	for (unsigned c = 0; c < World::articles.size(); c++) {
 		QSemaphore *stock = new QSemaphore();
 		prv->stocks.push_back(stock);
-		prv->articleRenewal.push_back(properies.at(1)->AsNumber());
+	}
+
+	for (; article != articles.end(); article++) {
+		JSONObject properies = (*article)->AsObject();
+		std::wstring articleName = properies.begin()->first;
+		int articleIndex = World::getArticleIndex(articleName);
+		assert(articleIndex >= 0 && articleIndex <World::articles.size());
+		JSONObject articleStockProperty = properies.begin()->second->AsObject();
+		int quant = 0;
+		if (articleStockProperty.count(L"stock") > 0) {
+			quant = articleStockProperty.at(L"stock")->AsNumber();
+		}
+		int reneval = 0;
+		if (articleStockProperty.count(L"reneval") > 0) {
+			reneval = articleStockProperty.at(L"reneval")->AsNumber();
+		}
+		prv->stocks.at(articleIndex)->release(quant);
+		prv->articleRenewal.at(articleIndex) = reneval;
 	}
 	ArticleStocks::iterator q;
 	UnsignedVector::iterator r;
@@ -139,13 +155,15 @@ void Field::renovateResources() {
  return price;
  }
 
+
  */
 
 const Recipe *Field::getRecipe(unsigned articleId) const {
-	return NULL;
+	// Jeżeli nie ma recepty związanej z polem to weź ogólnoświatową
+	return World::recipes.at(articleId);
 }
 
-Market *Field::getMarket () {
+Market *Field::getMarket() {
 	return prv->market;
 }
 
@@ -153,7 +171,7 @@ bool Field::tryTakeArticle(unsigned articleId) {
 	return prv->stocks.at(articleId)->tryAcquire();
 }
 
-unsigned Field::articleStock (unsigned articleId) {
+unsigned Field::articleStock(unsigned articleId) {
 	return prv->stocks.at(articleId)->available();
 }
 

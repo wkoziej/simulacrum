@@ -9,21 +9,15 @@
 #include <utility>
 #include <list>
 #include <stdlib.h>
+#include <algorithm>
 
 #include <ga/GASimpleGA.h>
 #include "JSON/JSON.h"
 #include "../StateSaver.h"
 #include <QtCore/QThread>
 #include "World.h"
-
-/*
- class WorldChangeInformer : public QObject {
- Q_OBJECT
- public:
- signals:
- void worldChanged (const World *world);
- };
- */
+#include "Article.h"
+#include "Recipe.h"
 
 using namespace std;
 
@@ -33,6 +27,19 @@ unsigned World::NO_OF_ARTICLES = 5;
 unsigned World::HEIGHT = 1;
 unsigned World::WIDTH = 1;
 std::vector<std::string> World::ARTICLES;
+std::vector<Article *> World::articles;
+std::vector<Recipe *> World::recipes;
+
+int World::getArticleIndex(std::wstring articleName) {
+	int index = -1;
+	std::string name = wstring2string(articleName);
+	std::vector<std::string>::iterator i = find(World::ARTICLES.begin(),
+			World::ARTICLES.end(), name);
+	if (i != World::ARTICLES.end()) {
+		index = i - World::ARTICLES.begin();
+	}
+	return index;
+}
 
 class CreatureActivityThread: public QThread {
 public:
@@ -73,10 +80,16 @@ public:
 			unsigned x, unsigned y) {
 		LOG4CXX_DEBUG(logger, "Population size before reproduction: " << population->size());
 		int c;
-		for (c = 0; c < population->size(); c++) {
+		int psize = population->size();
+		for (c = 0; c < psize; c++) {
 			GAGenome g = population->individual(c);
 			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
 		}
+
+		if (psize > 7) {
+			population->remove(&population->worst());
+		}
+
 		if (population->size()) {
 			GASimpleGA simpleGA(*population);
 			simpleGA.initialize(time(0));
@@ -101,39 +114,41 @@ public:
 };
 
 LoggerPtr ReproductionVisitor::logger(Logger::getLogger("ReproductionVisitor"));
+/*
 
-class DyingVisitor: public PopulationOnFieldVisitor {
+ class DyingVisitor: public PopulationOnFieldVisitor {
 
-private:
-	// Logowanie
-	static LoggerPtr logger;
-public:
-	void visit(CreaturesPopulation *population, Field *field, unsigned x,
-			unsigned y) {
-		int psize = population->size();
-		/*
-		 for (int c = 0; c < population->size() && population->size() > 2;) {
-		 //Creature *creature = (Creature *) &population->individual(c);
-		 // Jezeli wartosc funkcji celu jest mniejsza od sredniej populacji, to wyrzuc osobnika z populacji
-		 // Pomijaj dzieci
-		 /*float objAvg = population->objectiveAvarage();
-		 float creatureObjVal = population->individual(c).score();
-		 LOG4CXX_DEBUG(logger, "population->individual("<<c<<") " << population->individual(c) << ", objective: " << creatureObjVal);
-		 if (objAvg > creatureObjVal && creature->getAge() > 0) {
-		 population->remove(&(population->individual(c)));
-		 } else {
-		 c++;
-		 }
+ private:
+ // Logowanie
+ static LoggerPtr logger;
+ public:
+ void visit(CreaturesPopulation *population, Field *field, unsigned x,
+ unsigned y) {
+ int psize = population->size();
 
-		 }*/
-		if (psize > 7) {
-			population->remove(&population->worst());
-		}
-		LOG4CXX_DEBUG(logger, "population size get smaller from " << psize << " to " << population->size ());
-	}
-};
+ for (int c = 0; c < population->size() && population->size() > 2;) {
+ //Creature *creature = (Creature *) &population->individual(c);
+ // Jezeli wartosc funkcji celu jest mniejsza od sredniej populacji, to wyrzuc osobnika z populacji
+ // Pomijaj dzieci
+ /*float objAvg = population->objectiveAvarage();
+ float creatureObjVal = population->individual(c).score();
+ LOG4CXX_DEBUG(logger, "population->individual("<<c<<") " << population->individual(c) << ", objective: " << creatureObjVal);
+ if (objAvg > creatureObjVal && creature->getAge() > 0) {
+ population->remove(&(population->individual(c)));
+ } else {
+ c++;
+ }
 
-LoggerPtr DyingVisitor::logger(Logger::getLogger("DyingVisitor"));
+ }
+ if (psize > 7) {
+ population->remove(&population->worst());
+ }
+ LOG4CXX_DEBUG(logger, "population size get smaller from " << psize << " to " << population->size ());
+ }
+ };
+
+ LoggerPtr DyingVisitor::logger(Logger::getLogger("DyingVisitor"));
+ */
 
 class ObjectiveEvaluatorVisitor: public PopulationOnFieldVisitor {
 
@@ -244,12 +259,47 @@ World *World::readWorldFromFile(const char *fileName) {
 			LOG4CXX_DEBUG(logger, "wordlSize (" << X << "," << Y << ")");
 			JSONArray articles = root.at(L"articles")->AsArray();
 			World::NO_OF_ARTICLES = articles.size();
+
 			LOG4CXX_DEBUG(logger, "NO_OF_RESOURCES :" << World::NO_OF_ARTICLES);
-			for (unsigned z = 0; z < articles.size(); z++) {
-				std::wstring articleName = articles.at(z)->AsString();
-				std::string name(articleName.length(), ' ');
-				std::copy(articleName.begin(), articleName.end(), name.begin());
+			JSONArray::iterator a = articles.begin();
+			for (; a != articles.end(); a++) {
+				JSONObject article = (*a)->AsObject();
+
+				/*std::wstring articleName = article.begin()->first;
+				 std::string name(articleName.length(), ' ');
+				 std::copy(articleName.begin(), articleName.end(), name.begin());*/
+				std::string name = wstring2string(article.begin()->first);
 				World::ARTICLES.push_back(name);
+				JSONObject articleProps = article.begin()->second->AsObject();
+				Article *articleObject = new Article();
+				articleObject->setFood(articleProps.count(L"isFood?") > 0
+						&& articleProps.at(L"isFood?")->AsBool());
+				World::articles.push_back(articleObject);
+			}
+
+			JSONArray recipes = root.at(L"recipes")->AsArray();
+			World::recipes.assign(World::NO_OF_ARTICLES, NULL);
+			JSONArray::iterator r = recipes.begin();
+			for (; r != recipes.end(); r++) {
+				JSONObject recipe = (*r)->AsObject();
+				std::wstring articleName = recipe.begin()->first;
+				int articleIndex = World::getArticleIndex(articleName);
+				assert (articleIndex != -1);
+				Recipe *recipeObject = new Recipe();
+				UnsignedVector ingredients;
+				ingredients.assign(World::NO_OF_ARTICLES, 0);
+				JSONArray recipeIngredients = recipe.begin()->second->AsArray();
+				JSONArray::iterator g = recipeIngredients.begin();
+				for (; g != recipeIngredients.end(); g++) {
+					JSONObject ingredient = (*g)->AsObject();
+					std::wstring ingredientName = ingredient.begin()->first;
+					int ingredientIndex =
+							World::getArticleIndex(ingredientName);
+					assert (ingredientIndex != -1);
+					JSONValue value = ingredient.begin()->second->AsNumber();
+					ingredients.at(ingredientIndex) = value.AsNumber();
+				}
+				World::recipes.push_back(recipeObject);
 			}
 
 			world = World::getWorld();
@@ -326,12 +376,12 @@ World *World::readWorldFromFile(const char *fileName) {
  }
  }*/
 
-void World::creaturesDying() {
-	LOG4CXX_TRACE(logger, "creaturesDying");
-	PopulationOnFieldVisitor * visitor = new DyingVisitor();
-	iteratePopulationOnFields(visitor);
-	delete visitor;
-}
+/*void World::creaturesDying() {
+ LOG4CXX_TRACE(logger, "creaturesDying");
+ PopulationOnFieldVisitor * visitor = new DyingVisitor();
+ iteratePopulationOnFields(visitor);
+ delete visitor;
+ }*/
 
 void World::creaturesReproducting() {
 	LOG4CXX_TRACE(logger, "creaturesReproducting");
@@ -369,8 +419,8 @@ void World::step(StateSaver *stateSaver) {
 	creaturesReproducting();
 	stateSaver->save("reproductionDone");
 	// Usuń z populacji najmniej przystosowane
-	creaturesDying();
-	stateSaver->save("dieAfterDie");
+	/*	creaturesDying();
+	 stateSaver->save("dieAfterDie");*/
 }
 
 World::~World() {

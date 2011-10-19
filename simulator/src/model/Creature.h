@@ -42,12 +42,16 @@ enum OneArgActivities {
 	SellArticle,
 	BuyArticle,
 	CheckArticle,
+	EatArticle,
 	OneArgActivitiesSIZE
 };
+
 
 enum TwoArgActivities {
 	ExchangeArticles, TwoArgActivitiesSIZE
 };
+
+
 
 class CreatureActivity;
 
@@ -100,8 +104,17 @@ public:
 	bool sell(unsigned articleId);
 	bool buy(unsigned articleId);
 	bool check(unsigned articleId);
+	bool eat(unsigned articleId);
 	bool move(unsigned x, unsigned y);
 	CreatureActivityList getCreatureActivities();
+
+	static std::vector<std::string> ZeroArgActivitiesNames;
+	static std::vector<std::string> OneArgActivitiesNames;
+	static std::vector<std::string> TwoArgActivitiesNames;
+	static void initNames ();
+	static unsigned get0ArgActivityIndex (std::string activityName);
+	static unsigned get1ArgActivityIndex (std::string activityName);
+	static unsigned get2ArgActivityIndex (std::string activityName);
 private:
 	static unsigned createuresId;
 

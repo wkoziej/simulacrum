@@ -18,6 +18,7 @@
 //using namespace log4cxx;
 class StateSaver;
 class Field;
+class Article;
 typedef std::vector<Field *> FieldsVector;
 typedef std::vector<FieldsVector> FieldsMatrix;
 //typedef std::list<Creature *> CreaturesList;
@@ -47,8 +48,10 @@ public:
 	void nextYear();
 	bool creaturesExists();
 	void step(StateSaver *stateSaver);
-	void countResourcesPrices();
+	/*void countResourcesPrices();
 	void countProductsPrices();
+	*/
+	static bool isFood (unsigned articleId);
 
 	CreaturesPopulation *findOrCreatePopulation(
 			const CreaturesPopulation *species, int x, int y);
@@ -61,6 +64,9 @@ public:
 	static unsigned HEIGHT;
 	static unsigned WIDTH;
 	static std::vector <std::string> ARTICLES;
+	static std::vector <Article *> articles;
+	static std::vector <Recipe *> recipes;
+	static int getArticleIndex (std::wstring name);
 private:
 	static World *singleton;
 	World() {

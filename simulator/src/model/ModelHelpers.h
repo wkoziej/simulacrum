@@ -12,6 +12,9 @@
 #include "Field.h"
 #include "Population.h"
 
+
+std::string wstring2string (std::wstring str);
+
 class CreaturesOnFieldVisitor {
 public:
 	CreaturesOnFieldVisitor() {
