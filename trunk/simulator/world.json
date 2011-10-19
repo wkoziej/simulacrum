@@ -3,12 +3,29 @@
 	{
 		"sizeX" : 1,
 		"sizeY" : 1,
-		"articles" : ["energy",	"water",	"wood",		"corn", 	"bread"],
+		"articles" : [	{"energy" 		: null },	
+						{"water"		: {"food?" : 1} },	
+						{"wood" 		: null },		
+						{"corn"			: null }, 
+						{"flour"		: null },	
+						{"bread" 		: {"food?" : 1}}
+					 ],
+		"recipes" :  [	{ "bread" : [ {"water"  : 1}, 
+									  {"flour"  : 1}, 
+									  {"energy" : 1} 
+								   ]
+						},
+						{ "flour" : [ {"energy" : 1}, 
+									  {"corn"   : 1} 
+								   ] 
+					    }
+					],
 		"field0x0" : 
 		{
-			"stocks" : [ 
-					 [0, 0], 	[100, 10], 	[50, 5], 	[0, 0], 	[0,0]
-			],
+			"stocks" : [ { "water" : { 	"stock" : 100,  
+										"reneval" : 10} },
+						 { "wood"  : { "reneval" : 5} },
+						 { "corn"  : { "reneval" : 2} }	],
 			"populations" :
 			[
 				{
@@ -20,30 +37,10 @@
 					[
 						{
 							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ [0], 	[4] 			],					
-							"1ArgActivity" : [ [1, 1], 	[1, 1], [1, 1]	],
+							"0ArgActivity" : [ "rest", 	"goUp"	],					
+							"1ArgActivity" : [ {"collect" : "corn"}, {"produce" : "flour"}, {"sell" : "flour"}],
 							"2ArgActivity" : []
-						},
-						{
-							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ [1], 	[4] 			],					
-							"1ArgActivity" : [ [2, 2], 	[2, 2], [2, 2]	],
-							"2ArgActivity" : []
-						},
-						{
-							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ [2], 	[4] 			],					
-							"1ArgActivity" : [ [3, 3], 	[3, 3], [3, 3]	],
-							"2ArgActivity" : []
-						},
-						{
-							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ [3], 	[4] 			],					
-							"1ArgActivity" : [ [4, 4], 	[4, 4], [4, 4]	],
-							"2ArgActivity" : []
-						}
-						
-					]
+						}			]
 				}		
 			]
 		}
