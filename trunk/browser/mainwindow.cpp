@@ -125,14 +125,15 @@ void MainWindow::changeMasterId(QSqlTableModel *master,
 		QModelIndex pk = master->index(index.row(), 0);
 		QString detailCondition = masterColumnName + " = "
 				+ pk.data().toString();
-		LOG4CXX_DEBUG(logger, "changeMasterId, detailCondition = " << detailCondition.toStdString() );
 		detail->setFilter(detailCondition);
 		datailTableView->selectRow(0);
 	} else if (index.row() == 0) {
-		detail->setFilter(QString());
+		detail->setFilter("0=1");
 	} else {
-		return;
+		detail->setFilter("1=0");
 	}
+	LOG4CXX_DEBUG(logger, "changeMasterId, " << detail->tableName().toStdString() << " detailCondition = " << detail->filter().toStdString() );
+
 }
 
 MainWindow::~MainWindow() {
