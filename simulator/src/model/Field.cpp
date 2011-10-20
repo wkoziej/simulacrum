@@ -31,36 +31,18 @@ public:
 	UnsignedVector articleRenewal;
 };
 
-/*
- Field::Field() {
- prv = new FieldPrivate();
- //prv->resourceQuantities.assign(World::NO_OF_ARTICLES, 0);
- prv->stocks.assign(World::NO_OF_ARTICLES, )
- prv->articleRenewal.assign(World::NO_OF_ARTICLES, 0);
- prv->maxResourcesQuantities.assign(World::NO_OF_ARTICLES, 0);
- prv->maxProductsQuantities.assign(World::NO_OF_ARTICLES, 0);
- prv->resourcePriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
- prv->productPriceCache.assign(World::NO_OF_ARTICLES, POSITIVE_INFINITY);
-
- }
- */
+Field::Field() {
+	initializeEmptyField();
+}
 
 Field::Field(const JSONObject &field) {
-	prv = new FieldPrivate();
-	prv->market = new Market();
+	initializeEmptyField();
 	JSONArray articles = field.at(L"stocks")->AsArray();
 	JSONArray::iterator article = articles.begin();
-
-	prv->articleRenewal.assign(World::articles.size(), 0);
-	for (unsigned c = 0; c < World::articles.size(); c++) {
-		QSemaphore *stock = new QSemaphore();
-		prv->stocks.push_back(stock);
-	}
-
 	for (; article != articles.end(); article++) {
 		JSONObject properies = (*article)->AsObject();
 		std::wstring articleName = properies.begin()->first;
-		int articleIndex = World::getArticleIndex(articleName);
+		unsigned articleIndex = World::getArticleIndex(articleName);
 		assert(articleIndex >= 0 && articleIndex <World::articles.size());
 		JSONObject articleStockProperty = properies.begin()->second->AsObject();
 		int quant = 0;
@@ -80,6 +62,16 @@ Field::Field(const JSONObject &field) {
 	q = prv->stocks.begin();
 	for (; r != prv->articleRenewal.end(); r++, q++) {
 		LOG4CXX_DEBUG(logger, "article [" << r - prv->articleRenewal.begin( ) << "] = [" << (*q)->available() << "," << *r <<"]");
+	}
+}
+
+void Field::initializeEmptyField() {
+	prv = new FieldPrivate();
+	prv->market = new Market();
+	prv->articleRenewal.assign(World::articles.size(), 0);
+	for (unsigned c = 0; c < World::articles.size(); c++) {
+		QSemaphore *stock = new QSemaphore();
+		prv->stocks.push_back(stock);
 	}
 }
 

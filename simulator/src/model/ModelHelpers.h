@@ -14,6 +14,7 @@
 
 
 std::string wstring2string (std::wstring str);
+float randBetweenAndStepped(float min, float max, float step);
 
 class CreaturesOnFieldVisitor {
 public:

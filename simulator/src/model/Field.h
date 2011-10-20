@@ -24,7 +24,7 @@ class CreaturesPopulation;
 
 class Field {
 public:
-	//Field();
+	Field();
 	Field(const JSONObject &JSONfield);
 	//void initializeRandomly();
 	void renovateResources();
@@ -51,6 +51,7 @@ public:
 	//float getMoveLag () const { return moveLag; }
 private:
 	FieldPrivate *prv;
+	void initializeEmptyField ();
 	//float moveLag; // Opóźnienie ruchu
 	//FloatVector resourceQuantities;
 	//FloatVector productsQuantities;

@@ -27,46 +27,17 @@ class CreatureFenotype;
 class Field;
 class CreaturesPopulation;
 
-enum ActivitiesStrategy {
-	AscengingArgumentCountOrder
-};
-
-enum ZeroArgActivities {
-	GoUp, GoDown, GoLeft, GoRight, Rest, ZeroArgActivitiesSIZE
-};
-
-enum OneArgActivities {
-	ProduceArticle,
-	CollectArticle,
-	LeaveArticle,
-	SellArticle,
-	BuyArticle,
-	CheckArticle,
-	EatArticle,
-	OneArgActivitiesSIZE
-};
-
-
-enum TwoArgActivities {
-	ExchangeArticles, TwoArgActivitiesSIZE
-};
-
-
-
 class CreatureActivity;
-
-typedef std::list<CreatureActivity *> CreatureActivityList;
 
 class Creature: public GARealGenome {
 public:
 	// Logowanie
 	static LoggerPtr logger;
-	enum Directions {
-		NoDirection, DirLeft, DirRight, DirUp, DirDown
-	};
 	Creature(const Creature &creature);
 	Creature(CreaturesPopulation *population, Field * field,
 			JSONObject &creature, unsigned x, unsigned y);
+	Creature(CreaturesPopulation *population, Field * field, unsigned x,
+			unsigned y);
 	Creature & operator=(const Creature & arg) {
 		LOG4CXX_TRACE(logger, "operator=");
 		copy(arg);
@@ -81,7 +52,7 @@ public:
 
 	virtual ~Creature();
 
-	void doAllActivities();
+	//void doAllActivities();
 
 	std::string genomeStr() const;
 	CreatureFenotype *getFenotype() const {
@@ -95,7 +66,7 @@ public:
 	float getWallet() const;
 	unsigned getArticleStock(unsigned articleId) const;
 	int getArticleQuantChange(unsigned articleId) const;
-
+	unsigned getActivitiesCount();
 	bool hasEnergy() const;
 	void rest();
 	bool produce(unsigned articleId, std::vector<unsigned> ingredients);
@@ -106,15 +77,18 @@ public:
 	bool check(unsigned articleId);
 	bool eat(unsigned articleId);
 	bool move(unsigned x, unsigned y);
-	CreatureActivityList getCreatureActivities();
 
-	static std::vector<std::string> ZeroArgActivitiesNames;
-	static std::vector<std::string> OneArgActivitiesNames;
-	static std::vector<std::string> TwoArgActivitiesNames;
-	static void initNames ();
-	static unsigned get0ArgActivityIndex (std::string activityName);
-	static unsigned get1ArgActivityIndex (std::string activityName);
-	static unsigned get2ArgActivityIndex (std::string activityName);
+	//ActivityList getCreatureActivities();
+
+	/*static std::vector<std::string> ZeroArgActivitiesNames;
+	 static std::vector<std::string> OneArgActivitiesNames;
+	 static std::vector<std::string> TwoArgActivitiesNames;
+	 */
+	//static void initNames ();
+	//static unsigned get0ArgActivityIndex (std::string activityName);
+	//static unsigned get1ArgActivityIndex (std::string activityName);
+	//static unsigned get2ArgActivityIndex (std::string activityName);
+
 private:
 	static unsigned createuresId;
 
@@ -122,7 +96,7 @@ private:
 	/*	float getProcessingRateAndProductIndex(unsigned resourceIndex,
 	 int &productIndex);*/
 	//static float randBetweenAndStepped(float min, float max, float step);
-	//static void RandomInitializer(GAGenome &g);
+	static void RandomInitializer(GAGenome &g);
 	static void DoNothingInitializer(GAGenome &g);
 	static void JSONInitializer(GAGenome &g);
 	static GARealAlleleSetArray allelesDefinition(
@@ -137,16 +111,6 @@ private:
 	CreatureActivity *createActivity(unsigned activityGenIndex,
 			unsigned parametersCount);
 	//ActivitiesStrategy getActiviviesStrategy() const;
-};
-
-class CreatureActivity {
-protected:
-	Creature *creature;
-	const Field *field;
-	UnsignedVector arguments;
-public:
-	CreatureActivity(Creature *creature, UnsignedVector &arguments);
-	virtual void make() = 0;
 };
 
 #endif /* CREATURE_H_ */

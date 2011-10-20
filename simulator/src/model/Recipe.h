@@ -13,6 +13,9 @@ public:
 	Recipe();
 	virtual ~Recipe();
 	UnsignedVector getIngredientsVector() const;
+	void setIngredientsVector(const UnsignedVector &i);
+private:
+	UnsignedVector ingredients;
 };
 
 #endif /* RECIPE_H_ */
