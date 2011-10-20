@@ -12,3 +12,10 @@ std::string wstring2string(std::wstring wstr) {
 	std::copy(wstr.begin(), wstr.end(), str.begin());
 	return str;
 }
+
+float randBetweenAndStepped(float min, float max, float step) {
+	float zeroOne = (random() / (float) RAND_MAX);
+	float randBetween = min + zeroOne * (max - min);
+	int intVal = randBetween / step;
+	return intVal * step;
+}

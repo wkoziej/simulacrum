@@ -10,29 +10,29 @@
 #include "ModelHelpers.h"
 
 LoggerPtr CreaturesPopulation::logger(Logger::getLogger("population"));
-class UpdateValueVisitor: public CreaturesOnFieldVisitor {
-protected:
-	float value;
-private:
+/*class UpdateValueVisitor: public CreaturesOnFieldVisitor {
+ protected:
+ float value;
+ private:
 
-	int productIndex;
-public:
-	UpdateValueVisitor() :
-		value(0.0) {
-	}
+ int productIndex;
+ public:
+ UpdateValueVisitor() :
+ value(0.0) {
+ }
 
-	float getValue() {
-		return value;
-	}
+ float getValue() {
+ return value;
+ }
 
-	void visit(Creature *creature, Field *field, CreaturesPopulation *p,
-			unsigned x, unsigned y) {
-		updateValue(creature, field, p, x, y);
-	}
+ void visit(Creature *creature, Field *field, CreaturesPopulation *p,
+ unsigned x, unsigned y) {
+ updateValue(creature, field, p, x, y);
+ }
 
-	virtual void updateValue(Creature *creature, Field *field,
-			CreaturesPopulation *p, unsigned x, unsigned y) = 0;
-};
+ virtual void updateValue(Creature *creature, Field *field,
+ CreaturesPopulation *p, unsigned x, unsigned y) = 0;
+ };*/
 
 /*class NeededProductVisitor: public UpdateValueVisitor {
  private:
@@ -64,32 +64,27 @@ public:
  };
  */
 
-class SumObjectiveVisitor: public UpdateValueVisitor {
-public:
-	void updateValue(Creature *creature, Field *field, CreaturesPopulation *p,
-			unsigned x, unsigned y) {
-		value += creature->score();
-	}
-};
+/*class SumObjectiveVisitor: public UpdateValueVisitor {
+ public:
+ void updateValue(Creature *creature, Field *field, CreaturesPopulation *p,
+ unsigned x, unsigned y) {
+ value += creature->score();
+ }
+ };*/
 
 CreaturesPopulation::CreaturesPopulation(const CreaturesPopulation *species) {
-//	productsStock.assign(World::NO_OF_ARTICLES, 0.0);
+	//	productsStock.assign(World::NO_OF_ARTICLES, 0.0);
 	name = species->getName();
-	_0ArgActivityRoom = species->_0ArgActivityRoom;
-	_1ArgActivityRoom = species->_1ArgActivityRoom;
-	_2ArgActivityRoom = species->_2ArgActivityRoom;
-
+	activitiesCount = species->activitiesCount;
 }
 
 CreaturesPopulation::CreaturesPopulation(Field *field,
 		const JSONObject &population, unsigned x, unsigned y) {
+	activitiesCount = population.at(L"activitiesCount")->AsNumber();
+	name = population.at(L"name")->AsString();
 	if (population.count(L"creatures") > 0) {
 		LOG4CXX_TRACE(logger, "Creating creature");
-		_0ArgActivityRoom = population.at(L"0ArgActivityRoom")->AsNumber();
-		_1ArgActivityRoom = population.at(L"1ArgActivityRoom")->AsNumber();
-		_2ArgActivityRoom = population.at(L"2ArgActivityRoom")->AsNumber();
-		name = population.at(L"name")->AsString();
-		LOG4CXX_DEBUG(logger, "_0ArgActivityRoom = " << _0ArgActivityRoom << ", _1ArgActivityRoom =  " << _1ArgActivityRoom);
+		LOG4CXX_DEBUG(logger, "activitiesCount = " << activitiesCount);
 		JSONArray creatures = population.at(L"creatures")->AsArray();
 		JSONArray::iterator creature = creatures.begin();
 		for (; creature != creatures.end(); creature++) {
@@ -97,34 +92,34 @@ CreaturesPopulation::CreaturesPopulation(Field *field,
 			add(new Creature(this, field, creatureRepresentation, x, y));
 		}
 	}
+	if (population.count(L"generateRandomCreatures") > 0) {
+		int randomCreaturesCount =
+				population.at(L"generateRandomCreatures")->AsNumber();
+		for (int i = 0; i < randomCreaturesCount; i++) {
+			add(new Creature(this, field, x, y));
+		}
+	}
+
 }
 
 CreaturesPopulation::~CreaturesPopulation() {
 }
 
-float CreaturesPopulation::objectiveAvarage() {
-	// TODO - nie trzeba liczyć za kazdym razem średniej.
-	// Nalezy ją zapisać w cache i przy zmianie wartosci na osobniku przeliczać wartość średnią
-	SumObjectiveVisitor *visitor = new SumObjectiveVisitor();
-	CreaturesOfPopulationOnFieldVisitor *creatureVisitor =
-			new CreaturesOfPopulationOnFieldVisitor(visitor);
-	creatureVisitor->visit(this, NULL, -1, -1);
-	float objectiveSum = visitor->getValue();
-	delete creatureVisitor;
-	delete visitor;
-	return objectiveSum / size();
-}
+/*float CreaturesPopulation::objectiveAvarage() {
+ // TODO - nie trzeba liczyć za kazdym razem średniej.
+ // Nalezy ją zapisać w cache i przy zmianie wartosci na osobniku przeliczać wartość średnią
+ SumObjectiveVisitor *visitor = new SumObjectiveVisitor();
+ CreaturesOfPopulationOnFieldVisitor *creatureVisitor =
+ new CreaturesOfPopulationOnFieldVisitor(visitor);
+ creatureVisitor->visit(this, NULL, -1, -1);
+ float objectiveSum = visitor->getValue();
+ delete creatureVisitor;
+ delete visitor;
+ return objectiveSum / size();
+ }*/
 
-unsigned CreaturesPopulation::get0ArgActivitiesRoom() const {
-	return _0ArgActivityRoom;
-}
-
-unsigned CreaturesPopulation::get1ArgActivitiesRoom() const {
-	return _1ArgActivityRoom;
-}
-
-unsigned CreaturesPopulation::get2ArgActivitiesRoom() const {
-	return _2ArgActivityRoom;
+unsigned CreaturesPopulation::getCreatureActivitiesCount() const {
+	return activitiesCount;
 }
 
 /*

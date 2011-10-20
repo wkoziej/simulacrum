@@ -18,6 +18,7 @@
 #include "World.h"
 #include "Article.h"
 #include "Recipe.h"
+#include "Activity.h"
 
 using namespace std;
 
@@ -62,8 +63,8 @@ CreatureActivityThread::~CreatureActivityThread() {
 void CreatureActivityThread::run() {
 	// Wyznacz czynność do wykonania i
 	//this->creature->doAllActivities();
-	CreatureActivityList activities = creature->getCreatureActivities();
-	CreatureActivityList::iterator activity = activities.begin();
+	ActivityList activities = CreatureActivity::getCreatureActivities(creature);
+	ActivityList::iterator activity = activities.begin();
 	for (; activity != activities.end(); activity++) {
 		(*activity)->make();
 		//this->msleep(100);
@@ -86,7 +87,7 @@ public:
 			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
 		}
 
-		if (psize > 7) {
+		if (psize > 30) {
 			population->remove(&population->worst());
 		}
 
@@ -235,6 +236,7 @@ public:
  }*/
 
 World *World::readWorldFromFile(const char *fileName) {
+	Activity::init();
 	std::string fileContent;
 	World *world = NULL;
 	ifstream file;
@@ -298,46 +300,55 @@ World *World::readWorldFromFile(const char *fileName) {
 					assert (ingredientIndex != -1);
 					JSONValue value = ingredient.begin()->second->AsNumber();
 					ingredients.at(ingredientIndex) = value.AsNumber();
+					recipeObject->setIngredientsVector(ingredients);
 				}
-				World::recipes.push_back(recipeObject);
+				World::recipes.at(articleIndex) = recipeObject;
 			}
 
 			world = World::getWorld();
-			for (int i = 0; i < X; i++) {
+			int i;
+			for (i = 0; i < X; i++) {
 				FieldsVector fVector;
-				for (int j = 0; j < Y; j++) {
-					std::wstringstream fieldName;
-					fieldName << "field" << i << "x" << j;
-					LOG4CXX_DEBUG(logger, L" field : " << fieldName.str());
-					Field *field = NULL;
-					if (root.count(fieldName.str()) > 0) {
-						JSONObject JSONfield =
-								root.at(fieldName.str())->AsObject();
-						field = new Field(JSONfield);
-						if (JSONfield.count(L"populations") > 0) {
-							JSONArray populations =
-									JSONfield.at(L"populations")->AsArray();
-							JSONArray::iterator population =
-									populations.begin();
-							LOG4CXX_DEBUG(logger, "loading populations : " << populations.size());
-							for (; population != populations.end(); population++) {
-								CreaturesPopulation
-										*populationObject =
-												new CreaturesPopulation(
-														field,
-														(*population)->AsObject(),
-														i, j);
-								// populations.insert(namedPopulation)
-								field->addPopulation(populationObject);
-							}
-						}
-					}
-					assert(field != NULL);
-					fVector.push_back(field);
-				}
+				fVector.assign(Y, NULL);
 				world->fields.push_back(fVector);
 			}
-			LOG4CXX_DEBUG(logger, "");
+
+			JSONArray fields = root.at(L"fields")->AsArray();
+			JSONArray::iterator f = fields.begin();
+			for (; f != fields.end(); f++) {
+				Field *field = NULL;
+				JSONObject JSONfield = (*f)->AsObject();
+				unsigned fieldX = JSONfield.at(L"coordX")->AsNumber();
+				unsigned fieldY = JSONfield.at(L"coordY")->AsNumber();
+				// Czy gdzieś się nie powtórzyliśmy?
+				assert (world->fields.at(fieldX).at(fieldY)== NULL);
+				field = new Field(JSONfield);
+				if (JSONfield.count(L"populations") > 0) {
+					JSONArray populations =
+							JSONfield.at(L"populations")->AsArray();
+					JSONArray::iterator population = populations.begin();
+					LOG4CXX_DEBUG(logger, "loading populations : " << populations.size());
+					for (; population != populations.end(); population++) {
+						CreaturesPopulation *populationObject =
+								new CreaturesPopulation(field,
+										(*population)->AsObject(), fieldX,
+										fieldY);
+						// populations.insert(namedPopulation)
+						field->addPopulation(populationObject);
+					}
+				}
+				assert(field != NULL);
+				world->fields.at(fieldX).at(fieldY) = field;
+			}
+
+			// Reszta pol pustych
+			for (i = 0; i < X; i++) {
+				for (int j = 0; j < Y; j++) {
+					if (world->fields[i][j] == NULL) {
+						world->fields[i][j] = new Field();
+					}
+				}
+			}
 		}
 		file.close();
 	}

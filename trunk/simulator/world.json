@@ -1,8 +1,8 @@
 { 
 	"world" : 
 	{
-		"sizeX" : 1,
-		"sizeY" : 1,
+		"sizeX" : 4,
+		"sizeY" : 4,
 		"articles" : [	{"energy" 		: null },	
 						{"water"		: {"food?" : 1} },	
 						{"wood" 		: null },		
@@ -20,29 +20,62 @@
 								   ] 
 					    }
 					],
-		"field0x0" : 
-		{
-			"stocks" : [ { "water" : { 	"stock" : 100,  
-										"reneval" : 10} },
-						 { "wood"  : { "reneval" : 5} },
-						 { "corn"  : { "reneval" : 2} }	],
-			"populations" :
-			[
-				{
-					"name"	: "species0",
-					"0ArgActivityRoom" : 2,
-					"1ArgActivityRoom"	: 3, 
-					"2ArgActivityRoom"	: 0, 
-					"creatures" : 
-					[
-						{
-							"activitiesStrategy" : 0,
-							"0ArgActivity" : [ "rest", 	"goUp"	],					
-							"1ArgActivity" : [ {"collect" : "corn"}, {"produce" : "flour"}, {"sell" : "flour"}],
-							"2ArgActivity" : []
-						}			]
-				}		
-			]
-		}
+		"fields" : [
+			{
+				"coordX" : 0,
+				"coordY" : 0,	 
+				"stocks" : [ { "water" : { 	"stock" : 100,  
+											"reneval" : 10} },
+							 { "wood"  : { "reneval" : 5} },
+							 { "corn"  : { "reneval" : 2} }	],
+				"populations" :
+				[
+					{
+						"name"	: "dziesietnik",
+						"activitiesCount" : 10, 
+						"creatures" : 
+						[
+							{
+								"activities" : [ {"rest" : null}, 
+												{"rest" : null}, 
+												{"rest" : null}, 
+												{"rest" : null}, 
+												{"rest" : null}, 	
+												 {"goUp" : null}, 
+												 {"goUp" : null}, 
+												
+												 {"collect" : "corn"}, 
+												 {"produce" : "flour"}, 
+												 {"sell" : "flour"} ]
+							}
+						],
+						"generateRandomCreatures" : 19
+					},
+					{
+						"name" : "dziesietnik",
+						"activitiesCount" : 10,
+						"generateRandomCreatures" : 20
+					}		
+				]
+			},
+			{
+				"coordX" : 3,
+				"coordY" : 3,	 
+				"stocks" : [ { "water" : { 	"stock" : 0,  
+											"reneval" : 10} },
+							 { "wood"  : { "reneval" : 10} },
+							 { "corn"  : { "reneval" : 10} }	],
+				"populations" :
+				[
+					{
+						"name"	: "dziesietnik",
+						"activitiesCount" : 10, 
+						"generateRandomCreatures" : 10
+					}		
+				]
+			}
+			
+		]
+		
 	}
 }

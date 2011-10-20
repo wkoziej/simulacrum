@@ -14,6 +14,9 @@ Recipe::~Recipe() {
 }
 
 UnsignedVector Recipe::getIngredientsVector() const {
-	UnsignedVector empty;
-	return empty;
+	return ingredients;
+}
+
+void Recipe::setIngredientsVector(const UnsignedVector &i) {
+	ingredients = i;
 }
