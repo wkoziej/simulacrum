@@ -26,36 +26,32 @@
 				"coordY" : 0,	 
 				"stocks" : [ { "water" : { 	"stock" : 100,  
 											"reneval" : 10} },
-							 { "wood"  : { "reneval" : 5} },
-							 { "corn"  : { "reneval" : 2} }	],
+							 { "wood"  : { "stock" : 100,  "reneval" : 5} },
+							 { "corn"  : { "stock" : 100,  "reneval" : 2} }	],
 				"populations" :
 				[
 					{
 						"name"	: "dziesietnik",
 						"activitiesCount" : 10, 
+						"creaturesMax" : 30,
 						"creatures" : 
 						[
 							{
-								"activities" : [ {"rest" : null}, 
-												{"rest" : null}, 
-												{"rest" : null}, 
-												{"rest" : null}, 
+								"activities" : [ 
+												{"collect" : "flour"}, 
+												{"collect" : "water"}, 
+												{"collect" : "flour"}, 
 												{"rest" : null}, 	
+												 {"rest" : null}, 
 												 {"goUp" : null}, 
-												 {"goUp" : null}, 
-												
+												{"produce" : "bread"}, 
 												 {"collect" : "corn"}, 
 												 {"produce" : "flour"}, 
 												 {"sell" : "flour"} ]
 							}
 						],
-						"generateRandomCreatures" : 19
-					},
-					{
-						"name" : "dziesietnik",
-						"activitiesCount" : 10,
 						"generateRandomCreatures" : 20
-					}		
+					}
 				]
 			},
 			{
@@ -70,7 +66,7 @@
 					{
 						"name"	: "dziesietnik",
 						"activitiesCount" : 10, 
-						"generateRandomCreatures" : 10
+						"generateRandomCreatures" : 20
 					}		
 				]
 			}

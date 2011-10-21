@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 			world->step(&stateSaver);
 			// Odnów zasoby świata
 			world->nextYear();
-			stateSaver.save("resourcesRenovated");
+			stateSaver.save("nexYear");
 			char i;
 		//	cin >> i;
 		}
