@@ -167,8 +167,8 @@ unsigned Field::articleStock(unsigned articleId) {
 	return prv->stocks.at(articleId)->available();
 }
 
-void Field::putArticle(unsigned articleId) {
-	prv->stocks.at(articleId)->release();
+void Field::putArticle(unsigned articleId, unsigned quantity) {
+	prv->stocks.at(articleId)->release(quantity);
 }
 
 void Field::addPopulation(CreaturesPopulation *population) {

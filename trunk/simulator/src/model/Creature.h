@@ -78,6 +78,10 @@ public:
 	bool eat(unsigned articleId);
 	bool move(unsigned x, unsigned y);
 
+	int increaseAge();
+	// Leave all stocks on field
+	void prepareToDie ();
+
 	//ActivityList getCreatureActivities();
 
 	/*static std::vector<std::string> ZeroArgActivitiesNames;
@@ -110,6 +114,8 @@ private:
 	void changePopulation(CreaturesPopulation *from, CreaturesPopulation *to);
 	CreatureActivity *createActivity(unsigned activityGenIndex,
 			unsigned parametersCount);
+	void modifyStocks (unsigned articleId, int delta);
+	void wrongDecisionSanction (float weight = 1.0);
 	//ActivitiesStrategy getActiviviesStrategy() const;
 };
 

@@ -43,7 +43,7 @@ public:
 	Market *getMarket ();
 	bool tryTakeArticle (unsigned articleId);
 	unsigned articleStock (unsigned articleId);
-	void putArticle (unsigned articleId);
+	void putArticle (unsigned articleId, unsigned quantity = 1);
 	void addPopulation (CreaturesPopulation *population);
 	CreaturesPopulation *getPopulation (std::wstring name);
 	std::list<CreaturesPopulation *> getPopulations ();

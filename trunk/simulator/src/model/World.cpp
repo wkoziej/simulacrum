@@ -67,7 +67,7 @@ void CreatureActivityThread::run() {
 	ActivityList::iterator activity = activities.begin();
 	for (; activity != activities.end(); activity++) {
 		(*activity)->make();
-		//this->msleep(100);
+		this->msleep(10);
 		delete (*activity);
 	}
 }
@@ -83,33 +83,34 @@ public:
 		int c;
 		int psize = population->size();
 		for (c = 0; c < psize; c++) {
-			GAGenome g = population->individual(c);
-			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
-		}
-
-		if (psize > 30) {
-			population->remove(&population->worst());
+			Creature * creature = (Creature *) &population->individual(c);
+			creature->increaseAge();
+			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c));
 		}
 
 		if (population->size()) {
 			GASimpleGA simpleGA(*population);
 			simpleGA.initialize(time(0));
+			simpleGA.crossover(GARealTwoPointCrossover);
 			simpleGA.pMutation(MUTATION);
 			simpleGA.pCrossover(CROSSOVER);
 			simpleGA.step();
 			GAPopulation p = simpleGA.population();
 			for (c = 0; c < p.size(); c++) {
 				GAGenome g = p.individual(c);
-				LOG4CXX_DEBUG(logger, " N [" << c << "]: " << p.individual(c) << " UD: " << p.individual(c).evalData());
+				population->add(new Creature((Creature&) g));
+				LOG4CXX_DEBUG(logger, " N [" << c << "]: " << p.individual(c));
 			}
-
-			//int maxInd = p.size();
-			//for (c = 0; c < maxInd; c++) {
-			//LOG4CXX_DEBUG(logger, " J [" << c << "]: " << p.individual(c) << " UD: " << p.individual(c).evalData());
-
 			population->add(new Creature((Creature&) p.best()));
-			//}
+
 		}
+		psize = population->size();
+		for (c = psize - 30; c > 0; c--) {
+			Creature * creature = (Creature *) &population->worst();
+			creature->prepareToDie();
+			population->remove(creature);
+		}
+
 		LOG4CXX_DEBUG(logger, "Population size after reproduction: " << population->size());
 	}
 };
@@ -366,27 +367,6 @@ World *World::readWorldFromFile(const char *fileName) {
  }
  }*/
 
-/*void World::createRandomCreatures() {
- LOG4CXX_TRACE(logger, "createCreatures");
- // Wybierz losowe pole
- for (int z = 0; z < NO_OF_POPULATIONS; z++) {
- unsigned x = (random() / (float) RAND_MAX) * getWorld()->fields.size();
- unsigned y = (random() / (float) RAND_MAX)
- * getWorld()->fields.begin()->size();
- LOG4CXX_DEBUG(logger, "Initial Field: x  " << x << ", y " << y);
- Field *field = getWorld()->fields.at(x).at(y);
- CreaturesPopulation *population = field->populations.begin()->second;
- for (int i = 0; i < INITIAL_NO_OF_CREATURES_IN_FIELD; i++) {
- Creature * creature = new Creature(population, field);
- population->add(creature);
- };
- LOG4CXX_DEBUG(logger, "population: " << population << ", creaturesCreated: " << population->size());
- for (int c = 0; c < population->size(); c++) {
- LOG4CXX_DEBUG(logger, " creature [" << c << "]: " << population->individual(c) << " UD: " << population->individual(c).evalData());
- }
- }
- }*/
-
 /*void World::creaturesDying() {
  LOG4CXX_TRACE(logger, "creaturesDying");
  PopulationOnFieldVisitor * visitor = new DyingVisitor();
@@ -424,11 +404,11 @@ void World::step(StateSaver *stateSaver) {
 	PopulationOnFieldVisitor * visitor = new CreatureActivityVisitor();
 	iteratePopulationOnFields(visitor);
 	delete visitor;
-	stateSaver->save("activitiesMade");
+	//stateSaver->save("activitiesMade");
 
 	// Na podstawie funkcji celu dokonaj roznmożenia
 	creaturesReproducting();
-	stateSaver->save("reproductionDone");
+	//stateSaver->save("reproductionDone");
 	// Usuń z populacji najmniej przystosowane
 	/*	creaturesDying();
 	 stateSaver->save("dieAfterDie");*/
