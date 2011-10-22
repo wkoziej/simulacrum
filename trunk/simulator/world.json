@@ -6,7 +6,7 @@
 		"articles" : [	{"energy" 		: null },	
 						{"water"		: {"food?" : 1} },	
 						{"wood" 		: null },		
-						{"corn"			: null }, 
+						{"corn"			:  {"food?" : 1} }, 
 						{"flour"		: null },	
 						{"bread" 		: {"food?" : 1}}
 					 ],
@@ -25,9 +25,9 @@
 				"coordX" : 0,
 				"coordY" : 0,	 
 				"stocks" : [ { "water" : { 	"stock" : 100,  
-											"reneval" : 10} },
-							 { "wood"  : { "stock" : 100,  "reneval" : 5} },
-							 { "corn"  : { "stock" : 100,  "reneval" : 2} }	],
+											"reneval" : 100} },
+							 { "wood"  : { "stock" : 100,  "reneval" : 100} },
+							 { "corn"  : { "stock" : 100,  "reneval" : 100} }	],
 				"populations" :
 				[
 					{

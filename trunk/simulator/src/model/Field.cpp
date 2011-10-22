@@ -168,6 +168,7 @@ unsigned Field::articleStock(unsigned articleId) {
 }
 
 void Field::putArticle(unsigned articleId, unsigned quantity) {
+	assert (quantity < 10000);
 	prv->stocks.at(articleId)->release(quantity);
 }
 

@@ -15,8 +15,11 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += main.cpp src/model/World.cpp src/model/Field.cpp src/model/Population.cpp src/model/Creature.cpp \
-           src/JSON/JSON.cpp src/JSON/JSONValue.cpp \
+SOURCES += main.cpp src/model/Activity.cpp src/model/Article.cpp \
+					src/model/World.cpp src/model/Field.cpp \
+					src/model/Population.cpp src/model/Creature.cpp \
+					src/model/Market.cpp src/model/ModelHelpers.cpp src/model/Recipe.cpp \
+           			src/JSON/JSON.cpp src/JSON/JSONValue.cpp \
             src/ga/GA1DArrayGenome.C   src/ga/GA3DArrayGenome.C   src/ga/GABin2DecGenome.C  src/ga/GADemeGA.C  \
             src/ga/GAListBASE.C    src/ga/GAPopulation.C  src/ga/GASelector.C    src/ga/GAStringGenome.C \
             src/ga/GA1DBinStrGenome.C  src/ga/GA3DBinStrGenome.C  src/ga/gabincvt.C         src/ga/gaerror.C   src/ga/GAList.C \
@@ -34,4 +37,4 @@ target.files += world.json log.properties
 target.path = ../bin
 INSTALLS += target
 
-#DESTDIR = ../bin
+DESTDIR = ../bin

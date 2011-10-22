@@ -96,19 +96,20 @@ public:
 			simpleGA.pCrossover(CROSSOVER);
 			simpleGA.step();
 			GAPopulation p = simpleGA.population();
-			for (c = 0; c < p.size(); c++) {
-				GAGenome g = p.individual(c);
-				population->add(new Creature((Creature&) g));
+			psize = p.size() / 2;
+			for (c = 0; c < psize; c++) {
+				population->add(new Creature((Creature&) p.best(c)));
 				LOG4CXX_DEBUG(logger, " N [" << c << "]: " << p.individual(c));
 			}
-			population->add(new Creature((Creature&) p.best()));
 
 		}
 		psize = population->size();
 		for (c = psize - 30; c > 0; c--) {
 			Creature * creature = (Creature *) &population->worst();
-			creature->prepareToDie();
-			population->remove(creature);
+			if (creature->getAge() > 0) {
+				creature->prepareToDie();
+				population->remove(creature);
+			}
 		}
 
 		LOG4CXX_DEBUG(logger, "Population size after reproduction: " << population->size());

@@ -53,7 +53,7 @@ float Objective(GAGenome &g) {
 	CreatureFenotype * fenotype = c->getFenotype();
 	float value = 0.0;
 	//World *world = World::getWorld();
-	Field *field = fenotype->field;
+	//Field *field = fenotype->field;
 	// Możliwe funkcje celu
 	// 1. Stosunek wartości wytworzonych produktów do wartości zużytych surowców jest największy
 	// 2. Wartość wytworzonych produktów jest największa
@@ -71,9 +71,9 @@ float Objective(GAGenome &g) {
 
 	value = fenotype->wallet;
 
-	if (!c->getId().empty()) {
-		LOG4CXX_DEBUG(Creature::logger, "creature " <<c->getId() << " objective = " << value);
-	}
+	/*	if (!c->getId().empty()) {
+	 LOG4CXX_DEBUG(Creature::logger, "creature " <<c->getId() << " objective = " << value);
+	 }*/
 	return value;
 }
 
@@ -102,12 +102,14 @@ GAEvalData* CreatureFenotype::clone() const {
 }
 
 void CreatureFenotype::copy(const GAEvalData&src) {
-	LOG4CXX_TRACE(logger, "CreatureFenotype::copy");
+	LOG4CXX_TRACE(logger, ">CreatureFenotype::copy");
 	articleQuantsChange.assign(World::NO_OF_ARTICLES, 0);
+	articleStocks.assign(World::NO_OF_ARTICLES, 0);
 	yearsOld = 0;// (((CreatureFenotype &) src).yearsOld);
 	population = (((CreatureFenotype &) src).population);
 	field = (((CreatureFenotype &) src).field);
 	wallet = 0;
+	LOG4CXX_TRACE(logger, "<CreatureFenotype::copy");
 }
 
 GARealAlleleSetArray Creature::alleles;
@@ -123,7 +125,6 @@ std::string Creature::genomeStr() const {
 	for (i = 0; i < activitiesSize; i++) {
 		int activity = h->gene(geneShift++);
 		int argument = h->gene(geneShift++);
-		LOG4CXX_DEBUG(logger, getId() << " -> activity:" << activity << ", argument: " << argument);
 		buf << Activity::getName(activity);
 		if (Activity::hasArgument(activity)) {
 			// argument
@@ -152,7 +153,7 @@ GARealAlleleSetArray Creature::allelesDefinition(
 
 void Creature::RandomInitializer(GAGenome &g) {
 	Creature *h = (Creature*) &g;
-	int i = 0;
+	unsigned i = 0;
 	unsigned j = 0;
 	for (; i < h->getActivitiesCount(); i++) {
 		// Indeks czynnosci
@@ -168,7 +169,7 @@ void Creature::DoNothingInitializer(GAGenome &g) {
 
 void Creature::JSONInitializer(GAGenome &g) {
 	Creature *h = (Creature *) &g;
-	JSONObject *creature = (JSONObject *) h->userData();
+	JSONObject *creature = (JSONObject *) ((GAGenome *) h)->userData();
 	int geneShift = 0;
 	unsigned i;
 	// kodowanie czynnosci 1 argumentowych
@@ -199,7 +200,7 @@ Creature::Creature(CreaturesPopulation *population, Field * field,
 	GARealGenome(Creature::allelesDefinition(population), Objective) {
 	LOG4CXX_TRACE(logger, "Creature::Creature(CreaturesPopulation *population, Field * field, JSONObject &creature, unsigned x, unsigned y)");
 	// Wypełnij tymczasową strukturę z definicją osobnika
-	userData(&creature);
+	GAGenome::userData(&creature);
 	evalData(CreatureFenotype(population, field, x, y));
 	initializer(JSONInitializer);
 	initialize();
@@ -207,7 +208,7 @@ Creature::Creature(CreaturesPopulation *population, Field * field,
 	idBuf << Creature::createuresId++;
 	getFenotype()->id = idBuf.str();
 	// Można już wyczyścić dane
-	userData(NULL);
+	GAGenome::userData(NULL);
 	initializer(DoNothingInitializer);
 	LOG4CXX_DEBUG(logger, "genome : " << *this);
 }
@@ -264,10 +265,10 @@ Creature::~Creature() {
 bool Creature::hasEnergy() const {
 	return getFenotype()->articleStocks.at(ENERGY_INDEX) > 0;
 }
+
 void Creature::rest() {
 	LOG4CXX_DEBUG(logger, "craeture " << getId() << " resting " );
-	//getFenotype()->articleStocks.at(ENERGY_INDEX)++;
-	//getFenotype()->articleQuantsChange.at(ENERGY_INDEX)++;
+	modifyStocks(ENERGY_INDEX, 1);
 }
 
 bool Creature::produce(unsigned articleId, std::vector<unsigned> ingredients) {
@@ -286,6 +287,8 @@ bool Creature::produce(unsigned articleId, std::vector<unsigned> ingredients) {
 		s = getFenotype()->articleStocks.begin();
 		unsigned index = 0;
 		for (; i != ingredients.end(); s++, i++, index++) {
+			LOG4CXX_DEBUG(logger, "craeture " << getId() << " using " << *i << " of "
+					<< World::ARTICLES.at(index) << " to produce " << World::ARTICLES.at(articleId));
 			modifyStocks(index, -(*i));
 		}
 		modifyStocks(articleId, 1);
@@ -360,12 +363,18 @@ bool Creature::eat(unsigned articleId) {
 	bool eaten = fenotype->articleStocks.at(articleId) > 0;
 	if (fenotype->articleStocks.at(articleId) > 0) {
 		modifyStocks(articleId, -1);
-		int lessOrMore = World::articles.at(articleId)->isFood() ? 1 : -1;
-		modifyStocks(ENERGY_INDEX, lessOrMore);
-		if (lessOrMore < 0) {
+		bool eatFood = World::articles.at(articleId)->isFood();
+		if (eatFood) {
+			modifyStocks(ENERGY_INDEX, 1);
+		} else {
 			wrongDecisionSanction();
+			if (hasEnergy()) {
+				modifyStocks(ENERGY_INDEX, -1);
+			} else {
+				// One more sanction
+				wrongDecisionSanction();
+			}
 		}
-
 	}
 	return eaten;
 }
@@ -418,9 +427,12 @@ bool Creature::move(unsigned x, unsigned y) {
 		changePopulation(population, newPopulation);
 		getFenotype()->field = newField;
 		getFenotype()->population = newPopulation;
+		unsigned xFrom = x;
+		unsigned yFrom = y;
 		getFenotype()->fieldCoordX = x;
 		getFenotype()->fieldCoordY = y;
 		modifyStocks(ENERGY_INDEX, -1);
+		emit creatureMoved (xFrom, yFrom, this);
 	} else {
 		wrongDecisionSanction();
 	}
@@ -436,12 +448,18 @@ void Creature::prepareToDie() {
 	UnsignedVector::iterator s = getFenotype()->articleStocks.begin();
 	unsigned articleId = 0;
 	for (; s != getFenotype()->articleStocks.end(); s++, articleId++) {
-		getFenotype()->field->putArticle(articleId, *s);
-		modifyStocks(articleId, -(*s));
+		if (*s > 0) {
+			LOG4CXX_DEBUG(logger, "craeture " << getId() << " leaving " << *s<< " of " << World::ARTICLES.at(articleId) );
+			getFenotype()->field->putArticle(articleId, *s);
+			modifyStocks(articleId, -(*s));
+		}
 	}
 }
 
 void Creature::modifyStocks(unsigned articleId, int delta) {
+	int q = getFenotype()->articleStocks.at(articleId);
+	LOG4CXX_DEBUG(logger, "craeture's " << getId() << " stock of " << World::ARTICLES.at(articleId) << " modified by " << delta);
+	assert (q + delta >= 0);
 	getFenotype()->articleStocks.at(articleId) += delta;
 	getFenotype()->articleQuantsChange.at(articleId) += delta;
 }

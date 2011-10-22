@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
 	int i = 1298309352;//time(0); //time(0);
 	srand(i); //1298309352
 	World *world = World::readWorldFromFile("world.json");
+
 	if (world == NULL)
 		return 0;
 	else {

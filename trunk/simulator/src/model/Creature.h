@@ -11,7 +11,7 @@
 //#include <ga/GAGenome.h>
 #include <ga/GARealGenome.h>
 #include <log4cxx/logger.h>
-//#include <QtCore/qthread.h>
+#include <QtCore/qobject.h>
 #include "Config.h"
 #include "Types.h"
 //#include "Population.h"
@@ -29,7 +29,11 @@ class CreaturesPopulation;
 
 class CreatureActivity;
 
-class Creature: public GARealGenome {
+class Creature: public QObject, public GARealGenome {
+Q_OBJECT
+signals:
+	void creatureMoved (unsigned xFrom, unsigned yFrom, const Creature *creature);
+
 public:
 	// Logowanie
 	static LoggerPtr logger;
@@ -80,7 +84,7 @@ public:
 
 	int increaseAge();
 	// Leave all stocks on field
-	void prepareToDie ();
+	void prepareToDie();
 
 	//ActivityList getCreatureActivities();
 
@@ -114,9 +118,10 @@ private:
 	void changePopulation(CreaturesPopulation *from, CreaturesPopulation *to);
 	CreatureActivity *createActivity(unsigned activityGenIndex,
 			unsigned parametersCount);
-	void modifyStocks (unsigned articleId, int delta);
-	void wrongDecisionSanction (float weight = 1.0);
+	void modifyStocks(unsigned articleId, int delta);
+	void wrongDecisionSanction(float weight = 1.0);
 	//ActivitiesStrategy getActiviviesStrategy() const;
+
 };
 
 #endif /* CREATURE_H_ */
