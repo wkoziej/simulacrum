@@ -19,6 +19,7 @@
 #include "Article.h"
 #include "Recipe.h"
 #include "Activity.h"
+#include "visual/VisualizationController.h"
 
 using namespace std;
 
@@ -40,6 +41,26 @@ int World::getArticleIndex(std::wstring articleName) {
 		index = i - World::ARTICLES.begin();
 	}
 	return index;
+}
+
+void World::connectCreatureSignals(Creature *creature) {
+	creature ->connect(
+	creature, SIGNAL(creatureBorn (QString, unsigned, unsigned)),
+			VisualizationController::getPtr(),
+			SLOT(assignAvatarToNewCreature (QString, unsigned, unsigned ))
+	);
+
+	creature ->connect(
+			creature,
+			SIGNAL(creatureMoved (QString , unsigned , unsigned , unsigned , unsigned )),
+			VisualizationController::getPtr(),
+			SLOT(changeCreaturePosition (QString , unsigned , unsigned , unsigned , unsigned ))
+	);
+	creature ->connect(
+	creature, SIGNAL(creatureAte (QString, unsigned)),
+			VisualizationController::getPtr(),
+			SLOT(feedCreature (QString, unsigned ))
+	);
 }
 
 class CreatureActivityThread: public QThread {
@@ -67,7 +88,7 @@ void CreatureActivityThread::run() {
 	ActivityList::iterator activity = activities.begin();
 	for (; activity != activities.end(); activity++) {
 		(*activity)->make();
-		this->msleep(10);
+		this->msleep(100);
 		delete (*activity);
 	}
 }
@@ -98,17 +119,19 @@ public:
 			GAPopulation p = simpleGA.population();
 			psize = p.size() / 2;
 			for (c = 0; c < psize; c++) {
-				population->add(new Creature((Creature&) p.best(c)));
+				Creature *theBest = new Creature((Creature&) p.best(c));
+				population->add(theBest);
 				LOG4CXX_DEBUG(logger, " N [" << c << "]: " << p.individual(c));
 			}
-
 		}
+
 		psize = population->size();
 		for (c = psize - 30; c > 0; c--) {
 			Creature * creature = (Creature *) &population->worst();
 			if (creature->getAge() > 0) {
 				creature->prepareToDie();
 				population->remove(creature);
+				// disconnect all signalls
 			}
 		}
 
@@ -307,7 +330,7 @@ World *World::readWorldFromFile(const char *fileName) {
 				World::recipes.at(articleIndex) = recipeObject;
 			}
 
-			world = World::getWorld();
+			world = World::getPtr();
 			int i;
 			for (i = 0; i < X; i++) {
 				FieldsVector fVector;
@@ -384,8 +407,8 @@ void World::creaturesReproducting() {
 
 void World::nextYear() {
 	LOG4CXX_TRACE(logger, "nextYear");
-	FieldsMatrix::iterator i = getWorld()->fields.begin();
-	for (; i != getWorld()->fields.end(); i++) {
+	FieldsMatrix::iterator i = getPtr()->fields.begin();
+	for (; i != getPtr()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();
 		for (; j != i->end(); j++) {
 			(*j)->renovateResources();
@@ -429,11 +452,11 @@ void World::iterateCreaturesOnFields(CreaturesOnFieldVisitor *visitor) {
 
 void World::iteratePopulationOnFields(PopulationOnFieldVisitor *visitor) {
 	LOG4CXX_TRACE(logger, "iteratePopulationOnFields");
-	FieldsMatrix::iterator i = getWorld()->fields.begin();
-	for (; i != getWorld()->fields.end(); i++) {
+	FieldsMatrix::iterator i = getPtr()->fields.begin();
+	for (; i != getPtr()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();
 		for (; j != i->end(); j++) {
-			unsigned x = i - getWorld()->fields.begin();
+			unsigned x = i - getPtr()->fields.begin();
 			unsigned y = j - i->begin();
 			std::list<CreaturesPopulation *> populations =
 					(*j)->getPopulations();
@@ -446,8 +469,8 @@ void World::iteratePopulationOnFields(PopulationOnFieldVisitor *visitor) {
 }
 
 void World::visitFields(FieldsVisitor *fieldVisitor) {
-	FieldsMatrix::iterator i = getWorld()->fields.begin();
-	for (; i != getWorld()->fields.end(); i++) {
+	FieldsMatrix::iterator i = getPtr()->fields.begin();
+	for (; i != getPtr()->fields.end(); i++) {
 		FieldsVector::iterator j = i->begin();
 		for (; j != i->end(); j++) {
 			fieldVisitor->visit(*j);

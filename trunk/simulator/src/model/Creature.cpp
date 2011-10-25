@@ -105,7 +105,7 @@ void CreatureFenotype::copy(const GAEvalData&src) {
 	LOG4CXX_TRACE(logger, ">CreatureFenotype::copy");
 	articleQuantsChange.assign(World::NO_OF_ARTICLES, 0);
 	articleStocks.assign(World::NO_OF_ARTICLES, 0);
-	yearsOld = 0;// (((CreatureFenotype &) src).yearsOld);
+	yearsOld = 0;// (((CreatureFenotype &) src).yearsOld);new Creature((Creature&) p.best(c))
 	population = (((CreatureFenotype &) src).population);
 	field = (((CreatureFenotype &) src).field);
 	wallet = 0;
@@ -204,12 +204,13 @@ Creature::Creature(CreaturesPopulation *population, Field * field,
 	evalData(CreatureFenotype(population, field, x, y));
 	initializer(JSONInitializer);
 	initialize();
-	std::stringstream idBuf;
-	idBuf << Creature::createuresId++;
-	getFenotype()->id = idBuf.str();
+	assignId();
 	// Można już wyczyścić dane
 	GAGenome::userData(NULL);
 	initializer(DoNothingInitializer);
+	World::connectCreatureSignals(this);
+	emit
+	creatureBorn(getId().c_str(), x, y);
 	LOG4CXX_DEBUG(logger, "genome : " << *this);
 }
 
@@ -221,10 +222,11 @@ Creature::Creature(CreaturesPopulation *population, Field * field, unsigned x,
 	evalData(CreatureFenotype(population, field, x, y));
 	initializer(RandomInitializer);
 	initialize();
-	std::stringstream idBuf;
-	idBuf << Creature::createuresId++;
-	getFenotype()->id = idBuf.str();
+	assignId();
 	initializer(DoNothingInitializer);
+	World::connectCreatureSignals(this);
+	emit
+	creatureBorn(getId().c_str(), x, y);
 	LOG4CXX_DEBUG(logger, "genome : " << *this);
 }
 
@@ -238,12 +240,14 @@ void Creature::changePopulation(CreaturesPopulation *from,
 Creature::Creature(const Creature &creature) :
 	GARealGenome(creature) {
 	LOG4CXX_TRACE(logger, "Creature::Creature(const Creature &creature)");
-	std::stringstream idBuf;
-	idBuf << Creature::createuresId++;
+	assignId();
 	evalData(CreatureFenotype(creature.getFenotype()->population,
 			creature.getFenotype()->field, creature.getFenotype()->fieldCoordX,
 			creature.getFenotype()->fieldCoordY));
-	getFenotype()->id = idBuf.str();
+	World::connectCreatureSignals(this);
+	emit
+	creatureBorn(getId().c_str(), creature.getFenotype()->fieldCoordX,
+			creature.getFenotype()->fieldCoordY);
 	LOG4CXX_DEBUG(logger, "genome : " << *this);
 }
 
@@ -272,7 +276,6 @@ void Creature::rest() {
 }
 
 bool Creature::produce(unsigned articleId, std::vector<unsigned> ingredients) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " producing " << World::ARTICLES.at(articleId));
 	bool produced = true;
 	assert (getFenotype()->articleStocks.size() == ingredients.size());
 	UnsignedVector::const_iterator i = ingredients.begin();
@@ -286,6 +289,7 @@ bool Creature::produce(unsigned articleId, std::vector<unsigned> ingredients) {
 		i = ingredients.begin();
 		s = getFenotype()->articleStocks.begin();
 		unsigned index = 0;
+		LOG4CXX_DEBUG(logger, "craeture " << getId() << " producing " << World::ARTICLES.at(articleId));
 		for (; i != ingredients.end(); s++, i++, index++) {
 			LOG4CXX_DEBUG(logger, "craeture " << getId() << " using " << *i << " of "
 					<< World::ARTICLES.at(index) << " to produce " << World::ARTICLES.at(articleId));
@@ -299,9 +303,9 @@ bool Creature::produce(unsigned articleId, std::vector<unsigned> ingredients) {
 }
 
 bool Creature::collect(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " collecting " << World::ARTICLES.at(articleId));
 	bool canCollect = getField()->tryTakeArticle(articleId);
 	if (canCollect) {
+		LOG4CXX_DEBUG(logger, "craeture " << getId() << " collecting " << World::ARTICLES.at(articleId));
 		modifyStocks(articleId, 1);
 	} else {
 		wrongDecisionSanction();
@@ -310,10 +314,10 @@ bool Creature::collect(unsigned articleId) {
 }
 
 bool Creature::leave(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " leaving " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool canLeave = fenotype->articleStocks.at(articleId) >= 1.0;
 	if (canLeave) {
+		LOG4CXX_DEBUG(logger, "craeture " << getId() << " leaving " << World::ARTICLES.at(articleId));
 		modifyStocks(articleId, -1);
 		fenotype->field->putArticle(articleId);
 	} else {
@@ -323,10 +327,10 @@ bool Creature::leave(unsigned articleId) {
 }
 
 bool Creature::sell(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " selling " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool canSell = fenotype->articleStocks.at(articleId) >= 1.0;
 	if (canSell) {
+		LOG4CXX_DEBUG(logger, "craeture " << getId() << " selling " << World::ARTICLES.at(articleId));
 		float moneyEarned = fenotype->field->getMarket()->buyArticleFromClient(
 				getId(), articleId);
 		fenotype->wallet += moneyEarned;
@@ -338,11 +342,11 @@ bool Creature::sell(unsigned articleId) {
 }
 
 bool Creature::buy(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " buying " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool bought = fenotype->field->getMarket()->sellArticleToClient(getId(),
 			articleId, fenotype->wallet);
 	if (bought) {
+		LOG4CXX_DEBUG(logger, "craeture " << getId() << " buying " << World::ARTICLES.at(articleId));
 		modifyStocks(articleId, 1);
 	} else {
 		wrongDecisionSanction();
@@ -358,14 +362,15 @@ bool Creature::check(unsigned articleId) {
 }
 
 bool Creature::eat(unsigned articleId) {
-	LOG4CXX_DEBUG(logger, "craeture " << getId() << " eating " << World::ARTICLES.at(articleId));
 	CreatureFenotype *fenotype = getFenotype();
 	bool eaten = fenotype->articleStocks.at(articleId) > 0;
 	if (fenotype->articleStocks.at(articleId) > 0) {
 		modifyStocks(articleId, -1);
 		bool eatFood = World::articles.at(articleId)->isFood();
 		if (eatFood) {
+			LOG4CXX_DEBUG(logger, "craeture " << getId() << " eating " << World::ARTICLES.at(articleId));
 			modifyStocks(ENERGY_INDEX, 1);
+			emit creatureAte(getId().c_str(), articleId);
 		} else {
 			wrongDecisionSanction();
 			if (hasEnergy()) {
@@ -420,10 +425,10 @@ bool Creature::move(unsigned x, unsigned y) {
 			!= getFenotype()->fieldCoordY);
 	bool moved = anotherField && hasEnergy();
 	if (moved) {
-		Field *newField = World::getWorld()->fields.at(x).at(y);
+		Field *newField = World::getPtr()->fields.at(x).at(y);
 		CreaturesPopulation *population = getFenotype()->population;
 		CreaturesPopulation *newPopulation =
-				World::getWorld()->findOrCreatePopulation(population, x, y);
+				World::getPtr()->findOrCreatePopulation(population, x, y);
 		changePopulation(population, newPopulation);
 		getFenotype()->field = newField;
 		getFenotype()->population = newPopulation;
@@ -432,7 +437,7 @@ bool Creature::move(unsigned x, unsigned y) {
 		getFenotype()->fieldCoordX = x;
 		getFenotype()->fieldCoordY = y;
 		modifyStocks(ENERGY_INDEX, -1);
-		emit creatureMoved (xFrom, yFrom, this);
+		emit creatureMoved(getId().c_str(), xFrom, yFrom, x, y);
 	} else {
 		wrongDecisionSanction();
 	}
@@ -467,4 +472,10 @@ void Creature::modifyStocks(unsigned articleId, int delta) {
 void Creature::wrongDecisionSanction(float weight) {
 	getFenotype()->wallet -= weight
 			/ (float) getFenotype()->population->getCreatureActivitiesCount();
+}
+
+void Creature::assignId() {
+	std::stringstream idBuf;
+	idBuf << Creature::createuresId++;
+	getFenotype()->id = idBuf.str();
 }

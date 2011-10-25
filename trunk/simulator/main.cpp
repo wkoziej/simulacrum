@@ -6,37 +6,77 @@
 using namespace std;
 using namespace log4cxx;
 using namespace log4cxx::helpers;
+/*
+ int main(int argc, char *argv[]) {
 
-int main(int argc, char *argv[]) {
-	if (argc > 1) {
-		// BasicConfigurator replaced with PropertyConfigurator.
-		PropertyConfigurator::configure(argv[1]);
-	} else {
-		//BasicConfigurator::configure();
-		PropertyConfigurator::configure("log.properties");
+
+ if (world == NULL)
+ return 0;
+ else {
+ //Viewer viewer(world);
+ StateSaver stateSaver(world, "project-world.db");
+ stateSaver.startSession();
+ // Zapisz stan świata
+ stateSaver.save("start");
+ while (true) {
+ world->step(&stateSaver);
+ // Odnów zasoby świata
+ world->nextYear();
+ stateSaver.save("nexYear");
+ char i;
+ //	cin >> i;
+ }
+
+ }
+ return 0;*/
+
+//#include <QtGui/QApplication>
+//#include <Application>
+#include <Application.h>
+#include <QtGui/QWidget>
+#include <QtGui/QVBoxLayout>
+#include <QtCore/QThread>
+
+#include "visual/VisualizationController.h"
+#include "visual/SimulatorGameLogic.h"
+
+class WorldThred: public QThread {
+	StateSaver *stateSaver;
+public:
+	WorldThred(StateSaver *stateSaver) {
+		this->stateSaver = stateSaver;
 	}
-
-	int i = 1298309352;//time(0); //time(0);
-	srand(i); //1298309352
-	World *world = World::readWorldFromFile("world.json");
-
-	if (world == NULL)
-		return 0;
-	else {
-		//Viewer viewer(world);
-		StateSaver stateSaver(world, "project-world.db");
-		stateSaver.startSession();
-		// Zapisz stan świata
-		stateSaver.save("start");
+	void run() {
+		stateSaver->save("start");
 		while (true) {
-			world->step(&stateSaver);
+			World::getPtr()->step(stateSaver);
 			// Odnów zasoby świata
-			world->nextYear();
-			stateSaver.save("nexYear");
-			char i;
-		//	cin >> i;
+			World::getPtr()->nextYear();
+			stateSaver->save("nexYear");
 		}
 
 	}
-	return 0;
+};
+
+int main(int argc, char *argv[]) {
+
+	QtOgre::Application app(argc, argv,
+			VisualizationController::getPtr()->getGameLogicPtr());
+
+	if (argc > 1) {
+		PropertyConfigurator::configure(argv[1]);
+	} else {
+		PropertyConfigurator::configure("log.properties");
+	}
+	srand(time(0));
+
+	World *world = World::readWorldFromFile("world.json");
+	StateSaver stateSaver(world, "project-world.db");
+
+	WorldThred *worldThred = new WorldThred(&stateSaver);
+	worldThred->start();
+
+	return app.exec(QtOgre::SuppressSettingsDialog);
+
 }
+

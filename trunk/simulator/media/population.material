@@ -1,0 +1,24 @@
+
+material population
+{
+
+
+        technique
+        {
+                pass
+                {
+                        scene_blend colour_blend
+                        depth_write off
+
+                   
+
+                        texture_unit
+                        {
+                                texture Water01.jpg
+                                env_map spherical
+                                scroll_anim 0.01 0.01
+                        }
+                }
+        }
+
+}

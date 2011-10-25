@@ -15,7 +15,7 @@
 </extensions>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<configuration artifactName="simulator" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.exe.debug.1291983145" name="Debug" parent="cdt.managedbuild.config.gnu.exe.debug" prebuildStep="moc ../src/model/Creature.h -o ../src/model/Creature_moc.cpp">
+<configuration artifactName="simulator" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.exe.debug.1291983145" name="Debug" parent="cdt.managedbuild.config.gnu.exe.debug" prebuildStep="../generate_moc.sh">
 <folderInfo id="cdt.managedbuild.config.gnu.exe.debug.1291983145." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.965213487" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug">
 <targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug.736265341" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
@@ -26,7 +26,12 @@
 <option id="gnu.cpp.compiler.exe.debug.option.debugging.level.571222275" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.option.include.paths.1460632040" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value=".././src"/>
+<listOptionValue builtIn="false" value="/usr/include/OGRE"/>
+<listOptionValue builtIn="false" value="/usr/local/include/QtOgre"/>
 <listOptionValue builtIn="false" value="/usr/include/qt4"/>
+<listOptionValue builtIn="false" value="/usr/include/qt4/QtCore"/>
+<listOptionValue builtIn="false" value="/usr/include/qt4/QtXml"/>
+<listOptionValue builtIn="false" value="/usr/include/qt4/QtGui"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1400668167" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
@@ -39,8 +44,16 @@
 <tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.2704426" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 <option id="gnu.cpp.link.option.libs.1270599774" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 <listOptionValue builtIn="false" value="log4cxx"/>
+<listOptionValue builtIn="false" value="QtXml"/>
+<listOptionValue builtIn="false" value="QtOgre"/>
+<listOptionValue builtIn="false" value="QtOpenGL"/>
+<listOptionValue builtIn="false" value="QtGui"/>
+<listOptionValue builtIn="false" value="OgreMain"/>
 <listOptionValue builtIn="false" value="QtSql"/>
 <listOptionValue builtIn="false" value="QtCore"/>
+</option>
+<option id="gnu.cpp.link.option.paths.1932318487" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+<listOptionValue builtIn="false" value="/usr/local/lib"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.211749672" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -472,6 +485,7 @@
 <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 <storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
 <storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cconfiguration>
 <cconfiguration id="cdt.managedbuild.config.gnu.exe.release.1768683353">
 <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.release.1768683353" moduleId="org.eclipse.cdt.core.settings" name="Release">
@@ -936,6 +950,7 @@
 <storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
 <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 <storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cconfiguration>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">

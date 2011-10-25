@@ -4,14 +4,11 @@
 #
 #-------------------------------------------------
 
-QT       += core sql
-
-QT       -= gui
+QT       += core sql gui xml
 
 TARGET = simulator
-CONFIG   += console
 CONFIG   -= app_bundle
-
+CONFIG += app
 TEMPLATE = app
 
 
@@ -27,14 +24,30 @@ SOURCES += main.cpp src/model/Activity.cpp src/model/Article.cpp \
         src/ga/GA2DArrayGenome.C   src/ga/GAAllele.C          src/ga/GABinStr.C         src/ga/GAGenome.C  src/ga/GAListGenome.C \
   src/ga/GARealGenome.C  src/ga/GASStateGA.C    src/ga/GATree.C \
     src/ga/GA2DBinStrGenome.C  src/ga/GABaseGA.C          src/ga/GADCrowdingGA.C    src/ga/GAIncGA.C   src/ga/GAParameter.C  \
-  src/ga/GAScaling.C     src/ga/GAStatistics.C  src/ga/GATreeGenome.C
+  src/ga/GAScaling.C     src/ga/GAStatistics.C  src/ga/GATreeGenome.C \
+    src/visual/VisualizationController.cpp \
+    src/visual/StyleSettingsWidget.cpp \
+    src/visual/SimulatorGameLogic.cpp \
+    src/visual/MainMenu.cpp \
+    src/visual/FieldVisualizationWidget.cpp src/StateSaver.cpp
 
-INCLUDEPATH += src/
+INCLUDEPATH += src/ /usr/local/include/QtOgre /usr/include/qt4/QtCore /usr/include/qt4/QtGui /usr/include/qt4/QtXml /usr/include/OGRE
 
-LIBS += -llog4cxx
+LIBS += -llog4cxx -lQtOgre -lOgreMain
 
-target.files += world.json log.properties
-target.path = ../bin
+target.files += world.json log.properties resources.cfg plugins_d.cfg project-world.db settings.ini
+target.files += media
+target.path = ../sim_bin
 INSTALLS += target
 
-DESTDIR = ../bin
+DESTDIR = ../sim_bin
+
+HEADERS += \
+    src/visual/VisualizationController.h \
+    src/visual/StyleSettingsWidget.h \
+    src/visual/SimulatorGameLogic.h \
+    src/visual/MainMenu.h \
+    src/visual/FieldVisualizationWidget.h \
+    src/model/Recipe.h \
+    src/model/Activity.h \
+    src/model/Creature.h
