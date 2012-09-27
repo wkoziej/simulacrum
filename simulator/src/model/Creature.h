@@ -32,7 +32,11 @@ class CreatureActivity;
 class Creature: public QObject, public GARealGenome {
 Q_OBJECT
 signals:
-	void creatureMoved (unsigned xFrom, unsigned yFrom, const Creature *creature);
+	void creatureBorn(QString, unsigned atX, unsigned atY);
+	void creatureDie(QString, unsigned atX, unsigned atY);
+	void creatureMoved(QString creatureId, unsigned xFrom, unsigned yFrom,
+			unsigned xTo, unsigned yTo);
+	void creatureAte(QString creatureId, unsigned articleId);
 
 public:
 	// Logowanie
@@ -65,7 +69,7 @@ public:
 	Field *getField();
 	unsigned getX() const;
 	unsigned getY() const;
-	std::string getId() const;
+	QString getId() const;
 	unsigned getAge() const;
 	float getWallet() const;
 	unsigned getArticleStock(unsigned articleId) const;
@@ -86,41 +90,21 @@ public:
 	// Leave all stocks on field
 	void prepareToDie();
 
-	//ActivityList getCreatureActivities();
-
-	/*static std::vector<std::string> ZeroArgActivitiesNames;
-	 static std::vector<std::string> OneArgActivitiesNames;
-	 static std::vector<std::string> TwoArgActivitiesNames;
-	 */
-	//static void initNames ();
-	//static unsigned get0ArgActivityIndex (std::string activityName);
-	//static unsigned get1ArgActivityIndex (std::string activityName);
-	//static unsigned get2ArgActivityIndex (std::string activityName);
-
 private:
 	static unsigned createuresId;
-
-	//float getProcessingVelocity(unsigned index);
-	/*	float getProcessingRateAndProductIndex(unsigned resourceIndex,
-	 int &productIndex);*/
-	//static float randBetweenAndStepped(float min, float max, float step);
 	static void RandomInitializer(GAGenome &g);
 	static void DoNothingInitializer(GAGenome &g);
 	static void JSONInitializer(GAGenome &g);
 	static GARealAlleleSetArray allelesDefinition(
 			const CreaturesPopulation *population);
-	//void productMissed(float quant, unsigned productIndex);
-	//GAGenome *genome;
-	// float missedProductsFactor;
 
 	static GARealAlleleSetArray alleles;
-	//	void step ();
 	void changePopulation(CreaturesPopulation *from, CreaturesPopulation *to);
 	CreatureActivity *createActivity(unsigned activityGenIndex,
 			unsigned parametersCount);
 	void modifyStocks(unsigned articleId, int delta);
 	void wrongDecisionSanction(float weight = 1.0);
-	//ActivitiesStrategy getActiviviesStrategy() const;
+	void assignId();
 
 };
 
