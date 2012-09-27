@@ -31,7 +31,7 @@ public:
 	//static World *createRandomWorld(unsigned X, unsigned Y);
 	static World *readWorldFromFile(const char *fileName);
 
-	static World *getWorld() {
+	static World *getPtr() {
 		if (singleton == NULL)
 			singleton = new World();
 		return singleton;
@@ -67,6 +67,9 @@ public:
 	static std::vector <Article *> articles;
 	static std::vector <Recipe *> recipes;
 	static int getArticleIndex (std::wstring name);
+
+	static void connectCreatureSignals (Creature *creature);
+
 private:
 	static World *singleton;
 	World() {

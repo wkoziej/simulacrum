@@ -7,7 +7,7 @@
 
 --select * from SQLITE_SEQUENCE;
 
-select * from fields_snapshots;
+--select * from fields_snapshots;
 
 drop table if exists WORLDS;
 create table WORLDS (
@@ -108,31 +108,31 @@ ARTICLE_ID INT,
 
 
   
- drop view V_WORLDS_RUNS;
+ drop view if exists V_WORLDS_RUNS;
 CREATE VIEW V_WORLDS_RUNS AS select * from WORLDS_RUNS;
 
-drop view V_WORLDS_SNAPSHOTS;
+drop view if exists V_WORLDS_SNAPSHOTS;
 CREATE VIEW V_WORLDS_SNAPSHOTS AS select * from WORLDS_SNAPSHOTS;
 
 
-drop view V_FIELDS_SNAPSHOTS;
+drop view if exists V_FIELDS_SNAPSHOTS;
 create view V_FIELDS_SNAPSHOTS AS 
 select * from FIELDS_SNAPSHOTS;
 
 
 
-drop view V_POPULATIONS_SNAPSHOTS;
+drop view if exists V_POPULATIONS_SNAPSHOTS;
 create view V_POPULATIONS_SNAPSHOTS as select * from POPULATIONS_SNAPSHOTS;
 
-drop view v_fields_articles_snapshots;
+drop view if exists v_fields_articles_snapshots;
 create view v_fields_articles_snapshots as 
 select s.id, s.field_snapshot_id,  a.name,  s.field_stock, s.market_stock,  s.queries_count, s.sell_price, s.buy_price
  from fields_articles_snapshots s inner join articles a on a.id = s.article_id;
 
 
-drop view v_creatures_snapshots;
+drop view if exists v_creatures_snapshots;
 create view v_creatures_snapshots as select * from creatures_snapshots;
 
-drop view v_creatures_articles_snapshots;
+drop view if exists v_creatures_articles_snapshots;
 create  view v_creatures_articles_snapshots as 
 select s.id, s.creature_snapshot_id, a.name, s.stock, s.changed from creatures_articles_snapshots  s inner join articles a on a.id = s.article_id;

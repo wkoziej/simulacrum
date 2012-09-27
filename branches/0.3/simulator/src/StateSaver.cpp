@@ -116,7 +116,7 @@ void StateSaver::save(std::string description) {
 					params.push_back(creature->getAge());
 					params.push_back(creature->score());
 					params.push_back(creature->getWallet ());
-					params.push_back((creature->getId() + " : "
+					params.push_back((creature->getId().toStdString() + " : "
 							+ creature->genomeStr()).c_str());
 					executeQuery(
 							"insert into creatures_snapshots (population_snapshot_id, age, objective_value, wallet, genome) "
