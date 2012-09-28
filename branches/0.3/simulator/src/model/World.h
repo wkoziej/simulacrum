@@ -11,7 +11,6 @@
 #include <vector>
 //#include <list>
 #include <log4cxx/logger.h>
-
 #include "ModelHelpers.h"
 
 //using namespace std;

@@ -428,9 +428,14 @@ bool Creature::move(unsigned x, unsigned y) {
 	bool moved = anotherField && hasEnergy();
 	if (moved) {
 		Field *newField = World::getPtr()->fields.at(x).at(y);
+		// TODO: Zaznaczamy na osobniku, że chce się ruszyć, a zmieniać populację będzie w GADemeGA::migrate()
+
+
+		/*********
 		CreaturesPopulation *population = getFenotype()->population;
 		CreaturesPopulation *newPopulation =
 				World::getPtr()->findOrCreatePopulation(population, x, y);
+
 		changePopulation(population, newPopulation);
 		getFenotype()->field = newField;
 		getFenotype()->population = newPopulation;
@@ -440,6 +445,9 @@ bool Creature::move(unsigned x, unsigned y) {
 		getFenotype()->fieldCoordY = y;
 		modifyStocks(ENERGY_INDEX, -1);
 		emit creatureMoved(getId(), xFrom, yFrom, x, y);
+
+
+		*********/
 	} else {
 		wrongDecisionSanction();
 	}

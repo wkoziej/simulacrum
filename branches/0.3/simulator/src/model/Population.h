@@ -10,13 +10,16 @@
 #include "JSON/JSONValue.h"
 #include <ga/GAPopulation.h>
 #include <log4cxx/logger.h>
+#include <ga/GAIncGA.h>
 class Field;
 using namespace log4cxx;
 
-class CreaturesPopulation: public GAPopulation {
+class CreaturesPopulation : public GAPopulation
+{
 public:
 	CreaturesPopulation(const CreaturesPopulation *species);
 	CreaturesPopulation(Field *field, const JSONObject &population, unsigned x, unsigned y);
+	void reproduce();
 	virtual ~CreaturesPopulation();
 	//float productNeeds(int i);
 	//float resourceNeeds(int i);
@@ -45,6 +48,7 @@ private:
 	//int creaturesNeedsCount;
 	// Logowanie
 	static LoggerPtr logger;
+	GAIncrementalGA *ga;
 };
 
 typedef std::pair<std::wstring, CreaturesPopulation *> NamedPopulation;
