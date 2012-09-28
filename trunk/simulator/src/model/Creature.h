@@ -33,6 +33,7 @@ class Creature: public QObject, public GARealGenome {
 Q_OBJECT
 signals:
 	void creatureBorn(QString, unsigned atX, unsigned atY);
+	void creatureDie(QString, unsigned atX, unsigned atY);
 	void creatureMoved(QString creatureId, unsigned xFrom, unsigned yFrom,
 			unsigned xTo, unsigned yTo);
 	void creatureAte(QString creatureId, unsigned articleId);
@@ -68,7 +69,7 @@ public:
 	Field *getField();
 	unsigned getX() const;
 	unsigned getY() const;
-	std::string getId() const;
+	QString getId() const;
 	unsigned getAge() const;
 	float getWallet() const;
 	unsigned getArticleStock(unsigned articleId) const;

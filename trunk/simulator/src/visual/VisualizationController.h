@@ -29,6 +29,7 @@ public:
 
 public slots:
 	void assignAvatarToNewCreature(QString creatureId, unsigned x, unsigned y);
+	void releaseAvatar (QString creatureId, unsigned x, unsigned y);
 	void changeCreaturePosition(QString creatureId, unsigned xFrom,
 			unsigned yFrom, unsigned xTo, unsigned yTo);
 	void feedCreature(QString creatureId, unsigned articleId);

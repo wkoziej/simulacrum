@@ -1,10 +1,12 @@
 <?xml version="1.0" standalone="yes"?>
 <scene formatVersion="2.0">
+<!--
 	<environment>
 		<skyBox material="SkyBox" distance="100.0" drawFirst="true">
 			<rotation qw="0" qx="0" qy="1" qz="0"/>
 		</skyBox>
-	</environment>
+		<fog />
+	</environment> -->
 	
 	<nodes>
 		<node name="CameraNode">			
@@ -17,25 +19,77 @@
 		</node>
 		
 		<node name="field0x0">
-			<scale x="1" y="0.01" z="1.00" />
+			<scale x="0.99" y="0.01" z="0.99" />
+			<rotation qw="0" qx="0" qy="1" qz="0"/>
+			<position x="-100" y="0" z="0" />			
+			<entity meshFile="Cube.mesh" name="field0x0_cube" castShadows="True"/>		
+			
+			<node name="stock0x0_water">
+				<scale x="0.1" y="0.99" z="0.1" />
+android sdk download				<position x="-45" y="1" z="45" />			
+				<entity meshFile="Cube.mesh" name="stock0x0_water_indicator" castShadows="True"/>		
+			</node>
+		</node>
+		
+		<node name="field1x0">
+			<scale x="0.99" y="0.01" z="0.99" />
 			<rotation qw="0" qx="0" qy="1" qz="0"/>
 			<position x="0" y="0" z="0" />			
-			<entity meshFile="Barrel.mesh" name="Cube1" castShadows="True"/>		
+			<entity meshFile="Cube.mesh" name="field1x0_cube" castShadows="True"/>		
 		</node>
 		
-		<node name="CubeNode2">
-			<scale x="1" y="0.01" z="1.00" />
+		<node name="field2x0">
+			<scale x="0.99" y="0.01" z="0.99" />
 			<rotation qw="0" qx="0" qy="1" qz="0"/>
-			<position x="102" y="0" z="0" />			
-			<entity meshFile="cube.mesh" name="Cube2" castShadows="True"/>		
+			<position x="100" y="0" z="0" />			
+			<entity meshFile="Cube.mesh" name="field2x0_cube" castShadows="True"/>		
 		</node>
 		
-		<node name="CubeNode3">
-			<scale x="1" y="0.01" z="1.00" />
+		
+			
+		<node name="field0x1">
+			<scale x="0.99" y="0.01" z="0.99" />
 			<rotation qw="0" qx="0" qy="1" qz="0"/>
-			<position x="0" y="0" z="102" />			
-			<entity meshFile="cube.mesh" name="Cube3" castShadows="True" materialFile="field.material"/>		
+			<position x="-100" y="0" z="100" />			
+			<entity meshFile="Cube.mesh" name="field0x1_cube" castShadows="True"/>		
 		</node>
+		
+		<node name="field1x1">
+			<scale x="0.99" y="0.01" z="0.99" />
+			<rotation qw="0" qx="0" qy="1" qz="0"/>
+			<position x="0" y="0" z="100" />			
+			<entity meshFile="Cube.mesh" name="field1x1_cube" castShadows="True"/>		
+		</node>
+		
+		<node name="field2x1">
+			<scale x="0.99" y="0.01" z="0.99" />
+			<rotation qw="0" qx="0" qy="1" qz="0"/>
+			<position x="100" y="0" z="100" />			
+			<entity meshFile="Cube.mesh" name="field2x1_cube" castShadows="True"/>		
+		</node>
+	
+		
+		<node name="field0x2">
+			<scale x="0.99" y="0.01" z="0.99" />
+			<rotation qw="0" qx="0" qy="1" qz="0"/>
+			<position x="-100" y="0" z="200" />			
+			<entity meshFile="Cube.mesh" name="field0x2_cube" castShadows="True"/>		
+		</node>
+		
+		<node name="field1x2">
+			<scale x="0.99" y="0.01" z="0.99" />
+			<rotation qw="0" qx="0" qy="1" qz="0"/>
+			<position x="0" y="0" z="200" />			
+			<entity meshFile="Cube.mesh" name="field1x2_cube" castShadows="True"/>		
+		</node>
+		
+		<node name="field2x2">
+			<scale x="0.99" y="0.01" z="0.99" />
+			<rotation qw="0" qx="0" qy="1" qz="0"/>
+			<position x="100" y="0" z="200" />			
+			<entity meshFile="Cube.mesh" name="field2x2_cube" castShadows="True"/>		
+		</node>
+	
 		
 		
 	</nodes>

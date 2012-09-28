@@ -1,14 +1,18 @@
 
-material field
+material NoMaterial
 {
-    receive_shadows off
-	technique
+    technique
 	{
 		pass
 		{
-			ambient 1 0 1 1
-			diffuse 1 1 0 1
-			specular 0.1 0.2 0.4 1 10
+			lighting off
+			depth_write off
+
+			texture_unit
+			{
+				cubic_texture ruins.png separateUV
+				tex_address_mode clamp
+			}
 		}
 	}
 }

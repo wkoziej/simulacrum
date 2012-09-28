@@ -24,24 +24,27 @@ VisualizationController::~VisualizationController() {
 
 void VisualizationController::assignAvatarToNewCreature(QString creatureId,
 		unsigned x, unsigned y) {
-	LOG4CXX_TRACE(logger, "assignAvatarToNewCreature");
+	LOG4CXX_DEBUG(logger, "assignAvatarToNewCreature " << creatureId.toStdString());
 	Avatar *avatar = gameLogic->createCreatureAvatar(creatureId);
+	assert (avatar);
 	gameLogic->assureAvatarOnField(avatar, x, y);
 	gameLogic->animateAvatarBorn(avatar);
+}
+
+void VisualizationController::releaseAvatar(QString creatureId, unsigned x,
+		unsigned y) {
+	Avatar *avatar = gameLogic->findCreatureAvatar(creatureId);
+	assert (avatar);
+	gameLogic->animateAvatarRelease(avatar);
+	delete avatar; // ??
 }
 
 void VisualizationController::changeCreaturePosition(QString creatureId,
 		unsigned xFrom, unsigned yFrom, unsigned xTo, unsigned yTo) {
 	LOG4CXX_TRACE(logger, "changeCreaturePosition");
 	Avatar *avatar = gameLogic->findCreatureAvatar(creatureId);
+	assert (avatar);
 	gameLogic->animateAvatarMovementToField(avatar, xTo, yTo);
-	/*
-	 if (mSceneManager) {
-	 mSceneManager->getSceneNode("CubeNode2")->setScale(
-	 randBetweenAndStepped(0.1, 1.0, 0.1), randBetweenAndStepped(
-	 0.1, 1.0, 0.1), randBetweenAndStepped(0.1, 1.0, 0.1));
-	 }
-	 */
 }
 
 void VisualizationController::feedCreature(QString creatureId,
@@ -49,10 +52,4 @@ void VisualizationController::feedCreature(QString creatureId,
 	LOG4CXX_TRACE(logger, "feedCreature");
 	Avatar *avatar = gameLogic->findCreatureAvatar(creatureId);
 	gameLogic->animateAvatarEating(avatar, articleId);
-	/*
-	 if (mSceneManager) {
-	 mSceneManager->getSceneNode("CubeNode1")->setScale(
-	 randBetweenAndStepped(0.1, 1.0, 0.1), randBetweenAndStepped(
-	 0.1, 1.0, 0.1), randBetweenAndStepped(0.1, 1.0, 0.1));
-	 }*/
 }

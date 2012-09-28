@@ -32,6 +32,8 @@ std::vector<std::string> World::ARTICLES;
 std::vector<Article *> World::articles;
 std::vector<Recipe *> World::recipes;
 
+
+
 int World::getArticleIndex(std::wstring articleName) {
 	int index = -1;
 	std::string name = wstring2string(articleName);
@@ -45,11 +47,17 @@ int World::getArticleIndex(std::wstring articleName) {
 
 void World::connectCreatureSignals(Creature *creature) {
 	creature ->connect(
-	creature, SIGNAL(creatureBorn (QString, unsigned, unsigned)),
+	creature,
+			SIGNAL(creatureBorn (QString, unsigned, unsigned)),
 			VisualizationController::getPtr(),
 			SLOT(assignAvatarToNewCreature (QString, unsigned, unsigned ))
 	);
-
+	creature ->connect(
+	creature,
+			SIGNAL(creatureDie (QString, unsigned, unsigned)),
+			VisualizationController::getPtr(),
+			SLOT(releaseAvatar (QString, unsigned, unsigned ))
+	);
 	creature ->connect(
 			creature,
 			SIGNAL(creatureMoved (QString , unsigned , unsigned , unsigned , unsigned )),
@@ -131,9 +139,12 @@ public:
 			if (creature->getAge() > 0) {
 				creature->prepareToDie();
 				population->remove(creature);
-				// disconnect all signalls
+				// disconnect all signals
+				// delete creature
+
 			}
 		}
+
 
 		LOG4CXX_DEBUG(logger, "Population size after reproduction: " << population->size());
 	}
@@ -208,10 +219,18 @@ public:
 			activityThread->start(QThread::NormalPriority);
 			threadsToWait.push_back(activityThread);
 		}
+
+
 		while (threadsToWait.size()) {
+			LOG4CXX_DEBUG(logger, "waiting for all threads, lost = " << threadsToWait.size());
 			threadsToWait.front()->wait();
 			threadsToWait.pop_front();
 		}
+
+
+
+
+		LOG4CXX_TRACE(logger, "all threads completed...");
 	}
 };
 LoggerPtr CreatureActivityVisitor::logger(Logger::getLogger(

@@ -4,6 +4,7 @@
  *  Created on: 23-10-2011
  *      Author: wojtas
  */
+#include <QtCore/QThread>
 
 #include "SimulatorGameLogic.h"
 #include <Application.h>
@@ -27,6 +28,27 @@
 
 #include "Avatar.h"
 #include "model/ModelHelpers.h"
+
+#include "model/World.h"
+#include "StateSaver.h"
+
+class WorldThred: public QThread {
+	StateSaver *stateSaver;
+public:
+	WorldThred(StateSaver *stateSaver) {
+		this->stateSaver = stateSaver;
+	}
+	void run() {
+		stateSaver->save("start");
+		while (true) {
+			World::getPtr()->step(stateSaver);
+			// Odnów zasoby świata
+			World::getPtr()->nextYear();
+			//stateSaver->save("nexYear");
+		}
+
+	}
+};
 
 SimulatorGameLogic::~SimulatorGameLogic() {
 	// TODO Auto-generated destructor stub
@@ -89,6 +111,13 @@ void SimulatorGameLogic::initialise(void) {
 
 	mStyleSettingsWidget = new StyleSettingsWidget;
 	mApplication->addSettingsWidget("Style", mStyleSettingsWidget);
+
+	World *world = World::readWorldFromFile("world.json");
+	StateSaver stateSaver(world, "project-world.db");
+
+	WorldThred *worldThred = new WorldThred(&stateSaver);
+	worldThred->start();
+
 }
 
 void SimulatorGameLogic::update(void) {
@@ -215,38 +244,52 @@ void SimulatorGameLogic::loadScene(QString filename) {
 }
 
 Avatar * SimulatorGameLogic::createCreatureAvatar(QString creatureId) {
-	if (mSceneManager) {
-		Ogre::SceneNode *avatarNode =
-				mSceneManager->getRootSceneNode()->createChildSceneNode(
-						creatureId.toStdString().c_str(), Ogre::Vector3::ZERO,
-						Ogre::Quaternion::IDENTITY);
-		avatarNode->setVisible(false);
-		Ogre::Entity* avatarEntity = mSceneManager->createEntity((creatureId
-				+ "Entity").toStdString(), "robot.mesh");
-		avatarNode->attachObject(avatarEntity);
-	}
-	Avatar *avatar = new Avatar();
-	return avatar;
+	Avatar *avatarNode =
+			mSceneManager->getRootSceneNode()->createChildSceneNode(
+					creatureId.toStdString().c_str(), Ogre::Vector3::ZERO,
+					Ogre::Quaternion::IDENTITY);
+	avatarNode->setVisible(false);
+	Ogre::Entity* avatarEntity = mSceneManager->createEntity((creatureId
+			+ "Entity").toStdString(), "robot.mesh");
+
+	avatarNode->attachObject(avatarEntity);
+	avatarNode->setScale(0.1, 0.1, 0.1);
+	//Avatar *avatar = new Avatar(avatarNode);
+	return avatarNode;
 }
 
 void SimulatorGameLogic::assureAvatarOnField(Avatar *avatar, unsigned x,
 		unsigned y) {
 	// Sprawdź czy aktualnie avatar znajduje się na polu x,y. Jeżeli nie to przenieś go tam i pokaż
+	String fieldName = getFieldName(x, y);
+	Vector3 fieldPosition =
+			mSceneManager->getSceneNode(fieldName)->getPosition();
+
+	Ogre::AxisAlignedBox box =
+			mSceneManager->getSceneNode(fieldName)->getAttachedObject(fieldName
+					+ "_cube")->getBoundingBox();
+
+	float startX = fieldPosition.x + box.getCenter().x - box.getHalfSize().x;
+	float stopX = fieldPosition.x + box.getCenter().x + box.getHalfSize().x;
+	float startZ = fieldPosition.z + box.getCenter().z - box.getHalfSize().z;
+	float stopZ = fieldPosition.z + box.getCenter().z + box.getHalfSize().z;
+
+	avatar->setPosition(randBetweenAndStepped(startX, stopX, 1),
+			fieldPosition.y, randBetweenAndStepped(startZ, stopZ, 1));
 
 }
 
 Avatar * SimulatorGameLogic::findCreatureAvatar(QString creatureId) {
+	Ogre::SceneNode *avatarNode =
+			(Ogre::SceneNode *) mSceneManager->getRootSceneNode()->getChild(
+					creatureId.toStdString());
 
+	return avatarNode;
 }
 
 void SimulatorGameLogic::animateAvatarMovementToField(Avatar *avatar,
 		unsigned x, unsigned y) {
-
-	if (mSceneManager) {
-		mSceneManager->getSceneNode("CubeNode2")->setScale(
-				randBetweenAndStepped(0.1, 1.0, 0.1), randBetweenAndStepped(
-						0.1, 1.0, 0.1), randBetweenAndStepped(0.1, 1.0, 0.1));
-	}
+	assureAvatarOnField(avatar, x, y);
 }
 
 void SimulatorGameLogic::animateAvatarEating(Avatar *avatar, unsigned articleId) {
@@ -255,4 +298,14 @@ void SimulatorGameLogic::animateAvatarEating(Avatar *avatar, unsigned articleId)
 
 void SimulatorGameLogic::animateAvatarBorn(Avatar *avatar) {
 
+}
+
+void SimulatorGameLogic::animateAvatarRelease(Avatar *avatar) {
+	avatar->hideBoundingBox(true);
+}
+
+Ogre::String SimulatorGameLogic::getFieldName(unsigned x, unsigned y) {
+	std::stringstream str;
+	str << "field" << x << "x" << y;
+	return str.str();
 }

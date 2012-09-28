@@ -1,8 +1,8 @@
 { 
 	"world" : 
 	{
-		"sizeX" : 4,
-		"sizeY" : 4,
+		"sizeX" : 3,
+		"sizeY" : 3,
 		"articles" : [	{"energy" 		: null },	
 						{"water"		: {"food?" : 1} },	
 						{"wood" 		: null },		
@@ -33,7 +33,7 @@
 					{
 						"name"	: "dziesietnik",
 						"activitiesCount" : 10, 
-						"creaturesMax" : 30,
+						"creaturesMax" : 2,
 						"creatures" : 
 						[
 							{
@@ -50,13 +50,13 @@
 												 {"sell" : "flour"} ]
 							}
 						],
-						"generateRandomCreatures" : 20
+						"generateRandomCreatures" : 10
 					}
 				]
 			},
 			{
-				"coordX" : 3,
-				"coordY" : 3,	 
+				"coordX" : 1,
+				"coordY" : 1,	 
 				"stocks" : [ { "water" : { 	"stock" : 0,  
 											"reneval" : 10} },
 							 { "wood"  : { "reneval" : 10} },
@@ -66,7 +66,7 @@
 					{
 						"name"	: "dziesietnik",
 						"activitiesCount" : 10, 
-						"generateRandomCreatures" : 20
+						"generateRandomCreatures" : 10
 					}		
 				]
 			}

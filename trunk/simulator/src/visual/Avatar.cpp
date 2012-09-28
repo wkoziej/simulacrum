@@ -7,10 +7,10 @@
 
 #include "Avatar.h"
 
-Avatar::Avatar()  {
-
+/*Avatar::Avatar(Ogre::SceneNode *node) {
+	mNode = node;
 }
 
 Avatar::~Avatar() {
 
-}
+}*/

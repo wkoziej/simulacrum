@@ -13,10 +13,11 @@
 #include <OgrePrerequisites.h>
 #include "MainMenu.h"
 #include "StyleSettingsWidget.h"
+#include "Avatar.h"
 
 using namespace QtOgre;
 using namespace Ogre;
-class Avatar;
+
 class SimulatorGameLogic: public GameLogic {
 public:
 	enum KeyStates {
@@ -49,6 +50,7 @@ public:
 	void animateAvatarMovementToField(Avatar *avatar, unsigned x, unsigned y);
 	void animateAvatarEating(Avatar *avatar, unsigned articleId);
 	void animateAvatarBorn (Avatar *avatar);
+	void animateAvatarRelease(Avatar *avatar);
 private:
 	QHash<int, KeyStates> mKeyStates;
 	QPoint mLastFrameMousePos;
@@ -75,6 +77,8 @@ private:
 
 	QtOgre::Log* mDemoLog;
 	Ogre::SceneManager* mSceneManager;
+
+	Ogre::String getFieldName (unsigned x, unsigned y);
 };
 
 #endif /* SIMULATORGAMELOGIC_H_ */
