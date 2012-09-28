@@ -193,7 +193,8 @@ GAIncrementalGA::step()
   mom = &(pop->select()); 
   dad = &(pop->select()); 
   stats.numsel += 2;		// keep track of the number of selections
-
+	child1->copy(*mom);
+    child1->copy(*dad);
   if(noffspr == 1){
     c1 = 0;
     if(GAFlipCoin(pCrossover())){

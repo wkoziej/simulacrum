@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <algorithm>
 
-#include <ga/GASimpleGA.h>
 #include "JSON/JSON.h"
 #include "../StateSaver.h"
 #include <QtCore/QThread>
@@ -19,8 +18,7 @@
 #include "Article.h"
 #include "Recipe.h"
 #include "Activity.h"
-
-
+#include "Creature.h"
 using namespace std;
 
 LoggerPtr World::logger(Logger::getLogger("world"));
@@ -31,8 +29,6 @@ unsigned World::WIDTH = 1;
 std::vector<std::string> World::ARTICLES;
 std::vector<Article *> World::articles;
 std::vector<Recipe *> World::recipes;
-
-
 
 int World::getArticleIndex(std::wstring articleName) {
 	int index = -1;
@@ -47,30 +43,30 @@ int World::getArticleIndex(std::wstring articleName) {
 
 void World::connectCreatureSignals(Creature *creature) {
 	/*
-	creature ->connect(
-	creature,
-			SIGNAL(creatureBorn (QString, unsigned, unsigned)),
-			VisualizationController::getPtr(),
-			SLOT(assignAvatarToNewCreature (QString, unsigned, unsigned ))
-	);
-	creature ->connect(
-	creature,
-			SIGNAL(creatureDie (QString, unsigned, unsigned)),
-			VisualizationController::getPtr(),
-			SLOT(releaseAvatar (QString, unsigned, unsigned ))
-	);
-	creature ->connect(
-			creature,
-			SIGNAL(creatureMoved (QString , unsigned , unsigned , unsigned , unsigned )),
-			VisualizationController::getPtr(),
-			SLOT(changeCreaturePosition (QString , unsigned , unsigned , unsigned , unsigned ))
-	);
-	creature ->connect(
-	creature, SIGNAL(creatureAte (QString, unsigned)),
-			VisualizationController::getPtr(),
-			SLOT(feedCreature (QString, unsigned ))
-	);
-	*/
+	 creature ->connect(
+	 creature,
+	 SIGNAL(creatureBorn (QString, unsigned, unsigned)),
+	 VisualizationController::getPtr(),
+	 SLOT(assignAvatarToNewCreature (QString, unsigned, unsigned ))
+	 );
+	 creature ->connect(
+	 creature,
+	 SIGNAL(creatureDie (QString, unsigned, unsigned)),
+	 VisualizationController::getPtr(),
+	 SLOT(releaseAvatar (QString, unsigned, unsigned ))
+	 );
+	 creature ->connect(
+	 creature,
+	 SIGNAL(creatureMoved (QString , unsigned , unsigned , unsigned , unsigned )),
+	 VisualizationController::getPtr(),
+	 SLOT(changeCreaturePosition (QString , unsigned , unsigned , unsigned , unsigned ))
+	 );
+	 creature ->connect(
+	 creature, SIGNAL(creatureAte (QString, unsigned)),
+	 VisualizationController::getPtr(),
+	 SLOT(feedCreature (QString, unsigned ))
+	 );
+	 */
 }
 
 class CreatureActivityThread: public QThread {
@@ -83,12 +79,11 @@ private:
 };
 
 CreatureActivityThread::CreatureActivityThread(Creature *creature) :
-	QThread() {
+		QThread() {
 	this->creature = creature;
 }
 
 CreatureActivityThread::~CreatureActivityThread() {
-	// TODO Auto-generated destructor stub
 }
 
 void CreatureActivityThread::run() {
@@ -103,6 +98,16 @@ void CreatureActivityThread::run() {
 	}
 }
 
+class CreatureGetOldFieldVisitor : public CreaturesOnFieldVisitor {
+public:
+
+	virtual void visit(Creature *creature, Field *field, CreaturesPopulation *,
+			unsigned x, unsigned y)  {
+		creature->increaseAge();
+	}
+
+};
+
 class ReproductionVisitor: public PopulationOnFieldVisitor {
 private:
 	// Logowanie
@@ -110,52 +115,60 @@ private:
 public:
 	virtual void visit(CreaturesPopulation *population, Field *field,
 			unsigned x, unsigned y) {
-		LOG4CXX_DEBUG(logger, "Population size before reproduction: " << population->size());
-		int c;
-		int psize = population->size();
-		for (c = 0; c < psize; c++) {
-			Creature * creature = (Creature *) &population->individual(c);
-			creature->increaseAge();
-			LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c));
-		}
 
-		if (population->size()) {
-			GASimpleGA simpleGA(*population);
-			simpleGA.initialize(time(0));
-			simpleGA.crossover(GARealTwoPointCrossover);
-			simpleGA.pMutation(MUTATION);
-			simpleGA.pCrossover(CROSSOVER);
-			simpleGA.step();
-			GAPopulation p = simpleGA.population();
-			psize = p.size() / 2;
-			for (c = 0; c < psize; c++) {
-				Creature *theBest = new Creature((Creature&) p.best(c));
-				population->add(theBest);
-				LOG4CXX_DEBUG(logger, " N [" << c << "]: " << p.individual(c));
-			}
-		}
+		LOG4CXX_DEBUG(logger,
+				"Population size before reproduction: " << population->size());
 
-		psize = population->size();
-		for (c = psize - 30; c > 0; c--) {
-			Creature * creature = (Creature *) &population->worst();
-			if (creature->getAge() > 0) {
-				creature->prepareToDie();
-				population->remove(creature);
-				// disconnect all signals
-				// delete creature
+		population->reproduce();
+		/*
 
-			}
-		}
+		 int c;
+		 int psize = population->size();
+		 for (c = 0; c < psize; c++) {
+		 Creature * creature = (Creature *) &population->individual(c);
+		 creature->increaseAge();
+		 LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c));
+		 }
 
+		 if (population->size()) {
+		 GASimpleGA simpleGA(*population);
+		 simpleGA.initialize(time(0));
+		 simpleGA.crossover(GARealTwoPointCrossover);
+		 simpleGA.pMutation(MUTATION);
+		 simpleGA.pCrossover(CROSSOVER);
+		 simpleGA.step();
+		 GAPopulation p = simpleGA.population();
+		 psize = p.size() / 2;
+		 for (c = 0; c < psize; c++) {
+		 Creature *theBest = new Creature((Creature&) p.best(c));
+		 population->add(theBest);
+		 LOG4CXX_DEBUG(logger, " N [" << c << "]: " << p.individual(c));
+		 }
+		 }
 
-		LOG4CXX_DEBUG(logger, "Population size after reproduction: " << population->size());
+		 psize = population->size();
+		 for (c = psize - 30; c > 0; c--) {
+		 Creature * creature = (Creature *) &population->worst();
+		 if (creature->getAge() > 0) {
+		 creature->prepareToDie();
+		 population->remove(creature);
+		 // disconnect all signals
+		 // delete creature
+
+		 }
+		 }
+		 */
+
+		LOG4CXX_DEBUG(logger,
+				"Population size after reproduction: " << population->size());
 	}
 };
 
 LoggerPtr ReproductionVisitor::logger(Logger::getLogger("ReproductionVisitor"));
-/*
 
- class DyingVisitor: public PopulationOnFieldVisitor {
+// TODO: Wyliczanie wartości powinno zadziać sie autoamtycznie... dlatego komentuję
+/*
+ class ObjectiveEvaluatorVisitor: public PopulationOnFieldVisitor {
 
  private:
  // Logowanie
@@ -163,47 +176,14 @@ LoggerPtr ReproductionVisitor::logger(Logger::getLogger("ReproductionVisitor"));
  public:
  void visit(CreaturesPopulation *population, Field *field, unsigned x,
  unsigned y) {
- int psize = population->size();
-
- for (int c = 0; c < population->size() && population->size() > 2;) {
- //Creature *creature = (Creature *) &population->individual(c);
- // Jezeli wartosc funkcji celu jest mniejsza od sredniej populacji, to wyrzuc osobnika z populacji
- // Pomijaj dzieci
- /*float objAvg = population->objectiveAvarage();
- float creatureObjVal = population->individual(c).score();
- LOG4CXX_DEBUG(logger, "population->individual("<<c<<") " << population->individual(c) << ", objective: " << creatureObjVal);
- if (objAvg > creatureObjVal && creature->getAge() > 0) {
- population->remove(&(population->individual(c)));
- } else {
- c++;
- }
-
- }
- if (psize > 7) {
- population->remove(&population->worst());
- }
- LOG4CXX_DEBUG(logger, "population size get smaller from " << psize << " to " << population->size ());
+ population->evaluate(gaTrue);
+ LOG4CXX_DEBUG(logger, L"population " << population->getName() << L" evaluated");
  }
  };
 
- LoggerPtr DyingVisitor::logger(Logger::getLogger("DyingVisitor"));
+ LoggerPtr ObjectiveEvaluatorVisitor::logger(Logger::getLogger(
+ "ObjectiveEvaluatorVisitor"));
  */
-
-class ObjectiveEvaluatorVisitor: public PopulationOnFieldVisitor {
-
-private:
-	// Logowanie
-	static LoggerPtr logger;
-public:
-	void visit(CreaturesPopulation *population, Field *field, unsigned x,
-			unsigned y) {
-		population->evaluate(gaTrue);
-		LOG4CXX_DEBUG(logger, L"population " << population->getName() << L" evaluated");
-	}
-};
-
-LoggerPtr ObjectiveEvaluatorVisitor::logger(Logger::getLogger(
-		"ObjectiveEvaluatorVisitor"));
 
 class CreatureActivityVisitor: public PopulationOnFieldVisitor {
 private:
@@ -215,28 +195,24 @@ public:
 		std::list<CreatureActivityThread *> threadsToWait;
 		unsigned popSize = population->size();
 		for (unsigned i = 0; i < popSize; i++) {
-			CreatureActivityThread *activityThread =
-					new CreatureActivityThread(
-							(Creature*) &population->individual(i));
+			CreatureActivityThread *activityThread = new CreatureActivityThread(
+					(Creature*) &population->individual(i));
 			activityThread->start(QThread::NormalPriority);
 			threadsToWait.push_back(activityThread);
 		}
 
-
 		while (threadsToWait.size()) {
-			LOG4CXX_DEBUG(logger, "waiting for all threads, lost = " << threadsToWait.size());
+			LOG4CXX_DEBUG(logger,
+					"waiting for all threads, lost = " << threadsToWait.size());
 			threadsToWait.front()->wait();
 			threadsToWait.pop_front();
 		}
 
-
-
-
 		LOG4CXX_TRACE(logger, "all threads completed...");
 	}
 };
-LoggerPtr CreatureActivityVisitor::logger(Logger::getLogger(
-		"CreatureActivityVisitor"));
+LoggerPtr CreatureActivityVisitor::logger(
+		Logger::getLogger("CreatureActivityVisitor"));
 
 class AnybodyOutThereVisitor: public CreaturesOnFieldVisitor {
 public:
@@ -250,36 +226,6 @@ public:
 		anybody = true;
 	}
 };
-
-/*void World::createFieldsAndPopulations(unsigned X, unsigned Y) {
- World *w = World::getWorld();
- for (unsigned x = 0; x < X; x++) {
- FieldsVector fVector;
- for (unsigned y = 0; y < Y; y++) {
- Field *field = new Field();
- wstringstream name;
- name << "random" << x << "x" << y;
- NamedPopulation randomPopulationPair(name.str(),
- new CreaturesPopulation());
- field->populations.insert(randomPopulationPair);
- fVector.push_back(field);
- }
- w->fields.push_back(fVector);
- }
-
- }*/
-
-/*World *World::createRandomWorld(unsigned X, unsigned Y) {
- if (X < 1 || Y < 1) {
- LOG4CXX_FATAL(logger, "Incorrect dimensions");
- exit(1);
- }
- World *world = World::getWorld();
- world->createFieldsAndPopulations(X, Y);
- world->initializeRandomly();
- world->createRandomCreatures();
- return world;
- }*/
 
 World *World::readWorldFromFile(const char *fileName) {
 	Activity::init();
@@ -296,7 +242,7 @@ World *World::readWorldFromFile(const char *fileName) {
 		}
 		LOG4CXX_DEBUG(logger, "fileContent:" << fileContent);
 		JSONValue *value = JSON::Parse(fileContent.c_str());
-		assert (value != NULL);
+		assert(value != NULL);
 		if (value != NULL) {
 			JSONObject root = value->AsObject();
 			root = root[L"world"]->AsObject();
@@ -320,8 +266,9 @@ World *World::readWorldFromFile(const char *fileName) {
 				World::ARTICLES.push_back(name);
 				JSONObject articleProps = article.begin()->second->AsObject();
 				Article *articleObject = new Article();
-				articleObject->setFood(articleProps.count(L"isFood?") > 0
-						&& articleProps.at(L"isFood?")->AsBool());
+				articleObject->setFood(
+						articleProps.count(L"isFood?") > 0
+								&& articleProps.at(L"isFood?")->AsBool());
 				World::articles.push_back(articleObject);
 			}
 
@@ -332,7 +279,7 @@ World *World::readWorldFromFile(const char *fileName) {
 				JSONObject recipe = (*r)->AsObject();
 				std::wstring articleName = recipe.begin()->first;
 				int articleIndex = World::getArticleIndex(articleName);
-				assert (articleIndex != -1);
+				assert(articleIndex != -1);
 				Recipe *recipeObject = new Recipe();
 				UnsignedVector ingredients;
 				ingredients.assign(World::NO_OF_ARTICLES, 0);
@@ -341,9 +288,9 @@ World *World::readWorldFromFile(const char *fileName) {
 				for (; g != recipeIngredients.end(); g++) {
 					JSONObject ingredient = (*g)->AsObject();
 					std::wstring ingredientName = ingredient.begin()->first;
-					int ingredientIndex =
-							World::getArticleIndex(ingredientName);
-					assert (ingredientIndex != -1);
+					int ingredientIndex = World::getArticleIndex(
+							ingredientName);
+					assert(ingredientIndex != -1);
 					JSONValue value = ingredient.begin()->second->AsNumber();
 					ingredients.at(ingredientIndex) = value.AsNumber();
 					recipeObject->setIngredientsVector(ingredients);
@@ -367,13 +314,14 @@ World *World::readWorldFromFile(const char *fileName) {
 				unsigned fieldX = JSONfield.at(L"coordX")->AsNumber();
 				unsigned fieldY = JSONfield.at(L"coordY")->AsNumber();
 				// Czy gdzieś się nie powtórzyliśmy?
-				assert (world->fields.at(fieldX).at(fieldY)== NULL);
+				assert(world->fields.at(fieldX).at(fieldY)== NULL);
 				field = new Field(JSONfield);
 				if (JSONfield.count(L"populations") > 0) {
 					JSONArray populations =
 							JSONfield.at(L"populations")->AsArray();
 					JSONArray::iterator population = populations.begin();
-					LOG4CXX_DEBUG(logger, "loading populations : " << populations.size());
+					LOG4CXX_DEBUG(logger,
+							"loading populations : " << populations.size());
 					for (; population != populations.end(); population++) {
 						CreaturesPopulation *populationObject =
 								new CreaturesPopulation(field,
@@ -381,6 +329,7 @@ World *World::readWorldFromFile(const char *fileName) {
 										fieldY);
 						// populations.insert(namedPopulation)
 						field->addPopulation(populationObject);
+						// Dodajemy do naszego algorytmu genetycznego
 					}
 				}
 				assert(field != NULL);
@@ -400,27 +349,15 @@ World *World::readWorldFromFile(const char *fileName) {
 	}
 	return world;
 }
-/*
- void World::initializeRandomly() {
- LOG4CXX_TRACE(logger, "initializeRandomly");
- FieldsMatrix::iterator i = getWorld()->fields.begin();
- for (; i != getWorld()->fields.end(); i++) {
- FieldsVector::iterator j = i->begin();
- for (; j != i->end(); j++) {
- (*j)->initializeRandomly();
- }
- }
- }*/
-
-/*void World::creaturesDying() {
- LOG4CXX_TRACE(logger, "creaturesDying");
- PopulationOnFieldVisitor * visitor = new DyingVisitor();
- iteratePopulationOnFields(visitor);
- delete visitor;
- }*/
 
 void World::creaturesReproducting() {
 	LOG4CXX_TRACE(logger, "creaturesReproducting");
+	// TODO: Tutaj wszystkie populacje powinny wykonać jeden krok wprzód
+	// - narodziny nowych osobników
+	// - migracja
+	// - umieranie -> wypieranie przez nowych
+
+	// GAIncrementalGA
 	PopulationOnFieldVisitor *visitor = new ReproductionVisitor();
 	iteratePopulationOnFields(visitor);
 	delete visitor;
@@ -435,6 +372,9 @@ void World::nextYear() {
 			(*j)->renovateResources();
 		}
 	}
+	CreaturesOnFieldVisitor *visitor = new CreatureGetOldFieldVisitor ();
+	iterateCreaturesOnFields(visitor);
+	delete visitor;
 }
 
 bool World::creaturesExists() {
@@ -507,6 +447,7 @@ CreaturesPopulation *World::findOrCreatePopulation(
 	if (population == NULL) {
 		population = new CreaturesPopulation(species);
 		field->addPopulation(population);
+		delete population;
 	}
 	return population;
 }

@@ -30,7 +30,6 @@ public:
 };
 
 Market::Market() {
-	// TODO Auto-generated constructor stub
 	prv = new MarketPrivate();
 	for (unsigned i = 0; i < World::NO_OF_ARTICLES; i++) {
 		prv->stocks.push_back(new QSemaphore(0));
@@ -42,7 +41,6 @@ Market::Market() {
 }
 
 Market::~Market() {
-	// TODO Auto-generated destructor stub
 	delete prv;
 }
 
