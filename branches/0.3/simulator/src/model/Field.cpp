@@ -75,22 +75,6 @@ void Field::initializeEmptyField() {
 	}
 }
 
-/*void Field::initializeRandomly() {
- LOG4CXX_TRACE(logger, "initializeRandomly");
- moveLag = (random() / (float) RAND_MAX) * MAX_MOVE_LAG;
- LOG4CXX_TRACE(logger, "moveLag: " << moveLag);
- resourceQuantities.assign(World::NO_OF_ARTICLES, 0);
- UnsignedVector::iterator f;
- UnsignedVector::iterator mP = maxProductsQuantities.begin();
- UnsignedVector::iterator mR = maxResourcesQuantities.begin();
- for (f = articleRenewal.begin(); f != articleRenewal.end(); f++, mP++, mR++) {
- *f = (random() / (float) RAND_MAX) * MAX_RENEWAL;
- *mP = (random() / (float) RAND_MAX) * MAX_PRODUCT_QUANT;
- *mR = (random() / (float) RAND_MAX) * MAX_RESOURCE_QUANT;
- LOG4CXX_DEBUG(logger, "resourceRenewal [" << f - articleRenewal.begin( ) << "]: " << *f);
- }
- }*/
-
 void Field::renovateResources() {
 	LOG4CXX_TRACE(logger, "renovateResources");
 	UnsignedVector::iterator r = prv->articleRenewal.begin();
@@ -103,52 +87,6 @@ void Field::renovateResources() {
 	}
 
 }
-/*
-
- float Field::getArticleQuantity(unsigned index) const {
- return resourceQuantities.at(index);
- }
-
- float Field::productStock(int i) const {
- float kept = 0.0;
- PopulationsMap::const_iterator population = populations.begin();
- for (; population != populations.end(); population++) {
- kept += population->second->keptProductSum(i);
- }
- return kept;
- }
-
- float Field::productNeeds(int i) const {
- float needs = 0.0;
- PopulationsMap::const_iterator population = populations.begin();
- for (; population != populations.end(); population++) {
- needs += population->second->productNeeds(i);
- }
- return needs;
- }
-
- float Field::resourceNeeds(int i) const {
- PopulationsMap::const_iterator population = populations.begin();
- float needs = 0.0;
- for (; population != populations.end(); population++) {
- needs += population->second->resourceNeeds(i);
- }
- return needs;
- }
-
- float Field::productPrice(int i) const {
- // Wartość wytworzonych produktów
- float price = productPriceCache.at(i);
- return price;
- }
-
- float Field::resourcePrice(int i) const {
- float price = resourcePriceCache.at(i);
- return price;
- }
-
-
- */
 
 const Recipe *Field::getRecipe(unsigned articleId) const {
 	// Jeżeli nie ma recepty związanej z polem to weź ogólnoświatową
@@ -160,15 +98,18 @@ Market *Field::getMarket() {
 }
 
 bool Field::tryTakeArticle(unsigned articleId) {
+	LOG4CXX_DEBUG(logger, "trying to take article " << articleId << " from field " << this);
 	return prv->stocks.at(articleId)->tryAcquire();
 }
 
 unsigned Field::articleStock(unsigned articleId) {
+	LOG4CXX_DEBUG(logger, " checking stock of article " << articleId << " on field " << this);
 	return prv->stocks.at(articleId)->available();
 }
 
 void Field::putArticle(unsigned articleId, unsigned quantity) {
 	assert (quantity < 10000);
+	LOG4CXX_DEBUG(logger, " putting article " << articleId << " in field " << this);
 	prv->stocks.at(articleId)->release(quantity);
 }
 
@@ -178,6 +119,7 @@ void Field::addPopulation(CreaturesPopulation *population) {
 }
 
 CreaturesPopulation *Field::getPopulation(std::wstring name) {
+	LOG4CXX_DEBUG(logger, " searching population " << wstring2string(name));
 	PopulationsMap::iterator i = prv->populations.find(name);
 	if (i != prv->populations.end()) {
 		return i->second;
@@ -193,71 +135,13 @@ std::list<CreaturesPopulation *> Field::getPopulations() {
 	}
 	return populationList;
 }
-/*
- float Field::updateProductPrice(int i) {
- float price = productPriceCache.at(i);
- // Jaka ilosc produktu jest dostepna w zapasach populacji
- float kept = productStock(i);
- float needs = productNeeds(i);
- if (kept > 0)
- price = needs / kept;
- LOG4CXX_DEBUG(logger, "product [" << i << "]: kept = " << kept << ", needs = " << needs << ", price = " << price);
- productPriceCache.at(i) = price;
- return price;
- }
-
- float Field::updateResourcePrice(int i) {
- float price = resourcePriceCache.at(i);
- // Jaka ilosc produktu jest dostepna w zapasach populacji
- PopulationsMap::const_iterator population = populations.begin();
- float availabble = getArticleQuantity(i);
- float needs = resourceNeeds(i);
- LOG4CXX_DEBUG(logger, "resource [" << i << "]: available = " << availabble << ", needs = " << needs);
- if (availabble > 0)
- price = needs / availabble;
- resourcePriceCache.at(i) = price;
- return price;
- }
- */
-
-/*void Field::increaseProductQuantity(unsigned productIndex,
- float productQuantity) {
- LOG4CXX_DEBUG(logger, "productQuantity [" << productIndex << "] incresed from " << productsQuantities.at(productIndex) << " to " << productsQuantities.at(productIndex) + productQuantity);
- productsQuantities.at(productIndex) += productQuantity;
- if ( productsQuantities.at(productIndex) > maxProductsQuantities.at(productIndex) ) {
- productsQuantities.at(productIndex) = maxProductsQuantities.at(productIndex);
- }
- }*/
 
 void Field::decreaseArticleQuantity(unsigned resourceIndex, float resourceUsed) {
 	LOG4CXX_DEBUG(logger, "resourceQuantities [" << resourceIndex << "] decreased from "
-			<< prv->stocks.at(resourceIndex)->available() << " to " << prv->stocks.at(resourceIndex)->available() - resourceUsed);
+			<< prv->stocks.at(resourceIndex)->available() << " to " << prv->stocks.at(resourceIndex)->available() - resourceUsed << " on field " << this);
 	prv->stocks.at(resourceIndex)->acquire(resourceUsed);
 	assert(prv->stocks.at(resourceIndex)->available() >= 0);
 }
-/*
- float Field::getProductQuantity(unsigned productIndex) {
- return productsQuantities.at(productIndex);
- }*/
-
-/*void Field::decreaseProductQuantity(float productEaten, unsigned productIndex) {
- productsQuantities.at(productIndex) -= productEaten;
- }*/
-
-/*
- bool Field::getOut(float &velocity) {
- bool isOut = false;
- LOG4CXX_DEBUG(logger, "velocity " <<velocity << ", moveLag: " << moveLag);
- if (moveLag > velocity) {
- velocity = 0;
- } else {
- isOut = true;
- velocity -= moveLag;
- }
- LOG4CXX_DEBUG(logger, " isOut:" << isOut);
- return isOut;
- }
- */
 
 Field::~Field() {
 	delete prv->market;

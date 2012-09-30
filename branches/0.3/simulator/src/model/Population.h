@@ -10,35 +10,46 @@
 #include "JSON/JSONValue.h"
 #include <ga/GAPopulation.h>
 #include <log4cxx/logger.h>
-#include <ga/GAIncGA.h>
+#include <qt4/QtCore/qmutex.h>
+#include "GeneticAlgorithm.h"
+#include <list>
+
 class Field;
+class Creature;
+
+typedef std::vector<Creature *> Creatures;
+
 using namespace log4cxx;
 
-class CreaturesPopulation : public GAPopulation
+class CreaturesPopulation //: public GAPopulation
 {
 public:
+
+	CreaturesPopulation(std::wstring name, int activitiesCount,
+			Creature *oneCreature);
 	CreaturesPopulation(const CreaturesPopulation *species);
-	CreaturesPopulation(Field *field, const JSONObject &population, unsigned x, unsigned y);
+	CreaturesPopulation(Field *field, const JSONObject &population, unsigned x,
+			unsigned y);
+
 	void reproduce();
 	virtual ~CreaturesPopulation();
-	//float productNeeds(int i);
-	//float resourceNeeds(int i);
-	float objectiveAvarage();
 	std::wstring getName() const {
 		return name;
 	}
 	;
-	//float keptProductSum(int i);
-	//void updateProductStock (int i, float delta);
-	void loadCreatures(const JSONObject &population);
 	unsigned getCreatureActivitiesCount() const;
-/*
-	unsigned get1ArgActivitiesRoom() const;
-	unsigned get2ArgActivitiesRoom() const;
-
-*/
-	//int getCreaturesTalentsCount () const { return creaturesTalentsCount; }
-	//int getCreaturesNeedsCount () const { return creaturesNeedsCount; }
+	const int size() const {
+		return creatures.size();
+	}
+	void remove(Creature *creatureToRemove);
+	void add(Creature *creatureToAdd);
+	Creatures creatureList() const {
+		return creatures;
+	}
+protected:
+	const Creature *selectCreature() const;
+	void sexualCrossover(const Creature *mom, const Creature *dad,
+			Creature *sister, Creature *brother) const;
 private:
 	//Field *field;
 	//std::vector<float> productsStock;
@@ -48,7 +59,9 @@ private:
 	//int creaturesNeedsCount;
 	// Logowanie
 	static LoggerPtr logger;
-	GAIncrementalGA *ga;
+	//GeneticAlgorithm *ga;
+	Creatures creatures;
+	QMutex polulationChange;
 };
 
 typedef std::pair<std::wstring, CreaturesPopulation *> NamedPopulation;

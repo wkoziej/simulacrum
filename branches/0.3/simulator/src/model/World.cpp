@@ -76,7 +76,12 @@ public:
 	void run();
 private:
 	Creature *creature;
+	// Logowanie
+	static LoggerPtr logger;
 };
+
+LoggerPtr CreatureActivityThread::logger(
+		Logger::getLogger("CreatureActivityThread"));
 
 CreatureActivityThread::CreatureActivityThread(Creature *creature) :
 		QThread() {
@@ -87,28 +92,33 @@ CreatureActivityThread::~CreatureActivityThread() {
 }
 
 void CreatureActivityThread::run() {
-	// Wyznacz czynność do wykonania i
-	//this->creature->doAllActivities();
 	ActivityList activities = CreatureActivity::getCreatureActivities(creature);
 	ActivityList::iterator activity = activities.begin();
+	LOG4CXX_DEBUG(logger,
+			"creature " << creature->getId().toStdString() << " starting activities ");
 	for (; activity != activities.end(); activity++) {
+		this->msleep(10);
 		(*activity)->make();
-		this->msleep(100);
+		// TODO Chyba nie ma potrzeby spać....
+		this->msleep(10);
 		delete (*activity);
 	}
+	LOG4CXX_DEBUG(logger,
+			"creature " << creature->getId().toStdString() << " ended activities ");
+
 }
 
-class CreatureGetOldFieldVisitor : public CreaturesOnFieldVisitor {
+class CreatureGetOldFieldVisitor: public CreaturesOnFieldVisitor {
 public:
 
 	virtual void visit(Creature *creature, Field *field, CreaturesPopulation *,
-			unsigned x, unsigned y)  {
+			unsigned x, unsigned y) {
 		creature->increaseAge();
 	}
 
 };
 
-class ReproductionVisitor: public PopulationOnFieldVisitor {
+class ReproductionAndMingrationVisitor: public PopulationOnFieldVisitor {
 private:
 	// Logowanie
 	static LoggerPtr logger;
@@ -118,7 +128,6 @@ public:
 
 		LOG4CXX_DEBUG(logger,
 				"Population size before reproduction: " << population->size());
-
 		population->reproduce();
 		/*
 
@@ -164,26 +173,8 @@ public:
 	}
 };
 
-LoggerPtr ReproductionVisitor::logger(Logger::getLogger("ReproductionVisitor"));
-
-// TODO: Wyliczanie wartości powinno zadziać sie autoamtycznie... dlatego komentuję
-/*
- class ObjectiveEvaluatorVisitor: public PopulationOnFieldVisitor {
-
- private:
- // Logowanie
- static LoggerPtr logger;
- public:
- void visit(CreaturesPopulation *population, Field *field, unsigned x,
- unsigned y) {
- population->evaluate(gaTrue);
- LOG4CXX_DEBUG(logger, L"population " << population->getName() << L" evaluated");
- }
- };
-
- LoggerPtr ObjectiveEvaluatorVisitor::logger(Logger::getLogger(
- "ObjectiveEvaluatorVisitor"));
- */
+LoggerPtr ReproductionAndMingrationVisitor::logger(
+		Logger::getLogger("ReproductionVisitor"));
 
 class CreatureActivityVisitor: public PopulationOnFieldVisitor {
 private:
@@ -192,23 +183,46 @@ private:
 public:
 	void visit(CreaturesPopulation *population, Field *field, unsigned x,
 			unsigned y) {
-		std::list<CreatureActivityThread *> threadsToWait;
-		unsigned popSize = population->size();
-		for (unsigned i = 0; i < popSize; i++) {
-			CreatureActivityThread *activityThread = new CreatureActivityThread(
-					(Creature*) &population->individual(i));
-			activityThread->start(QThread::NormalPriority);
-			threadsToWait.push_back(activityThread);
-		}
 
-		while (threadsToWait.size()) {
+		Creatures cList = population->creatureList();
+		for (Creatures::iterator i = cList.begin(); i != cList.end(); i++) {
+			Creature *creature = *i;
+
+			ActivityList activities = CreatureActivity::getCreatureActivities(
+					creature);
+			ActivityList::iterator activity = activities.begin();
 			LOG4CXX_DEBUG(logger,
-					"waiting for all threads, lost = " << threadsToWait.size());
-			threadsToWait.front()->wait();
-			threadsToWait.pop_front();
-		}
+					"creature " << creature->getId().toStdString() << " starting activities ");
+			for (; activity != activities.end(); activity++) {
+				(*activity)->make();
+				// TODO Chyba nie ma potrzeby spać....
+				delete (*activity);
+			}
+			LOG4CXX_DEBUG(logger,
+					"creature " << creature->getId().toStdString() << " ended activities ");
 
-		LOG4CXX_TRACE(logger, "all threads completed...");
+		}
+		/*
+		 std::list<CreatureActivityThread *> threadsToWait;
+
+		 CreatureList l = population->creatureList();
+		 CreatureList::iterator i = l.begin();
+		 for (; i != l.end(); i++) {
+		 CreatureActivityThread *activityThread = new CreatureActivityThread(
+		 *i);
+		 activityThread->start(QThread::NormalPriority);
+		 threadsToWait.push_back(activityThread);
+		 }
+
+		 while (threadsToWait.size()) {
+		 LOG4CXX_DEBUG(logger,
+		 "waiting for all threads, threads count = " << threadsToWait.size());
+		 threadsToWait.front()->wait();
+		 threadsToWait.pop_front();
+		 }
+		 LOG4CXX_TRACE(logger, "all threads completed...");
+
+		 */
 	}
 };
 LoggerPtr CreatureActivityVisitor::logger(
@@ -328,8 +342,9 @@ World *World::readWorldFromFile(const char *fileName) {
 										(*population)->AsObject(), fieldX,
 										fieldY);
 						// populations.insert(namedPopulation)
+						LOG4CXX_DEBUG(logger,
+								"adding population : " << populationObject);
 						field->addPopulation(populationObject);
-						// Dodajemy do naszego algorytmu genetycznego
 					}
 				}
 				assert(field != NULL);
@@ -358,7 +373,7 @@ void World::creaturesReproducting() {
 	// - umieranie -> wypieranie przez nowych
 
 	// GAIncrementalGA
-	PopulationOnFieldVisitor *visitor = new ReproductionVisitor();
+	PopulationOnFieldVisitor *visitor = new ReproductionAndMingrationVisitor();
 	iteratePopulationOnFields(visitor);
 	delete visitor;
 }
@@ -372,7 +387,7 @@ void World::nextYear() {
 			(*j)->renovateResources();
 		}
 	}
-	CreaturesOnFieldVisitor *visitor = new CreatureGetOldFieldVisitor ();
+	CreaturesOnFieldVisitor *visitor = new CreatureGetOldFieldVisitor();
 	iterateCreaturesOnFields(visitor);
 	delete visitor;
 }
@@ -386,6 +401,22 @@ bool World::creaturesExists() {
 }
 
 void World::step(StateSaver *stateSaver) {
+/*
+	int x = fields.size();
+	int y = fields.begin()->size();
+
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+			Field *f = fields.at(i).at(j);
+			for (unsigned a = 0; a < World::NO_OF_ARTICLES; a++) {
+				LOG4CXX_DEBUG(logger, "Test article " << a << " from field " << f);
+				f->tryTakeArticle(a);
+			}
+		}
+	}
+
+	*/
+
 	PopulationOnFieldVisitor * visitor = new CreatureActivityVisitor();
 	iteratePopulationOnFields(visitor);
 	delete visitor;
@@ -440,14 +471,31 @@ void World::visitFields(FieldsVisitor *fieldVisitor) {
 
 }
 
-CreaturesPopulation *World::findOrCreatePopulation(
-		const CreaturesPopulation *species, int x, int y) {
+CreaturesPopulation *World::insertCreatureToXYPopulation(std::wstring name,
+		int activitiesCount, int x, int y, Creature *creature) {
 	Field *field = fields.at(x).at(y);
-	CreaturesPopulation *population = field->getPopulation(species->getName());
+	CreaturesPopulation *population = field->getPopulation(name);
 	if (population == NULL) {
-		population = new CreaturesPopulation(species);
-		field->addPopulation(population);
-		delete population;
+		LOG4CXX_TRACE(logger,
+				"creature " << creature->getId().toStdString() << " locking (" << x << ", " << y << ")");
+		populationCreationMutex.lock();
+		// Raz jeszcze po zalokowaniu
+		population = field->getPopulation(name);
+		if (population == NULL) {
+			LOG4CXX_TRACE(logger,
+					"creating population on field (" << x << ", " << y <<") for creature " << creature->getId().toStdString());
+			population = new CreaturesPopulation(name, activitiesCount,
+					creature);
+			field->addPopulation(population);
+			LOG4CXX_TRACE(logger, "Population created");
+		}
+		LOG4CXX_TRACE(logger,
+				"creature " << creature->getId().toStdString() << " unlocking (" << x << ", " << y << ")");
+		populationCreationMutex.unlock();
+	} else {
+		LOG4CXX_TRACE(logger,
+				"creature " << creature->getId().toStdString() << ", T:" << creature << " inserted into population " << population);
+		population->add(creature);
 	}
 	return population;
 }

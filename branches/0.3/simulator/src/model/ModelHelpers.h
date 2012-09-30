@@ -15,6 +15,7 @@
 
 std::string wstring2string (std::wstring str);
 float randBetweenAndStepped(float min, float max, float step);
+bool flipCoin(float p);
 
 class CreaturesOnFieldVisitor {
 public:
@@ -56,6 +57,7 @@ public:
 class FieldsVisitor {
 public:
 	virtual void visit(Field *field) = 0;
+	virtual ~FieldsVisitor() {};
 };
 
 
