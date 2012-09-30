@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 		PropertyConfigurator::configure("log.properties");
 	}
 
-	int i = 1298309352;//time(0); //time(0);
+	int i = 1298309352; //time(0); //time(0);
 	srand(i); //1298309352
 	World *world = World::readWorldFromFile("world.json");
 
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 			world->nextYear();
 			stateSaver.save("nexYear");
 			char i;
-		//	cin >> i;
+			cin >> i;
 		}
 
 	}

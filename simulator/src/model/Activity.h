@@ -34,7 +34,7 @@ public:
 		COUNT
 	};
 
-	Activity();
+	Activity(std::string activityId);
 	virtual ~Activity();
 	static void init ();
 	static int getIndex(Activity::Kind kind);
@@ -42,9 +42,12 @@ public:
 	static std::string getName (Activity::Kind kind);
 	static std::string getName(int index);
 	static bool hasArgument(int index);
-
-private:
+	std::string activityId() { return id; };
+protected:
 	static LoggerPtr logger;
+	std::string id;
+private:
+
 	static std::vector<std::string> names;
 	static std::vector<bool> argumentFlag;
 };
@@ -57,14 +60,14 @@ typedef std::list<CreatureActivity *> ActivityList;
 class CreatureActivity: public Activity {
 protected:
 	Creature *creature;
-	const Field *field;
+	//const Field *field;
 	UnsignedVector arguments;
 public:
 	virtual void make() = 0;
 	static ActivityList getCreatureActivities(Creature *creature);
 protected:
 	static CreatureActivity *create(Creature *creature, unsigned activityIndex);
-	CreatureActivity(Creature *creature, UnsignedVector &arguments);
+	CreatureActivity(Creature *creature, UnsignedVector &arguments, std::string activityId);
 
 };
 #endif /* ACTIVITY_H_ */

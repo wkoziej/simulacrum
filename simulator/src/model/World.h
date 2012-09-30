@@ -12,7 +12,7 @@
 //#include <list>
 #include <log4cxx/logger.h>
 #include "ModelHelpers.h"
-
+#include <QtCore/QMutex>
 //using namespace std;
 //using namespace log4cxx;
 class StateSaver;
@@ -48,12 +48,13 @@ public:
 	bool creaturesExists();
 	void step(StateSaver *stateSaver);
 	/*void countResourcesPrices();
-	void countProductsPrices();
-	*/
-	static bool isFood (unsigned articleId);
+	 void countProductsPrices();
+	 */
+	static bool isFood(unsigned articleId);
 
-	CreaturesPopulation *findOrCreatePopulation(
-			const CreaturesPopulation *species, int x, int y);
+
+	CreaturesPopulation *insertCreatureToXYPopulation(std::wstring name,
+			int activitiesCount, int x, int y, Creature *creature);
 	FieldsMatrix fields;
 	//PopulationsMatrix populations;
 	void iteratePopulationOnFields(PopulationOnFieldVisitor *visitor);
@@ -62,15 +63,16 @@ public:
 	static unsigned NO_OF_ARTICLES;
 	static unsigned HEIGHT;
 	static unsigned WIDTH;
-	static std::vector <std::string> ARTICLES;
-	static std::vector <Article *> articles;
-	static std::vector <Recipe *> recipes;
-	static int getArticleIndex (std::wstring name);
+	static std::vector<std::string> ARTICLES;
+	static std::vector<Article *> articles;
+	static std::vector<Recipe *> recipes;
+	static int getArticleIndex(std::wstring name);
 
-	static void connectCreatureSignals (Creature *creature);
+	static void connectCreatureSignals(Creature *creature);
 
 private:
 	static World *singleton;
+	QMutex populationCreationMutex;
 	World() {
 		if (singleton == NULL)
 			singleton = this;

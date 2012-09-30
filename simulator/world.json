@@ -1,8 +1,8 @@
 { 
 	"world" : 
 	{
-		"sizeX" : 4,
-		"sizeY" : 4,
+		"sizeX" : 2,
+		"sizeY" : 2,
 		"articles" : [	{"energy" 		: null },	
 						{"water"		: {"food?" : 1} },	
 						{"wood" 		: null },		
@@ -34,40 +34,9 @@
 						"name"	: "dziesietnik",
 						"activitiesCount" : 10, 
 						"creaturesMax" : 30,
-						"creatures" : 
-						[
-							{
-								"activities" : [ 
-												{"collect" : "flour"}, 
-												{"collect" : "water"}, 
-												{"collect" : "flour"}, 
-												{"rest" : null}, 	
-												 {"rest" : null}, 
-												 {"goUp" : null}, 
-												{"produce" : "bread"}, 
-												 {"collect" : "corn"}, 
-												 {"produce" : "flour"}, 
-												 {"sell" : "flour"} ]
-							}
-						],
-						"generateRandomCreatures" : 20
+						
+						"generateRandomCreatures" : 5
 					}
-				]
-			},
-			{
-				"coordX" : 3,
-				"coordY" : 3,	 
-				"stocks" : [ { "water" : { 	"stock" : 0,  
-											"reneval" : 10} },
-							 { "wood"  : { "reneval" : 10} },
-							 { "corn"  : { "reneval" : 10} }	],
-				"populations" :
-				[
-					{
-						"name"	: "dziesietnik",
-						"activitiesCount" : 10, 
-						"generateRandomCreatures" : 20
-					}		
 				]
 			}
 			
