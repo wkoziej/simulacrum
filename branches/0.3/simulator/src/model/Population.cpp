@@ -103,6 +103,8 @@ void CreaturesPopulation::reproduce() {
 	creatures.push_back(child1);
 	creatures.push_back(child2);
 
+	polulationChange.unlock();
+
 	LOG4CXX_DEBUG(logger,
 			"New child1 " << " T:" << child1 << " OLD:" << child1->getAge() << " GENE: " << *child1);
 	LOG4CXX_DEBUG(logger,
@@ -111,7 +113,7 @@ void CreaturesPopulation::reproduce() {
 	//ga->removeIndividual(creatureToRemove);
 	while (creatures.size() > 30) {
 		const Creature *dead = selectCreature();
-		std::remove(creatures.begin(), creatures.end(), dead);
+		remove(dead);
 	}
 
 	std::sort(creatures.begin(), creatures.end());
@@ -121,7 +123,6 @@ void CreaturesPopulation::reproduce() {
 		LOG4CXX_DEBUG(logger,
 				" CREATURE " << " T:" << *i << " OLD:" << (*i)->getAge() << " GENE: " << *(*i));
 	}
-	polulationChange.unlock();
 	/*
 	 if (rs == PARENT) {
 	 child1 = pop->replace(child1, mom);
@@ -148,21 +149,14 @@ unsigned CreaturesPopulation::getCreatureActivitiesCount() const {
 	return activitiesCount;
 }
 
-void CreaturesPopulation::remove(Creature *creatureToRemove) {
+void CreaturesPopulation::remove(const Creature *creatureToRemove) {
 	LOG4CXX_TRACE(logger,
 			" removing creature " << *creatureToRemove << " T:" << creatureToRemove << " TC:" << ((Creature *)creatureToRemove));
 	polulationChange.lock();
-	//ga->removeIndividual(creatureToRemove);
-	LOG4CXX_DEBUG(logger,
-			" population size before removing = " << creatures.size());
-
 	Creatures::iterator toErase = std::find(creatures.begin(), creatures.end(),
 			creatureToRemove);
 	if (toErase != creatures.end())
 		creatures.erase(toErase);
-
-	LOG4CXX_DEBUG(logger,
-			" population size after removing = " << creatures.size());
 	polulationChange.unlock();
 }
 
