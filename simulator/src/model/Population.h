@@ -41,7 +41,7 @@ public:
 	const int size() const {
 		return creatures.size();
 	}
-	void remove(Creature *creatureToRemove);
+	void remove(const Creature *creatureToRemove);
 	void add(Creature *creatureToAdd);
 	Creatures creatureList() const {
 		return creatures;

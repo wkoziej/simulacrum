@@ -33,8 +33,8 @@ int main(int argc, char *argv[]) {
 			// Odnów zasoby świata
 			world->nextYear();
 			stateSaver.save("nexYear");
-			char i;
-			cin >> i;
+			//char i;
+			//cin >> i;
 		}
 
 	}
