@@ -6,4 +6,8 @@ Field is area of world where creatures of populations can do their [Activities]
 
 = Details =
 
-Every field has its own coordinates in the world and some FieldProperties. 
+Every field in the world has some properties
+
+  * coordinates
+  * stocks
+  * populations
