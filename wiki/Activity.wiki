@@ -1,0 +1,11 @@
+#summary Activity is something what [Creature] do
+
+= Introduction =
+Activity defines what creature can do. Activity can have argument which is [Article]
+ 
+= Details =
+
+Types of activities
+  * [EatActivity]
+  * [RestActivity]
+  * ...
