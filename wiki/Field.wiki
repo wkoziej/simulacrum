@@ -1,0 +1,9 @@
+#summary Definition and properties of field
+
+= Field =
+
+Field is area of world where creatures of populations can do their Activities 
+
+= Details =
+
+Every field has its own coordinates in the world and some FieldProperties. 
