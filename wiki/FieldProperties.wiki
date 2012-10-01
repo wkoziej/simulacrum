@@ -1,0 +1,8 @@
+#summary Definition of world's field properties
+
+= Field properties  =
+Every field in the world has some properties
+
+* coordinates
+* stocks
+* populations
