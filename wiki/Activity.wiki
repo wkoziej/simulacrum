@@ -1,7 +1,7 @@
 #summary Activity is something what creatures do
 
 = Introduction =
-Activity defines what [Creature creature] can do. Activity can have argument which is [Article article] but should be [Object object]
+Activity defines what [Creature creature] can do. Activity can have argument which is [Article article] but should be [Object an object]
  
 = Details =
 
