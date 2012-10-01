@@ -9,3 +9,15 @@ Types of activities
   * [EatActivity]
   * [RestActivity]
   * ...
+
+= Generalization of activity =
+
+DO SOMETHING WITH ( OBJECT ) 
+
+[Object] can be anything in the [World world].
+
+Examples:
+  * eat(bread)
+  * rest()
+  * sell(soul)
+  * buy(love)
