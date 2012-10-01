@@ -2,7 +2,7 @@
 
 = Field =
 
-Field is area of world where creatures of populations can do their Activities 
+Field is area of world where creatures of populations can do their [Activities] 
 
 = Details =
 
