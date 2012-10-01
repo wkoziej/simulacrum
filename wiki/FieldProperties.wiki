@@ -3,6 +3,6 @@
 = Field properties  =
 Every field in the world has some properties
 
-* coordinates
-* stocks
-* populations
+  * coordinates
+  * stocks
+  * populations
