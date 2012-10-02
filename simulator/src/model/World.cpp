@@ -97,10 +97,10 @@ void CreatureActivityThread::run() {
 	LOG4CXX_DEBUG(logger,
 			"creature " << creature->getId().toStdString() << " starting activities ");
 	for (; activity != activities.end(); activity++) {
-		this->msleep(10);
+		//this->msleep(10);
 		(*activity)->make();
 		// TODO Chyba nie ma potrzeby spać....
-		this->msleep(10);
+		//this->msleep(10);
 		delete (*activity);
 	}
 	LOG4CXX_DEBUG(logger,
@@ -126,50 +126,16 @@ public:
 	virtual void visit(CreaturesPopulation *population, Field *field,
 			unsigned x, unsigned y) {
 
-		LOG4CXX_DEBUG(logger,
-				"Population size before reproduction: " << population->size());
 		population->reproduce();
-		/*
-
-		 int c;
-		 int psize = population->size();
-		 for (c = 0; c < psize; c++) {
-		 Creature * creature = (Creature *) &population->individual(c);
-		 creature->increaseAge();
-		 LOG4CXX_DEBUG(logger, " I [" << c << "]: " << population->individual(c));
-		 }
-
-		 if (population->size()) {
-		 GASimpleGA simpleGA(*population);
-		 simpleGA.initialize(time(0));
-		 simpleGA.crossover(GARealTwoPointCrossover);
-		 simpleGA.pMutation(MUTATION);
-		 simpleGA.pCrossover(CROSSOVER);
-		 simpleGA.step();
-		 GAPopulation p = simpleGA.population();
-		 psize = p.size() / 2;
-		 for (c = 0; c < psize; c++) {
-		 Creature *theBest = new Creature((Creature&) p.best(c));
-		 population->add(theBest);
-		 LOG4CXX_DEBUG(logger, " N [" << c << "]: " << p.individual(c));
-		 }
-		 }
-
-		 psize = population->size();
-		 for (c = psize - 30; c > 0; c--) {
-		 Creature * creature = (Creature *) &population->worst();
-		 if (creature->getAge() > 0) {
-		 creature->prepareToDie();
-		 population->remove(creature);
-		 // disconnect all signals
-		 // delete creature
-
-		 }
-		 }
-		 */
-
+		std::string name = wstring2string(population->getName());
 		LOG4CXX_DEBUG(logger,
-				"Population size after reproduction: " << population->size());
+				"Population " << name << " after reproduction at " << x << "x" << y);
+		Creatures c =  population->creatureList();
+		Creatures::iterator i = c.begin();
+		for (; i != c.end(); i++) {
+			LOG4CXX_DEBUG(logger,
+					" CREATURE " << " T:" << *i << " OLD:" << (*i)->getAge() << ", VAL:" << (*i)->getWallet() << " GENE: " << *(*i));
+		}
 	}
 };
 
@@ -184,45 +150,25 @@ public:
 	void visit(CreaturesPopulation *population, Field *field, unsigned x,
 			unsigned y) {
 
-		Creatures cList = population->creatureList();
-		for (Creatures::iterator i = cList.begin(); i != cList.end(); i++) {
-			Creature *creature = *i;
+		std::list<CreatureActivityThread *> threadsToWait;
 
-			ActivityList activities = CreatureActivity::getCreatureActivities(
-					creature);
-			ActivityList::iterator activity = activities.begin();
-			LOG4CXX_DEBUG(logger,
-					"creature " << creature->getId().toStdString() << " starting activities ");
-			for (; activity != activities.end(); activity++) {
-				(*activity)->make();
-				// TODO Chyba nie ma potrzeby spać....
-				delete (*activity);
-			}
-			LOG4CXX_DEBUG(logger,
-					"creature " << creature->getId().toStdString() << " ended activities ");
-
+		Creatures l = population->creatureList();
+		Creatures::iterator i = l.begin();
+		for (; i != l.end(); i++) {
+			CreatureActivityThread *activityThread = new CreatureActivityThread(
+					*i);
+			activityThread->start(QThread::NormalPriority);
+			threadsToWait.push_back(activityThread);
 		}
-		/*
-		 std::list<CreatureActivityThread *> threadsToWait;
 
-		 CreatureList l = population->creatureList();
-		 CreatureList::iterator i = l.begin();
-		 for (; i != l.end(); i++) {
-		 CreatureActivityThread *activityThread = new CreatureActivityThread(
-		 *i);
-		 activityThread->start(QThread::NormalPriority);
-		 threadsToWait.push_back(activityThread);
-		 }
+		while (threadsToWait.size()) {
+			LOG4CXX_DEBUG(logger,
+					"waiting for all threads, threads count = " << threadsToWait.size());
+			threadsToWait.front()->wait();
+			threadsToWait.pop_front();
+		}
+		LOG4CXX_TRACE(logger, "all threads completed...");
 
-		 while (threadsToWait.size()) {
-		 LOG4CXX_DEBUG(logger,
-		 "waiting for all threads, threads count = " << threadsToWait.size());
-		 threadsToWait.front()->wait();
-		 threadsToWait.pop_front();
-		 }
-		 LOG4CXX_TRACE(logger, "all threads completed...");
-
-		 */
 	}
 };
 LoggerPtr CreatureActivityVisitor::logger(
@@ -401,21 +347,21 @@ bool World::creaturesExists() {
 }
 
 void World::step(StateSaver *stateSaver) {
-/*
-	int x = fields.size();
-	int y = fields.begin()->size();
+	/*
+	 int x = fields.size();
+	 int y = fields.begin()->size();
 
-	for (int i = 0; i < x; i++) {
-		for (int j = 0; j < y; j++) {
-			Field *f = fields.at(i).at(j);
-			for (unsigned a = 0; a < World::NO_OF_ARTICLES; a++) {
-				LOG4CXX_DEBUG(logger, "Test article " << a << " from field " << f);
-				f->tryTakeArticle(a);
-			}
-		}
-	}
+	 for (int i = 0; i < x; i++) {
+	 for (int j = 0; j < y; j++) {
+	 Field *f = fields.at(i).at(j);
+	 for (unsigned a = 0; a < World::NO_OF_ARTICLES; a++) {
+	 LOG4CXX_DEBUG(logger, "Test article " << a << " from field " << f);
+	 f->tryTakeArticle(a);
+	 }
+	 }
+	 }
 
-	*/
+	 */
 
 	PopulationOnFieldVisitor * visitor = new CreatureActivityVisitor();
 	iteratePopulationOnFields(visitor);

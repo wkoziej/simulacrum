@@ -38,6 +38,7 @@ public:
 	}
 	;
 	unsigned getCreatureActivitiesCount() const;
+	unsigned  getNoOfGenes () const;
 	const int size() const {
 		return creatures.size();
 	}
@@ -46,9 +47,16 @@ public:
 	Creatures creatureList() const {
 		return creatures;
 	}
+
+	enum SelectionStrategy {
+		SS_RANDOM, SS_WORST, SS_BEST
+	};
+
 protected:
-	const Creature *selectCreature() const;
+	const Creature *selectCreature(SelectionStrategy) const;
 	void sexualCrossover(const Creature *mom, const Creature *dad,
+			Creature *sister, Creature *brother) const;
+	void onePointCrossover(const Creature *mom, const Creature *dad,
 			Creature *sister, Creature *brother) const;
 private:
 	//Field *field;

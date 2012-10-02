@@ -39,11 +39,7 @@ public:
 	virtual ~World();
 	void initializeRandomly();
 	void createRandomCreatures();
-	void creaturesWorking();
-	void creaturesSupplying();
-	void creaturesDying();
 	void creaturesReproducting();
-	void creaturesMoving();
 	void nextYear();
 	bool creaturesExists();
 	void step(StateSaver *stateSaver);
