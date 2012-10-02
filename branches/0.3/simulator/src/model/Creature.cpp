@@ -114,6 +114,7 @@ CreatureFenotype::CreatureFenotype(std::wstring species, unsigned x,
 	articleStocks.assign(World::NO_OF_ARTICLES, 0);
 	yearsOld = 0;
 	speciesName = species;
+	wallet = 0.0;
 	assignId();
 }
 ;
@@ -485,6 +486,7 @@ bool Creature::move(unsigned x, unsigned y) {
 }
 
 int Creature::increaseAge() {
+	getFenotype()->wallet = 0.0;
 	return ++getFenotype()->yearsOld;
 }
 

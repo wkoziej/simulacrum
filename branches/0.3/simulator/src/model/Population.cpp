@@ -12,14 +12,16 @@
 
 LoggerPtr CreaturesPopulation::logger(Logger::getLogger("population"));
 
+bool moreValuableCreature(Creature *one, Creature *two) {
+	return one->getWallet() > two->getWallet();
+}
+
 CreaturesPopulation::CreaturesPopulation(std::wstring name, int activitiesCount,
 		Creature *oneCreature) {
 	LOG4CXX_TRACE(logger,
 			"CreaturesPopulation( std::wstring name, int activitiesCount, Creature *oneCreature)");
 	this->activitiesCount = activitiesCount;
 	this->name = name;
-	///ga = new GeneticAlgorithm(oneCreature);
-	//ga->initialize(time(0));
 }
 
 CreaturesPopulation::CreaturesPopulation(Field *field,
@@ -61,16 +63,54 @@ CreaturesPopulation::CreaturesPopulation(Field *field,
 			"populationSize after creation/generation = " << creatures.size());
 }
 
-const Creature *CreaturesPopulation::selectCreature() const {
-	return creatures.at(randBetweenAndStepped(0.0, creatures.size(), 1.0));
+const Creature *CreaturesPopulation::selectCreature(
+		SelectionStrategy selectionStrategy) const {
+	// Assume creatures sorted by objective. First is the best.
+	Creature *selected;
+	switch (selectionStrategy) {
+	case SS_RANDOM:
+		selected = creatures.at(
+				randBetweenAndStepped(0.0, creatures.size(), 1.0));
+		break;
+	case SS_WORST:
+		selected = creatures.back();
+		break;
+	default:
+		selected = creatures.front();
+		break;
+	}
+	return selected;
+}
+
+unsigned CreaturesPopulation::getNoOfGenes() const {
+	return getCreatureActivitiesCount() * 2;
 }
 
 void CreaturesPopulation::sexualCrossover(const Creature *mom,
 		const Creature *dad, Creature *sister, Creature *brother) const {
-	for (unsigned i = 0; i < getCreatureActivitiesCount(); i++) {
+	unsigned genesCount = getNoOfGenes();
+	for (unsigned i = 0; i < genesCount; i++) {
 		unsigned momGene = mom->gene(i);
 		unsigned dadGene = dad->gene(i);
 		if (flipCoin(0.5)) {
+			sister->gene(i, momGene);
+			brother->gene(i, dadGene);
+		} else {
+			sister->gene(i, dadGene);
+			brother->gene(i, momGene);
+		}
+	}
+}
+
+void CreaturesPopulation::onePointCrossover(const Creature *mom,
+		const Creature *dad, Creature *sister, Creature *brother) const {
+	unsigned genesCount = getNoOfGenes();
+	unsigned breakGeneIndex = randBetweenAndStepped(0, genesCount, 1);
+	for (unsigned i = 0; i < genesCount; i++) {
+
+		unsigned momGene = mom->gene(i);
+		unsigned dadGene = dad->gene(i);
+		if (i < breakGeneIndex) {
 			sister->gene(i, momGene);
 			brother->gene(i, dadGene);
 		} else {
@@ -85,8 +125,8 @@ void CreaturesPopulation::reproduce() {
 	// TODO - implementacja
 	if (creatures.size() <= 1)
 		return;
-	const Creature *mom = selectCreature();
-	const Creature *dad = selectCreature();
+	const Creature *mom = selectCreature(CreaturesPopulation::SS_RANDOM);
+	const Creature *dad = selectCreature(CreaturesPopulation::SS_RANDOM);
 	Creature *child1 = new Creature(*mom);
 	Creature *child2 = new Creature(*dad);
 
@@ -97,32 +137,29 @@ void CreaturesPopulation::reproduce() {
 	child1->mutate(MUTATION);
 	child2->mutate(MUTATION);
 
-	// Blokada zmian dla innych wątków
-	polulationChange.lock();
+	std::sort(creatures.begin(), creatures.end(), moreValuableCreature);
 
-	creatures.push_back(child1);
-	creatures.push_back(child2);
-
-	polulationChange.unlock();
+	//ga->removeIndividual(creatureToRemove);
+	while (creatures.size() > 30) {
+		const Creature *dead = selectCreature(CreaturesPopulation::SS_WORST);
+		LOG4CXX_DEBUG(logger,
+				" DEAD " << " T:" << dead << " OLD:" << dead->getAge() << ", VAL:" << dead->getWallet() << " GENE: " << *dead);
+		remove(dead);
+	}
 
 	LOG4CXX_DEBUG(logger,
 			"New child1 " << " T:" << child1 << " OLD:" << child1->getAge() << " GENE: " << *child1);
 	LOG4CXX_DEBUG(logger,
 			"New child2 " << " T:" << child2 << " OLD:" << child2->getAge() << " GENE: " << *child2);
 
-	//ga->removeIndividual(creatureToRemove);
-	while (creatures.size() > 30) {
-		const Creature *dead = selectCreature();
-		remove(dead);
-	}
+	// Blokada zmian dla innych wątków
+	polulationChange.lock();
 
-	std::sort(creatures.begin(), creatures.end());
+	creatures.push_back(child1);
+	creatures.push_back(child2);
+	std::sort(creatures.begin(), creatures.end(), moreValuableCreature);
+	polulationChange.unlock();
 
-	Creatures::iterator i = creatures.begin();
-	for (; i != creatures.end(); i++) {
-		LOG4CXX_DEBUG(logger,
-				" CREATURE " << " T:" << *i << " OLD:" << (*i)->getAge() << " GENE: " << *(*i));
-	}
 	/*
 	 if (rs == PARENT) {
 	 child1 = pop->replace(child1, mom);
