@@ -1,0 +1,8 @@
+#summary Article definition
+
+= Introduction =
+Article is an object of the [World world]. [Creature Creatures] can do their [Activity activities] using articles. Every article have some properties:
+  * when it expire (article older then this value disapear)
+  * volume (amount of place taken by article in the FieldStock or CreatureBackpack 
+  * way in which article influences creatures/fields during actions 
+Articles are components of [Recipe recipes]. 
