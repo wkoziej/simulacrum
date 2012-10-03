@@ -1,0 +1,109 @@
+{ 
+	"world" : 
+	{
+		"sizeX" : 2,
+		"sizeY" : 2,
+		"articles" : [	{"corn" : 
+							{
+								"modifiers" : {
+									"eatAction"  : { "energy" : -1 },
+								}
+								"expire" : 5,
+								"volume" : 1
+							}
+						}
+					],
+		"actions" : ["eat", "plant", "destroy"],			
+		"recipeGroups" : [
+			{ "name" : "production", 	"use" : ["creature"] },
+			{ "name" : "grow", 			"use" : ["field"] },
+			{ "name" : "destruction", 	"use" : ["creature"] } 
+		],			
+		"recipes" :  [		
+						{ "name" : "bread baking",
+						  "group" : "production",
+						  "products":   [ {"bread" : 1 } ],
+						  "materials" : [ {"water"  : 1}, 
+										  {"flour"  : 1}, 
+										  {"energy" : 1} ]
+						},
+						
+						{ "corn" : [ {"water"  : 1},
+					    			 {"seed"   : 1},
+					    			 {"energy" : 1},
+					    			 {"soil"   : 1}
+					    			]
+					    },
+					    { "energy" : [ {"water" : 2},
+					    			   {"wood" : 1}
+					    			 ]
+					    }
+					],
+					
+		"species" : [
+			{ "krasnolud, czyli gnome" : 
+						{ "activitiesCount" : 20,
+			  			  "backpackCapacity" : 100,
+			  			  "heartbits" : 100,
+			  			  "crossover" : { "operator" : "onePoint",
+			  			  				  "probability" : 0.9 }
+			  			 }
+			}
+		],
+		
+		"fields" : [
+			{	
+				"coordX" : 0,
+				"coordY" : 0,	 
+				"stocks" : [ { "water" : { 	"stock" : 100, "reneval" : 100} } ],
+				"populations" :
+				[
+					{
+						"name"	: "krasnolud, czyli gnome",
+						"activitiesCount" : 20, 					
+						"generateRandomCreatures" : 50
+					}
+				],
+				
+			    "__comment" : "Przyszła postać definicji pola poniżej"
+				"coordinates": [0, 0],
+				
+				"containers" : [
+					"stock"  : { "capacity" : 5000 },
+					"market" : { "capacity" : 200  }
+				]
+				"articles"	: { "water" : { "amount" : 30,
+											"affectsContainer" : "stock",
+											"affectsCapacity?" : false,
+											"amountModifier" : "emiter/absorber"
+								 			"modifierValue" : 2, 
+								 			"modifierLimit": 1000   ,                  "_comment: -1 znaczy nielimitowny" : 1
+								 		  }
+				"modifiers" : { "modyfikatory życia/zdrowia/akcji osobników i funkcjonalności pól -> wzrost roślin np." : 1
+							},
+				"generators" : {
+					"population" : [ {"name" : "krasnal", "creatureCount" : 20},
+					 ]
+				}
+			},
+			{
+				"coordX" : 1,
+				"coordY" : 0,	 
+				"stocks" : [ { "wood"  : { "stock" : 100,  "reneval" : 100} }]
+			},
+			{
+				"coordX" : 0,
+				"coordY" : 1,	 
+				"stocks" : [ { "corn"  : { "stock" : 100,  "reneval" : 100} }	]
+				
+			},
+			{
+				"coordX" : 1,
+				"coordY" : 1,	 
+				"stocks" : [ ]
+			}
+			
+		]
+		
+	}
+}

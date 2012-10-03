@@ -134,11 +134,9 @@ void StateSaver::save(std::string description) {
 						params.push_back(articleIndex + 1);
 						params.push_back(
 								creature->getArticleStock(articleIndex));
-						params.push_back(
-								creature->getArticleQuantChange(articleIndex));
 						executeQuery(
-								"insert into creatures_articles_snapshots (creature_snapshot_id, article_id, stock, changed) "
-										" values (:1, :2, :3, :4);", params,
+								"insert into creatures_articles_snapshots (creature_snapshot_id, article_id, stock) "
+										" values (:1, :2, :3);", params,
 								tmp);
 
 					}
