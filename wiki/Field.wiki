@@ -5,7 +5,7 @@
 Field is area of world where creatures of populations can do their [Activity activities] 
 
 Every field in the world has some properties (e.g. coordinates) and objects connected with it e.g:
-  * stocks of [Articles articles] in fields
+  * stocks of [Article articles] in fields
   * [Population populations] of [Creature creature] living on fields
   
 = Stock =
