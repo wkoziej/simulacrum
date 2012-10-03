@@ -6,12 +6,7 @@
 		"articles" : [	{"energy" 		: null },	
 						{"water"		: {"food?" : 1} },	
 						{"wood" 		: null },		
-						{"corn" : 
-							{
-								"food?" : 1,
-								"expire" : 5
-							}
-						}, 
+						{"corn" : null}, 
 						{"flour"		: null },	
 						{"bread" 		: {"food?" : 1} },
 						{"soil"			: null },

@@ -77,8 +77,7 @@ drop table  if exists ARTICLES;
 	ID INTEGER  PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
        CREATURE_SNAPSHOT_ID INTEGER CONSTRAINT CREATURES_SNAPSHOTS_FK REFERENCES CREATURES_SNAPSHOTS(ID) ON DELETE CASCADE,
 ARTICLE_ID INT,
-       STOCK INT,
-       CHANGED INT
+       STOCK INT
  );
    CREATE INDEX "CREATURE_SNAPSHOT_ID_FK_I" on CREATURES_ARTICLES_SNAPSHOTS (CREATURE_SNAPSHOT_ID ASC);
   CREATE INDEX "ARTICLE_ID_FK_I" on CREATURES_ARTICLES_SNAPSHOTS (ARTICLE_ID ASC);
@@ -135,4 +134,4 @@ create view v_creatures_snapshots as select * from creatures_snapshots;
 
 drop view if exists v_creatures_articles_snapshots;
 create  view v_creatures_articles_snapshots as 
-select s.id, s.creature_snapshot_id, a.name, s.stock, s.changed from creatures_articles_snapshots  s inner join articles a on a.id = s.article_id;
+select s.id, s.creature_snapshot_id, a.name, s.stock from creatures_articles_snapshots  s inner join articles a on a.id = s.article_id;

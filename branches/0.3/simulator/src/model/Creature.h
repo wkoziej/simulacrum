@@ -26,7 +26,7 @@ using namespace log4cxx;
 
 //float Objective(GAGenome &g);
 
-class CreatureFenotype;
+class Phenotype;
 class Field;
 class CreaturesPopulation;
 
@@ -84,8 +84,8 @@ public:
 	virtual ~Creature();
 
 	std::string genomeStr() const;
-	CreatureFenotype *getFenotype() const {
-		return fenotype;
+	Phenotype *getPhenotype() const {
+		return phenotype;
 	}
 	Field *getField();
 	unsigned getX() const;
@@ -94,7 +94,6 @@ public:
 	unsigned getAge() const;
 	float getWallet() const;
 	unsigned getArticleStock(unsigned articleId) const;
-	int getArticleQuantChange(unsigned articleId) const;
 	unsigned getActivitiesCount() const;
 	bool hasEnergy() const;
 	void rest();
@@ -121,7 +120,7 @@ public:
 
 private:
 	Genome genome;
-	CreatureFenotype *fenotype;
+	Phenotype *phenotype;
 	static void RandomInitializer(Genome &g, unsigned genomeLenght);
 	//static void DoNothingInitializer(Genome &g);
 	static void JSONInitializer(Genome &g, JSONObject *creature);
