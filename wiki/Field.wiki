@@ -8,4 +8,6 @@ Every field in the world has some properties (e.g. coordinates) and objects conn
   * stocks of [Articles articles] in fields
   * [Population populations] of [Creature creature] living on fields
   
-= Details =
+= Stock =
+Field has some space (called stock) to keep articles. Stock has defined by
+capacity and cannot hold more articles then their summary volume.
