@@ -1,0 +1,13 @@
+#summary Definition of individual
+
+= Introduction =
+
+= Genome =
+Fixed length list of gene. Each gene codes action or action argument.
+
+= Phenotype =
+
+
+= Backpack =
+  * capacity
+  * list of articles and their quantities
