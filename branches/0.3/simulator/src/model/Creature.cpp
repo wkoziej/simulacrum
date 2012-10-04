@@ -319,8 +319,11 @@ bool Creature::leave(unsigned articleId) {
 		LOG4CXX_DEBUG(logger,
 				"craeture " << getId().toStdString() << " leaving " << World::ARTICLES.at(articleId));
 		modifyStocks(articleId, -1);
+
+		// TODO objects !!! -> emit articlePut(x, y, articleId)
 		Field *field = getField();
 		field->putArticle(articleId);
+
 	} else {
 		wrongDecisionSanction();
 	}
@@ -368,6 +371,8 @@ bool Creature::buy(unsigned articleId) {
 bool Creature::check(unsigned articleId) {
 	LOG4CXX_DEBUG(logger,
 			"craeture " << getId().toStdString() << " checking " << World::ARTICLES.at(articleId));
+
+	// TODO objects! emit check (x, y, articleId)
 	Field *field = getField();
 	field->getMarket()->articleSellPrice(getId().toStdString(), articleId);
 	return true;

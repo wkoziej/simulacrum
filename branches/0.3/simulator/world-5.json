@@ -3,17 +3,27 @@
 	{
 		"sizeX" : 2,
 		"sizeY" : 2,
+		"id" : "n + 1",
+		"world_id" : "n",
 		"articles" : [	{"corn" : 
 							{
 								"modifiers" : {
-									"eatAction"  : { "energy" : -1 },
+									"eat"  : { "energy" : -1 },
 								}
 								"expire" : 5,
 								"volume" : 1
 							}
 						}
 					],
-		"actions" : ["eat", "plant", "destroy"],			
+		
+		"_C1" : "Akcje mogą być ogóle. Wykonywane przez różne obiekty świata np.: Creature, Field. Źródła akcji (materiały) i produkty umieszczane byłyby w określonych kontenerach"
+		
+		"actions" : ["eat", 
+					 "plant", 
+					 "destroy", 
+					 "create" : { "recipeGroup" : "production"}
+					 ],
+					
 		"recipeGroups" : [
 			{ "name" : "production", 	"use" : ["creature"] },
 			{ "name" : "grow", 			"use" : ["field"] },
@@ -22,10 +32,10 @@
 		"recipes" :  [		
 						{ "name" : "bread baking",
 						  "group" : "production",
-						  "products":   [ {"bread" : 1 } ],
-						  "materials" : [ {"water"  : 1}, 
-										  {"flour"  : 1}, 
-										  {"energy" : 1} ]
+						  "products":   [ {"bread" : 1} ],
+						  "materials" : [ {"water" : 1}, 
+										  {"flour" : 1}, 
+										  {"energy": 1} ]
 						},
 						
 						{ "corn" : [ {"water"  : 1},
@@ -44,10 +54,14 @@
 			{ "krasnolud, czyli gnome" : 
 						{ "activitiesCount" : 20,
 			  			  "backpackCapacity" : 100,
-			  			  "heartbits" : 100,
+			  			  "energy" : 100,
 			  			  "crossover" : { "operator" : "onePoint",
-			  			  				  "probability" : 0.9 }
-			  			 }
+			  			  				  "probability" : 0.9 },
+			  			  "dieWhen" : [ 
+			  			  	{ "energy" : ["<" , 0] },
+			  			  	{ "yearOld" : [">", 100] }
+			  			  ]
+			  			}
 			}
 		],
 		
@@ -71,20 +85,27 @@
 				"containers" : [
 					"stock"  : { "capacity" : 5000 },
 					"market" : { "capacity" : 200  }
-				]
+				],
+				"actions" : [
+					"grow"
+				],
 				"articles"	: { "water" : { "amount" : 30,
 											"affectsContainer" : "stock",
 											"affectsCapacity?" : false,
-											"amountModifier" : "emiter/absorber"
+											"action" : "create",
 								 			"modifierValue" : 2, 
 								 			"modifierLimit": 1000   ,                  "_comment: -1 znaczy nielimitowny" : 1
 								 		  }
+							  	"plant" : { "amount" : 10,
+							  				"affectsContainer" : "stock",
+											"affectsCapacity?" : false,
+											"amountModifier" : "emiter",
+								 			"action" : "grow",
+							  				"modifierLimit": 100
+							  			  }
+							  }
 				"modifiers" : { "modyfikatory życia/zdrowia/akcji osobników i funkcjonalności pól -> wzrost roślin np." : 1
-							},
-				"generators" : {
-					"population" : [ {"name" : "krasnal", "creatureCount" : 20},
-					 ]
-				}
+					}
 			},
 			{
 				"coordX" : 1,
