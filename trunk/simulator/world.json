@@ -1,0 +1,95 @@
+{ 
+	"world" : 
+	{
+		"sizeX" : 2,
+		"sizeY" : 2,
+		"articles" : [	{"energy" 		: null },	
+						{"water"		: {"food?" : 1} },	
+						{"wood" 		: null },		
+						{"corn" : null}, 
+						{"flour"		: null },	
+						{"bread" 		: {"food?" : 1} },
+						{"soil"			: null },
+						{"seed"			: null } 
+					 ],
+		"recipes" :  [	{ "bread" : [ {"water"  : 1}, 
+									  {"flour"  : 1}, 
+									  {"energy" : 1} 
+								    ]
+						},
+						{ "flour" : [ {"energy" : 1}, 
+									  {"corn"   : 1} 
+								    ] 
+					    },
+					    { "corn" : [ {"water"  : 1},
+					    			 {"seed"   : 1},
+					    			 {"energy" : 1},
+					    			 {"soil"   : 1}
+					    			]
+					    }
+					],
+					
+		"species" : [
+			{ "gnome" :
+				{ "activities" : 
+					{ "perCycle" : 20,
+					  "customDefinitions" :
+					  	{ "eat" : 
+					  		{ "article" : 
+								[ 
+									{ "stone" :
+										{
+											"energy" : 1 
+										} 
+									},
+									{ "milk" :
+										{
+											"energy" : -1
+										}
+										
+									}
+									
+								]
+					  		}
+					
+						}				  				
+					}
+				} 
+			}
+		],
+		
+		"fields" : [
+			{
+				"coordX" : 0,
+				"coordY" : 0,	 
+				"stocks" : [ { "water" : { 	"stock" : 100, "reneval" : 100} } ],
+				"populations" :
+				[
+					{
+						"name"	: "gnome",
+						"activitiesCount" : 20, 					
+						"generateRandomCreatures" : 50
+					}
+				]
+			},
+			{
+				"coordX" : 1,
+				"coordY" : 0,	 
+				"stocks" : [ { "wood"  : { "stock" : 100,  "reneval" : 100} }]
+			},
+			{
+				"coordX" : 0,
+				"coordY" : 1,	 
+				"stocks" : [ { "corn"  : { "stock" : 100,  "reneval" : 100} }	]
+				
+			},
+			{
+				"coordX" : 1,
+				"coordY" : 1,	 
+				"stocks" : [ ]
+			}
+			
+		]
+		
+	}
+}
