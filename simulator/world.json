@@ -1,0 +1,77 @@
+{ 
+	"world" : 
+	{
+		"sizeX" : 3,
+		"sizeY" : 3,
+		"articles" : [	{"energy" 		: null },	
+						{"water"		: {"food?" : 1} },	
+						{"wood" 		: null },		
+						{"corn"			:  {"food?" : 1} }, 
+						{"flour"		: null },	
+						{"bread" 		: {"food?" : 1}}
+					 ],
+		"recipes" :  [	{ "bread" : [ {"water"  : 1}, 
+									  {"flour"  : 1}, 
+									  {"energy" : 1} 
+								   ]
+						},
+						{ "flour" : [ {"energy" : 1}, 
+									  {"corn"   : 1} 
+								   ] 
+					    }
+					],
+		"fields" : [
+			{
+				"coordX" : 0,
+				"coordY" : 0,	 
+				"stocks" : [ { "water" : { 	"stock" : 100,  
+											"reneval" : 100} },
+							 { "wood"  : { "stock" : 100,  "reneval" : 100} },
+							 { "corn"  : { "stock" : 100,  "reneval" : 100} }	],
+				"populations" :
+				[
+					{
+						"name"	: "dziesietnik",
+						"activitiesCount" : 10, 
+						"creaturesMax" : 2,
+						"creatures" : 
+						[
+							{
+								"activities" : [ 
+												{"collect" : "flour"}, 
+												{"collect" : "water"}, 
+												{"collect" : "flour"}, 
+												{"rest" : null}, 	
+												 {"rest" : null}, 
+												 {"goUp" : null}, 
+												{"produce" : "bread"}, 
+												 {"collect" : "corn"}, 
+												 {"produce" : "flour"}, 
+												 {"sell" : "flour"} ]
+							}
+						],
+						"generateRandomCreatures" : 10
+					}
+				]
+			},
+			{
+				"coordX" : 1,
+				"coordY" : 1,	 
+				"stocks" : [ { "water" : { 	"stock" : 0,  
+											"reneval" : 10} },
+							 { "wood"  : { "reneval" : 10} },
+							 { "corn"  : { "reneval" : 10} }	],
+				"populations" :
+				[
+					{
+						"name"	: "dziesietnik",
+						"activitiesCount" : 10, 
+						"generateRandomCreatures" : 10
+					}		
+				]
+			}
+			
+		]
+		
+	}
+}
