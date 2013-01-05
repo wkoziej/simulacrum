@@ -68,7 +68,7 @@
 					{
 						"name"	: "gnome",
 						"activitiesCount" : 20, 					
-						"generateRandomCreatures" : 50
+						"generateRandomCreatures" : 10
 					}
 				]
 			},
